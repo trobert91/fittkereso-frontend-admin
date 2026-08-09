@@ -1,0 +1,15 @@
+export enum CommentStatus {
+  NEW = "new",
+  IDENTIFIED = "identified",
+  RELEVANCE_CALCULATED = "relevance_calculated",
+  PLANNED = "planned",
+  EXTRACTED = "extracted",
+  RESOLVED = "resolved",
+  VALIDATED = "validated",
+  RELEVANCE_FINALIZED = "relevance_finalized",
+  REFINEMENT = "refinement",
+  IN_REVIEW = "in_review",
+  APPROVED = "approved",
+  DELETED = "deleted",
+  SKIPPED = "skipped",
+}
