@@ -1,7 +1,5 @@
 import { routes } from "@/utils/routes";
 import { ElementType } from "react";
-import { GoCodeReview } from "react-icons/go";
-import { MdRateReview } from "react-icons/md";
 import { PiListBullets, PiStarDuotone } from "react-icons/pi";
 import { TbBuildingFactory2, TbCategory } from "react-icons/tb";
 import { VscTasklist } from "react-icons/vsc";
@@ -66,31 +64,6 @@ export const menu: MenuItem[] = [
     ],
   },
   {
-    header: "Reviews",
-    section: [
-      {
-        name: "Thread List",
-        href: routes.threads.list,
-        icon: GoCodeReview,
-      },
-      {
-        name: "Thread Runs",
-        href: routes.threadRuns.list,
-        icon: GoCodeReview,
-      },
-      {
-        name: "Comment List",
-        href: routes.comments.list,
-        icon: GoCodeReview,
-      },
-      {
-        name: "Review List",
-        href: routes.reviews.list,
-        icon: MdRateReview,
-      },
-    ],
-  },
-  {
     header: "System",
     section: [
       {
@@ -101,16 +74,6 @@ export const menu: MenuItem[] = [
       {
         name: "Scrape Task List",
         href: routes.scrapeTasks.list,
-        icon: VscTasklist,
-      },
-      {
-        name: "Thread Search Task List",
-        href: routes.threadSearchTasks.list,
-        icon: VscTasklist,
-      },
-      {
-        name: "Thread Keywords",
-        href: routes.threadKeywords.list,
         icon: VscTasklist,
       },
     ],

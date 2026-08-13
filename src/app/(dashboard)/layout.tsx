@@ -1,8 +1,8 @@
 import { DashboardLayout } from "@/components/dashboard/dashboard";
 
 export const metadata = {
-  title: "ebike Admin",
-  description: "ebike admin page",
+  title: "fittkereso Admin",
+  description: "fittkereso admin page",
 };
 
 export default function RootLayout({

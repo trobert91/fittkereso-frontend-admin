@@ -1,5 +1,12 @@
-import type { ProductSpecs } from './product-specs';
-import type { MatchResultComponents, StructuredSpec } from './product-resolution-context';
+import type { ProductSpecs, StructuredSpec } from './product-specs';
+
+export interface MatchResultComponents {
+  stringSimilarity: number;
+  tokenOverlap: number;
+  alphaMatch: number;
+  aliasMatch: boolean;
+  specSimilarity: number;
+}
 
 // ─── Input + Options ─────────────────────────────────────────────────────────
 

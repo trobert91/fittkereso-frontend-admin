@@ -4,8 +4,8 @@ import { ProductTable } from "@/components/product/product-table";
 import { routes } from "@/utils/routes";
 
 export const metadata = {
-  title: "ebike Admin Index page",
-  description: "ebike admin page",
+  title: "fittkereso Admin Index page",
+  description: "fittkereso admin page",
 };
 
 const breadcrumbs = [

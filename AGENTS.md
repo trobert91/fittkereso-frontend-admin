@@ -1,4 +1,4 @@
-# ebike Frontend Admin Instructions
+# fittkereso Frontend Admin Instructions
 
 Shared workspace rules live in `../.github/copilot-instructions.md`.
 
@@ -6,7 +6,7 @@ Use this file for admin frontend-specific guidance only.
 
 ## Project Context
 
-- This repo is the internal admin Next.js app for category management, product management, moderation, thread and review inspection, and operational tooling.
+- This repo is the internal admin Next.js app for category management, product management, and operational tooling.
 - Stack: Next.js 16, React 19, Mantine UI, Redux Toolkit, React Hook Form, Supabase Auth.
 - Primary areas: `src/app/`, `src/components/`, `src/api-actions/`, `src/hooks/`, `src/models/`, `src/store/`, and `src/utils/`.
 

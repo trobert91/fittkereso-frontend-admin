@@ -4,8 +4,8 @@ import { routes } from "@/utils/routes";
 import { CategoryTable } from "@/components/category/category-table";
 
 export const metadata = {
-  title: "ebike Admin Categories",
-  description: "ebike admin page",
+  title: "fittkereso Admin Categories",
+  description: "fittkereso admin page",
 };
 
 const breadcrumbs = [

@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "ebike.b-cdn.net",
+        hostname: "fittkereso.b-cdn.net",
         pathname: "/**", // allow all product images
       },
     ],

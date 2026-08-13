@@ -22,8 +22,8 @@ import { theme } from "@/theme";
 import { Providers } from "@/components/providers";
 
 export const metadata = {
-  title: "ebike Admin",
-  description: "ebike admin page",
+  title: "fittkereso Admin",
+  description: "fittkereso admin page",
 };
 
 export default function RootLayout({

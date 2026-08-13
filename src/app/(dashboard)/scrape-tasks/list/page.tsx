@@ -5,8 +5,8 @@ import { ScrapeTaskTable } from "@/components/scrape-tasks/scrape-task-table";
 import { CreateScrapeTaskAction } from "@/components/scrape-tasks/create-scrape-task-action";
 
 export const metadata = {
-  title: "ebike Admin Scrape Tasks",
-  description: "ebike admin page",
+  title: "fittkereso Admin Scrape Tasks",
+  description: "fittkereso admin page",
 };
 
 const breadcrumbs = [

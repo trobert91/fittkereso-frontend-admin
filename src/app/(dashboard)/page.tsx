@@ -1,15 +1,15 @@
 import { Text, Title, Center, Code } from "@mantine/core";
 
 export const metadata = {
-  title: "ebike Admin Index page",
-  description: "ebike admin page",
+  title: "fittkereso Admin Index page",
+  description: "fittkereso admin page",
 };
 
 export default function Index() {
   return (
     <>
       <Center>
-        <Title>ebike admin index page</Title>
+        <Title>fittkereso admin index page</Title>
       </Center>
 
       <Center>

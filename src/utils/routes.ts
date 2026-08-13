@@ -50,29 +50,10 @@ export const routes = {
     list: "/categories/list",
     details: (id: string) => `/categories/${id}`,
   },
-  threads: {
-    list: "/threads/list",
-    details: (id: string) => `/threads/${id}`,
-  },
-  threadRuns: {
-    list: "/thread-runs/list",
-  },
-  comments: {
-    list: "/comments/list",
-  },
-  reviews: {
-    list: "/reviews/list",
-  },
   tasks: {
     list: "/tasks/list",
   },
   scrapeTasks: {
     list: "/scrape-tasks/list",
-  },
-  threadSearchTasks: {
-    list: "/thread-search-tasks/list",
-  },
-  threadKeywords: {
-    list: "/thread-keywords/list",
   },
 };

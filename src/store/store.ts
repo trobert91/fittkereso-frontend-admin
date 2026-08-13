@@ -3,11 +3,6 @@ import authReducer from "./slices/auth-slice";
 import brandReducer from "./slices/brand-slice";
 import categoryReducer from "./slices/category-slice";
 import productReducer from "./slices/product-slice";
-import threadReducer from "./slices/thread-slice";
-import commentReducer from "./slices/comment-slice";
-import threadCommentReducer from "./slices/thread-comment-slice";
-import threadCommentSearchReducer from "./slices/thread-comment-search-slice";
-import reviewReducer from "./slices/review-slice";
 import productSourceReducer from "./slices/product-source-slice";
 import storage from "redux-persist/lib/storage"; // localStorage for web
 import { persistReducer, persistStore } from "redux-persist";
@@ -25,11 +20,6 @@ const rootReducer = combineReducers({
   brand: brandReducer,
   product: productReducer,
   category: categoryReducer,
-  thread: threadReducer,
-  comment: commentReducer,
-  threadComment: threadCommentReducer,
-  threadCommentSearch: threadCommentSearchReducer,
-  review: reviewReducer,
   productSource: productSourceReducer,
 });
 

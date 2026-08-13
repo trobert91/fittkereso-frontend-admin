@@ -4,8 +4,8 @@ import { ProductSourceTable } from "@/components/product-sources/product-source-
 import { routes } from "@/utils/routes";
 
 export const metadata = {
-  title: "ebike Admin Product Sources",
-  description: "ebike admin page",
+  title: "fittkereso Admin Product Sources",
+  description: "fittkereso admin page",
 };
 
 const breadcrumbs = [

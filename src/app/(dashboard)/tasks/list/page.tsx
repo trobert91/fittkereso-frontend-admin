@@ -4,8 +4,8 @@ import { routes } from "@/utils/routes";
 import { TaskTable } from "@/components/tasks/task-table";
 
 export const metadata = {
-  title: "ebike Admin Tasks",
-  description: "ebike admin page",
+  title: "fittkereso Admin Tasks",
+  description: "fittkereso admin page",
 };
 
 const breadcrumbs = [

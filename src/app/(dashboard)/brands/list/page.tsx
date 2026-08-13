@@ -5,8 +5,8 @@ import { BrandTable } from "@/components/brand/brand-table";
 import { CreateBrandAction } from "@/components/brand/create-brand-action";
 
 export const metadata = {
-  title: "ebike Admin Brands",
-  description: "ebike admin page",
+  title: "fittkereso Admin Brands",
+  description: "fittkereso admin page",
 };
 
 const breadcrumbs = [

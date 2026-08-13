@@ -1,4 +1,11 @@
-import { Sentiment } from "./enums/review-enums";
+export enum Sentiment {
+  StrongPositive = "strongPositive",
+  Positive = "positive",
+  Neutral = "neutral",
+  Negative = "negative",
+  StrongNegative = "strongNegative",
+  Mixed = "mixed",
+}
 
 // ─── Review-Level Criteria Aggregation ──────────────────────────────────────
 
