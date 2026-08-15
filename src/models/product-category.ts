@@ -14,14 +14,6 @@ export interface ProductCategory extends BaseEntity {
 
   enabled?: boolean;
 
-  extractionEnabled?: boolean;
-
-  searchEnabled?: boolean;
-
-  searchPriority?: number;
-
-  autoDeduplicationEnabled?: boolean;
-
   aliases?: string[];
 
   jsonSchema?: SpecDefinitionJsonSchema;

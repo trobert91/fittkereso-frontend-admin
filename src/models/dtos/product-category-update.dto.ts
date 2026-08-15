@@ -5,14 +5,6 @@ export interface ProductCategoryUpdateDto {
 
   enabled?: boolean;
 
-  extractionEnabled?: boolean;
-
-  searchEnabled?: boolean;
-
-  searchPriority?: number;
-
-  autoDeduplicationEnabled?: boolean;
-
   aliases?: string[];
 
   config?: ProductCategoryConfig;

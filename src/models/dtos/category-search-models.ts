@@ -7,29 +7,13 @@ export interface CategorySearchParams {
   page?: number;
   pageSize?: number;
 
-  sort?:
-    | "name"
-    | "createdAt"
-    | "updatedAt"
-    | "enabled"
-    | "extractionEnabled"
-    | "searchEnabled"
-    | "searchPriority";
+  sort?: "name" | "createdAt" | "updatedAt" | "enabled";
   order?: "ASC" | "DESC";
 
   includeConfig?: boolean;
-  autoDeduplicationEnabled?: boolean;
   enabled?: boolean;
-  searchEnabled?: boolean;
 }
 
 export type CategorySearchResult = BasePageResult<ProductCategory> & {
-  sort?:
-    | "name"
-    | "createdAt"
-    | "updatedAt"
-    | "enabled"
-    | "extractionEnabled"
-    | "searchEnabled"
-    | "searchPriority";
+  sort?: "name" | "createdAt" | "updatedAt" | "enabled";
 };

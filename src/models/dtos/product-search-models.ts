@@ -11,12 +11,12 @@ export interface ProductSearchParams {
   page?: number;
   pageSize?: number;
 
-  sort?: "model" | "displayName" | "createdAt" | "updatedAt" | "rating" | "totalReviewCount";
+  sort?: "model" | "displayName" | "createdAt" | "updatedAt";
   order?: "ASC" | "DESC";
 
   includeImages?: boolean;
 }
 
 export type ProductSearchResult = BasePageResult<ProductModel> & {
-  sort?: "model" | "displayName" | "createdAt" | "updatedAt" | "rating" | "totalReviewCount";
+  sort?: "model" | "displayName" | "createdAt" | "updatedAt";
 };

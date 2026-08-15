@@ -6,7 +6,6 @@ import {
   Switch,
   Button,
   Stack,
-  NumberInput,
   TagsInput,
   Group,
 } from "@mantine/core";
@@ -40,10 +39,6 @@ export const CategoryDetailsForm = () => {
     defaultValues: {
       name: category?.name ?? "",
       enabled: category?.enabled ?? false,
-      extractionEnabled: category?.extractionEnabled ?? false,
-      searchEnabled: category?.searchEnabled ?? false,
-      autoDeduplicationEnabled: category?.autoDeduplicationEnabled ?? false,
-      searchPriority: category?.searchPriority ?? 5,
       aliases: category?.aliases ?? [],
     },
   });
@@ -54,10 +49,6 @@ export const CategoryDetailsForm = () => {
       reset({
         name: category.name ?? "",
         enabled: category.enabled ?? false,
-        extractionEnabled: category.extractionEnabled ?? false,
-        searchEnabled: category.searchEnabled ?? false,
-        autoDeduplicationEnabled: category.autoDeduplicationEnabled ?? false,
-        searchPriority: category.searchPriority ?? 5,
         aliases: category.aliases ?? [],
       });
     }
@@ -102,49 +93,7 @@ export const CategoryDetailsForm = () => {
             checked={watch("enabled") ?? false}
             onChange={(e) => setValue("enabled", e.currentTarget.checked)}
           />
-
-          <Switch
-            label="Extraction Enabled"
-            checked={watch("extractionEnabled") ?? false}
-            onChange={(e) =>
-              setValue("extractionEnabled", e.currentTarget.checked)
-            }
-          />
-
-          <Switch
-            label="Search Enabled"
-            checked={watch("searchEnabled") ?? false}
-            onChange={(e) =>
-              setValue("searchEnabled", e.currentTarget.checked)
-            }
-          />
-
-          <Switch
-            label="Auto Deduplication"
-            checked={watch("autoDeduplicationEnabled") ?? false}
-            onChange={(e) =>
-              setValue("autoDeduplicationEnabled", e.currentTarget.checked)
-            }
-          />
         </Group>
-
-        <Controller
-          name="searchPriority"
-          control={control}
-          render={({ field }) => (
-            <NumberInput
-              label="Search Priority"
-              description="Priority for thread search scheduling (1 = lowest, 10 = highest)"
-              min={1}
-              max={10}
-              step={1}
-              value={field.value ?? 5}
-              onChange={(val) => field.onChange(Number(val))}
-              error={errors.searchPriority?.message}
-              w={200}
-            />
-          )}
-        />
 
         <Controller
           name="aliases"

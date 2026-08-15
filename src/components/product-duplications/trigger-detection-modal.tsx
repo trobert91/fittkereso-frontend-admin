@@ -41,7 +41,7 @@ export function TriggerDetectionModal({
         const result = await postCategorySearch({
           page: 1,
           pageSize: 100,
-          autoDeduplicationEnabled: true,
+          enabled: true,
         });
         setCategories(result.items || []);
       } catch (err) {
@@ -111,8 +111,7 @@ export function TriggerDetectionModal({
           <Stack gap="md">
             <Text size="sm" c="dimmed">
               Run the duplicate detection pipeline. Optionally select a category
-              to limit the scan. Only categories with auto-deduplication enabled
-              are shown.
+              to limit the scan.
             </Text>
 
             {categoriesLoading ? (

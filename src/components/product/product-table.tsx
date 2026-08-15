@@ -36,7 +36,6 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
 import { LuExternalLink } from "react-icons/lu";
-import { ProductRatingBar } from "@/components/product/product-rating-bar";
 import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
 import { ProductCategory } from "@/models/product-category";
 import { postCategorySearch } from "@/api-actions/category/category-search";
@@ -118,7 +117,7 @@ export function ProductTable({
   );
 
   // TanStack sorting state
-  const [sorting, setSorting] = useState<SortingState>([{ id: "rating", desc: true }]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
 
   const { searchProducts, loading, searchResult, error } = useProductSearch();
   const columnHelper = useMemo(() => createColumnHelper<ProductModel>(), []);
@@ -344,37 +343,6 @@ export function ProductTable({
         ],
       }),
 
-      columnHelper.accessor((row) => row.rating, {
-        id: "rating",
-        header: ({ column }) => (
-          <Text
-            fw={500}
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            style={{ cursor: "pointer" }}
-          >
-            Rating
-          </Text>
-        ),
-        cell: (props) => <ProductRatingBar rating={props.getValue()} />,
-      }),
-
-      columnHelper.accessor((row) => row.rating?.totalReviewCount, {
-        id: "totalReviewCount",
-        header: ({ column }) => (
-          <Text
-            fw={500}
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            style={{ cursor: "pointer" }}
-          >
-            Reviews
-          </Text>
-        ),
-        cell: (props) => {
-          const value = props.getValue();
-          return value != null ? value : "—";
-        },
-      }),
-
       columnHelper.accessor((row) => row, {
         id: "alerts",
         header: () => "",
@@ -570,7 +538,7 @@ export function ProductTable({
             <Table.Tbody>
               {isEmpty(table.getRowModel().rows) ? (
                 <Table.Tr>
-                  <Table.Td colSpan={7}>
+                  <Table.Td colSpan={8}>
                     <Center>No products found</Center>
                   </Table.Td>
                 </Table.Tr>
