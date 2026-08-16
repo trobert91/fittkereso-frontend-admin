@@ -50,6 +50,10 @@ export const routes = {
     list: "/categories/list",
     details: (id: string) => `/categories/${id}`,
   },
+  sellers: {
+    list: "/sellers/list",
+    details: (id: string) => `/sellers/${id}`,
+  },
   tasks: {
     list: "/tasks/list",
   },

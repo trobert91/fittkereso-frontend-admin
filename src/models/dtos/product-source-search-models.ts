@@ -7,6 +7,7 @@ export interface ProductSource {
   id: string;
   name: string;
   type: ProductSourceType;
+  config?: unknown;
   schedulingEnabled: boolean;
   processingEnabled: boolean;
   priority: number;

@@ -1,5 +1,6 @@
 export interface ProductSourceUpdateDto {
   name?: string;
+  config?: unknown;
   schedulingEnabled?: boolean;
   processingEnabled?: boolean;
   priority?: number;

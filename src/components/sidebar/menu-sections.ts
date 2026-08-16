@@ -1,6 +1,6 @@
 import { routes } from "@/utils/routes";
 import { ElementType } from "react";
-import { PiListBullets, PiStarDuotone } from "react-icons/pi";
+import { PiListBullets, PiStarDuotone, PiStorefront } from "react-icons/pi";
 import { TbBuildingFactory2, TbCategory } from "react-icons/tb";
 import { VscTasklist } from "react-icons/vsc";
 
@@ -60,6 +60,11 @@ export const menu: MenuItem[] = [
         name: "Brand List",
         href: routes.brands.list,
         icon: TbBuildingFactory2,
+      },
+      {
+        name: "Seller List",
+        href: routes.sellers.list,
+        icon: PiStorefront,
       },
     ],
   },
