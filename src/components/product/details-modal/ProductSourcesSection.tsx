@@ -13,16 +13,7 @@ import {
 import { format } from "date-fns";
 import { ReactNode } from "react";
 import { FaCheck, FaTimes } from "react-icons/fa";
-import {
-  ProductModelSource,
-  ProductSourceType,
-} from "@/models/product-source";
-
-const SOURCE_TYPE_COLOR: Record<ProductSourceType, string> = {
-  [ProductSourceType.arukereso]: "blue",
-  [ProductSourceType.displaySpecs]: "violet",
-  [ProductSourceType.manual]: "gray",
-};
+import { ProductSourceRecord } from "@/models/product-source";
 
 function formatTimestamp(value: string): string {
   const date = new Date(value);
@@ -30,7 +21,7 @@ function formatTimestamp(value: string): string {
   return format(date, "yyyy-MM-dd HH:mm");
 }
 
-function SpecValidCell({ source }: { source: ProductModelSource }) {
+function SpecValidCell({ source }: { source: ProductSourceRecord }) {
   if (source.specValid == null) {
     return (
       <Text size="xs" c="dimmed">
@@ -114,7 +105,7 @@ function SpecErrorsCell({
 export function ProductSourcesSection({
   sources,
 }: {
-  sources?: ProductModelSource[];
+  sources?: ProductSourceRecord[];
 }) {
   if (!sources || sources.length === 0) {
     return (
@@ -128,7 +119,7 @@ export function ProductSourcesSection({
       <Table striped highlightOnHover withTableBorder withColumnBorders fz="xs">
         <Table.Thead>
           <Table.Tr>
-            <Table.Th>Type</Table.Th>
+            <Table.Th>Supplier</Table.Th>
             <Table.Th>Source name</Table.Th>
             <Table.Th>Normalized</Table.Th>
             <Table.Th>URL</Table.Th>
@@ -146,15 +137,7 @@ export function ProductSourcesSection({
               : 0;
             return (
               <Table.Tr key={source.id}>
-                <Table.Td>
-                  <Badge
-                    color={SOURCE_TYPE_COLOR[source.type] ?? "gray"}
-                    variant="light"
-                    size="sm"
-                  >
-                    {source.type}
-                  </Badge>
-                </Table.Td>
+                <Table.Td>{source.source?.name ?? "Manual"}</Table.Td>
                 <Table.Td>{source.sourceName ?? "—"}</Table.Td>
                 <Table.Td>
                   {source.normalizedSourceName ? (

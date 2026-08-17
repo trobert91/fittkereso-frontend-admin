@@ -152,7 +152,7 @@ function ProductColumn({
           {product.sources.map((source) => (
             <Group key={source.id} gap={4}>
               <Badge size="xs" variant="light">
-                {source.type}
+                {source.source?.name ?? "Manual"}
               </Badge>
               {source.url && (
                 <Anchor href={source.url} target="_blank" size="xs" truncate>

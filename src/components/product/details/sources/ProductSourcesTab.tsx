@@ -1,17 +1,10 @@
 "use client";
 
 import { Anchor, Badge, CopyButton, Group, Table, Text, Tooltip } from "@mantine/core";
-import { ProductSourceType } from "@/models/product-source";
 import { selectProduct } from "@/store/slices/product-slice";
 import { useAppSelector } from "@/store/store-hooks";
 import { DeleteSourceButton } from "./DeleteSourceButton";
 import { ResyncSourceButton } from "./ResyncSourceButton";
-
-const sourceTypeColorMap: Record<ProductSourceType, string> = {
-  [ProductSourceType.arukereso]: "blue",
-  [ProductSourceType.displaySpecs]: "violet",
-  [ProductSourceType.manual]: "gray",
-};
 
 const formatDateTime = (value?: string): string => {
   if (!value) {
@@ -44,7 +37,7 @@ export function ProductSourcesTab() {
       <Table.Thead>
         <Table.Tr>
           <Table.Th>ID</Table.Th>
-          <Table.Th>Type</Table.Th>
+          <Table.Th>Supplier</Table.Th>
           <Table.Th>URL</Table.Th>
           <Table.Th>Spec Valid</Table.Th>
           <Table.Th>Spec Errors</Table.Th>
@@ -58,8 +51,7 @@ export function ProductSourcesTab() {
 
       <Table.Tbody>
         {sources.map((source) => {
-          const canResync =
-            source.type !== ProductSourceType.manual && Boolean(source.url);
+          const canResync = Boolean(source.source) && Boolean(source.url);
 
           return (
             <Table.Tr key={source.id}>
@@ -81,9 +73,11 @@ export function ProductSourcesTab() {
               </Table.Td>
 
               <Table.Td>
-                <Badge color={sourceTypeColorMap[source.type]}>
-                  {source.type}
-                </Badge>
+                {source.source ? (
+                  <Text size="sm">{source.source.name}</Text>
+                ) : (
+                  <Text c="dimmed">Manual</Text>
+                )}
               </Table.Td>
 
               <Table.Td>
@@ -155,7 +149,7 @@ export function ProductSourcesTab() {
                   {canResync && source.url ? (
                     <ResyncSourceButton
                       productId={product.id}
-                      productModelSourceId={source.id}
+                      sourceRecordId={source.id}
                       sourceUrl={source.url}
                     />
                   ) : null}

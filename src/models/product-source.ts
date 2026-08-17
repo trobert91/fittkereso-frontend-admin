@@ -6,15 +6,17 @@ export enum ProductSourceType {
   manual = "manual",
 }
 
-export interface ProductModelSource {
+export interface ProductSourceRecord {
   id: string;
-  type: ProductSourceType;
   url?: string;
   specs: ProductSpecs;
   specValid?: boolean;
   specErrors?: Record<string, any>;
   lastUpdated: string;
   deduplicated: boolean;
+  // The scraped listing's own display name (used for dedup matching) — NOT the supplier name.
   sourceName?: string;
   normalizedSourceName?: string;
+  // The linked supplier/source config, e.g. "ebikeshop". Null for manual (admin-entered) specs.
+  source?: { id: string; name: string } | null;
 }

@@ -3,7 +3,7 @@ import { Brand } from "./brand";
 import { ProductAlias } from "./product-alias";
 import { ProductCategory } from "./product-category";
 import { ProductImage } from "./product-image";
-import { ProductModelSource } from "./product-source";
+import { ProductSourceRecord } from "./product-source";
 import { OrderedSpec, ProductSpecs } from "./product-specs";
 import { ProductRating } from "./rating-types";
 import { ScrapeTask } from "./dtos/scrape-task-search-models";
@@ -34,7 +34,7 @@ export interface ProductModel extends BaseEntity {
   ratingLastUpdated?: string | null; // adminList
 
   // Admin only:
-  sources?: ProductModelSource[];
+  sources?: ProductSourceRecord[];
   aliases?: ProductAlias[];
   scrapeTasks?: ScrapeTask[];
 }

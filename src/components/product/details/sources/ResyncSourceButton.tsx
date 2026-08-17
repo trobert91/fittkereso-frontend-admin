@@ -7,13 +7,13 @@ import { resyncProductSource } from "@/api-actions/product/product-actions";
 
 interface ResyncSourceButtonProps {
   productId: string;
-  productModelSourceId: string;
+  sourceRecordId: string;
   sourceUrl: string;
 }
 
 export function ResyncSourceButton({
   productId,
-  productModelSourceId,
+  sourceRecordId,
   sourceUrl,
 }: ResyncSourceButtonProps) {
   const [opened, setOpened] = useState(false);
@@ -23,7 +23,7 @@ export function ResyncSourceButton({
     setLoading(true);
 
     try {
-      await resyncProductSource(productId, productModelSourceId);
+      await resyncProductSource(productId, sourceRecordId);
 
       notifications.show({
         title: "Success",

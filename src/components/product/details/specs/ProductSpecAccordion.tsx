@@ -1,4 +1,3 @@
-import { ProductSourceType } from "@/models/product-source";
 import { SpecDefinitionJsonSchema } from "@/models/product-specs";
 import { Accordion, Alert, Anchor, useMantineColorScheme } from "@mantine/core";
 import JsonView from "@uiw/react-json-view";
@@ -37,15 +36,17 @@ export const ProductSpecAccordion: React.FC<{
       return undefined;
     }
 
-    return [first.type];
+    return [first.source?.name ?? "Unknown source"];
   }, [sources]);
 
   const filteredSources = useMemo(() => {
-    return sources.filter((s) => s.type !== ProductSourceType.manual);
+    // Manual (admin-entered) specs have no linked source — see
+    // product-spec-updater.service.ts on the backend.
+    return sources.filter((s) => s.source);
   }, [sources]);
 
   const groupedSources = useMemo(() => {
-    return groupBy(filteredSources, (s) => s.type);
+    return groupBy(filteredSources, (s) => s.source?.name ?? "Unknown source");
   }, [filteredSources]);
 
   const handleJsonChange = useCallback(
@@ -96,11 +97,11 @@ export const ProductSpecAccordion: React.FC<{
         </Accordion.Item>
       )}
 
-      {Object.entries(groupedSources).map(([type, entries]) => {
+      {Object.entries(groupedSources).map(([sourceName, entries]) => {
         const latest = maxBy(entries, (e) => e.lastUpdated)!;
         return (
-          <Accordion.Item key={type} value={type}>
-            <Accordion.Control>{type}</Accordion.Control>
+          <Accordion.Item key={sourceName} value={sourceName}>
+            <Accordion.Control>{sourceName}</Accordion.Control>
             <Accordion.Panel>
               {entries
                 .filter((e) => e.url)

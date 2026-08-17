@@ -10,7 +10,6 @@ import debounce from "lodash/debounce";
 import { RegistryWidgetsType } from "@rjsf/utils";
 import { CustomNumberInput } from "./CustomNumberInput";
 import { CustomTextInput } from "./CustomTextInput";
-import { ProductSourceType } from "@/models/product-source";
 import {
   selectManualSpecs,
   selectProduct,
@@ -113,8 +112,7 @@ export const ProductSpecForm: React.FC<{
 
   useEffect(() => {
     const manual =
-      product?.sources?.find((s) => s.type === ProductSourceType.manual)
-        ?.specs || {};
+      product?.sources?.find((s) => !s.source)?.specs || {};
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormAndManualSpecs(manual);

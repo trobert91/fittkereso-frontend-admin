@@ -52,12 +52,12 @@ export async function deleteProductSource(
 
 export async function resyncProductSource(
   productId: string,
-  productModelSourceId: string,
+  sourceRecordId: string,
 ): Promise<QueueStatusResult> {
   try {
     const response = await axiosInstance.post<QueueStatusResult>(
       `/admin-product/${productId}/resync-source`,
-      { productModelSourceId },
+      { sourceRecordId },
     );
 
     return response.data;
