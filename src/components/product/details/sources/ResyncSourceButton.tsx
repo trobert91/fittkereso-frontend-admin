@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Group, Modal, Stack, Text } from "@mantine/core";
+import { Button, Checkbox, Group, Modal, Stack, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { resyncProductSource } from "@/api-actions/product/product-actions";
 
@@ -18,12 +18,13 @@ export function ResyncSourceButton({
 }: ResyncSourceButtonProps) {
   const [opened, setOpened] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [force, setForce] = useState(false);
 
   const onConfirm = async () => {
     setLoading(true);
 
     try {
-      await resyncProductSource(productId, sourceRecordId);
+      await resyncProductSource(productId, sourceRecordId, force);
 
       notifications.show({
         title: "Success",
@@ -60,6 +61,12 @@ export function ResyncSourceButton({
           <Text c="dimmed" size="sm" style={{ wordBreak: "break-all" }}>
             {sourceUrl}
           </Text>
+
+          <Checkbox
+            checked={force}
+            onChange={(event) => setForce(event.currentTarget.checked)}
+            label="Force resync (ignore unchanged specs and always re-run LLM unification)"
+          />
 
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setOpened(false)}>

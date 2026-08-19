@@ -1,3 +1,4 @@
+import { Offer } from "./offer";
 import { ProductSpecs } from "./product-specs";
 
 export enum ProductSourceType {
@@ -9,6 +10,7 @@ export enum ProductSourceType {
 export interface ProductSourceRecord {
   id: string;
   url?: string;
+  externalId?: string;
   specs: ProductSpecs;
   specValid?: boolean;
   specErrors?: Record<string, any>;
@@ -19,4 +21,5 @@ export interface ProductSourceRecord {
   normalizedSourceName?: string;
   // The linked supplier/source config, e.g. "ebikeshop". Null for manual (admin-entered) specs.
   source?: { id: string; name: string } | null;
+  offers?: Offer[];
 }

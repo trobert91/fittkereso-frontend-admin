@@ -122,6 +122,7 @@ export function ProductSourcesSection({
             <Table.Th>Supplier</Table.Th>
             <Table.Th>Source name</Table.Th>
             <Table.Th>Normalized</Table.Th>
+            <Table.Th>External ID</Table.Th>
             <Table.Th>URL</Table.Th>
             <Table.Th>Spec valid</Table.Th>
             <Table.Th>Spec errors</Table.Th>
@@ -142,6 +143,13 @@ export function ProductSourcesSection({
                 <Table.Td>
                   {source.normalizedSourceName ? (
                     <Code>{source.normalizedSourceName}</Code>
+                  ) : (
+                    "—"
+                  )}
+                </Table.Td>
+                <Table.Td>
+                  {source.externalId ? (
+                    <Code>{source.externalId}</Code>
                   ) : (
                     "—"
                   )}
