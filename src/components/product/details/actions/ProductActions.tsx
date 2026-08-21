@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { selectProduct } from "@/store/slices/product-slice";
 import { useState } from "react";
 import { MergeProductAction } from "./MergeProductAction";
+import { MergeSourcesAction } from "./MergeSourcesAction";
 import { QueueReviewAnalysisAction } from "./QueueReviewAnalysisAction";
 import { RecalculateRatingAction } from "./RecalculateRatingAction";
 
@@ -38,6 +39,7 @@ export const ProductActions = () => {
           <RecalculateRatingAction productId={product.id} />
           <QueueReviewAnalysisAction productId={product.id} />
           <MergeProductAction sourceProduct={product} />
+          <MergeSourcesAction productId={product.id} />
         </Stack>
       </Drawer>
     </>

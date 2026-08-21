@@ -21,6 +21,21 @@ export async function recalculateProductRating(
   }
 }
 
+export async function mergeProductSources(
+  productId: string,
+): Promise<ProductModel> {
+  try {
+    const response = await axiosInstance.post<ProductModel>(
+      `/admin-product/${productId}/merge-sources`,
+    );
+    return response.data;
+  } catch (error: AxiosError | any) {
+    throw new Error(
+      error?.response?.data?.message || "Merging product sources failed",
+    );
+  }
+}
+
 export async function queueProductReviewAnalysis(
   productId: string,
 ): Promise<QueueStatusResult> {
