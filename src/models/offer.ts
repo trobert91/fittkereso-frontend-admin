@@ -27,6 +27,7 @@ export interface Offer extends BaseEntity {
   seller: OfferSeller;
   condition: OfferCondition;
   price: number;
+  priceWithoutDiscount?: number;
   currency: string;
   url?: string;
   availability: OfferAvailability;

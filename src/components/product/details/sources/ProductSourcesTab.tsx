@@ -93,6 +93,11 @@ function OfferCard({ offer }: { offer: Offer }) {
           <Text fw={700} size="lg">
             {formatPrice(offer.price, offer.currency)}
           </Text>
+          {offer.priceWithoutDiscount != null && (
+            <Text size="sm" c="dimmed" td="line-through">
+              {formatPrice(offer.priceWithoutDiscount, offer.currency)}
+            </Text>
+          )}
           <Badge variant="light" size="sm">
             {conditionLabel[offer.condition]}
           </Badge>
@@ -182,7 +187,7 @@ export function ProductSourcesTab() {
   }
 
   return (
-    <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
+    <SimpleGrid cols={1} spacing="md">
       {sources.map((source) => {
         const canResync = Boolean(source.source) && Boolean(source.url);
 
