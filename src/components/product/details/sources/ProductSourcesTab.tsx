@@ -2,17 +2,17 @@
 
 import {
   Anchor,
+  Avatar,
   Badge,
+  Button,
   Card,
   CopyButton,
   Divider,
   Group,
-  SimpleGrid,
   Stack,
   Text,
   Tooltip,
 } from "@mantine/core";
-import { ReactNode } from "react";
 import { selectProduct } from "@/store/slices/product-slice";
 import { useAppSelector } from "@/store/store-hooks";
 import { Offer, OfferAvailability, OfferCondition } from "@/models/offer";
@@ -64,112 +64,136 @@ const conditionLabel: Record<OfferCondition, string> = {
   [OfferCondition.refurbished]: "Refurbished",
 };
 
-function OfferCard({ offer }: { offer: Offer }) {
+function OfferSpecsInline({ offer }: { offer: Offer }) {
+  const entries = Object.entries(offer.specs ?? {}).filter(
+    ([, value]) => value !== undefined && value !== null && value !== ""
+  );
+
+  if (!entries.length) {
+    return null;
+  }
+
   return (
-    <Card key={offer.id} withBorder radius="sm" padding="sm" bg="var(--mantine-color-default-hover)">
-      <Stack gap="xs">
-        <Group justify="space-between" align="flex-start">
-          <Group gap="xs">
-            <Text fw={600} size="sm">
-              {offer.seller.name}
-            </Text>
-            {offer.seller.verified && (
-              <Badge color="blue" variant="light" size="sm">
-                Verified
-              </Badge>
-            )}
-            {!offer.active && (
-              <Badge color="gray" variant="outline" size="sm">
-                Inactive
-              </Badge>
-            )}
-          </Group>
-          <Badge color={availabilityColor[offer.availability]} size="sm">
-            {availabilityLabel[offer.availability]}
-          </Badge>
-        </Group>
-
-        <Group gap="xs" align="baseline">
-          <Text fw={700} size="lg">
-            {formatPrice(offer.price, offer.currency)}
-          </Text>
-          {offer.priceWithoutDiscount != null && (
-            <Text size="sm" c="dimmed" td="line-through">
-              {formatPrice(offer.priceWithoutDiscount, offer.currency)}
-            </Text>
-          )}
-          <Badge variant="light" size="sm">
-            {conditionLabel[offer.condition]}
-          </Badge>
-        </Group>
-
-        {offer.seller.location && (
-          <Text size="xs" c="dimmed">
-            {offer.seller.location}
-          </Text>
-        )}
-
-        {offer.url && (
-          <Anchor
-            href={offer.url}
-            target="_blank"
-            rel="noreferrer"
-            size="sm"
-            style={{ wordBreak: "break-all" }}
-          >
-            {offer.url}
-          </Anchor>
-        )}
-
-        <SimpleGrid cols={2} spacing="sm">
-          {offer.condition === OfferCondition.used && (
-            <>
-              {offer.mileageKm != null && (
-                <SourceField label="Mileage">
-                  <Text size="sm">{offer.mileageKm} km</Text>
-                </SourceField>
-              )}
-              {offer.batteryHealthPercent != null && (
-                <SourceField label="Battery health">
-                  <Text size="sm">{offer.batteryHealthPercent}%</Text>
-                </SourceField>
-              )}
-              {offer.purchaseDate && (
-                <SourceField label="Purchase date">
-                  <Text size="sm">{offer.purchaseDate}</Text>
-                </SourceField>
-              )}
-            </>
-          )}
-          <SourceField label="Last seen">
-            <Text size="sm">{formatDateTime(offer.lastSeenAt)}</Text>
-          </SourceField>
-        </SimpleGrid>
-
-        {offer.usedConditionNotes && (
-          <Text size="xs" c="dimmed">
-            {offer.usedConditionNotes}
-          </Text>
-        )}
-      </Stack>
-    </Card>
+    <Group gap={6}>
+      {entries.map(([key, value]) => (
+        <Badge key={key} variant="light" color="gray" size="xs" tt="none">
+          {key}: {Array.isArray(value) ? value.join(", ") : String(value)}
+        </Badge>
+      ))}
+    </Group>
   );
 }
 
-function SourceField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+// Row-based price-comparison layout, one row per seller offer — mirrors the
+// public árukereső-style shop-list UI (seller | meta | price + CTA) so
+// admins can sanity-check a source's offers against what shoppers see.
+function OfferRow({ offer }: { offer: Offer }) {
+  const usedDetails = [
+    offer.mileageKm != null ? `${offer.mileageKm} km` : null,
+    offer.batteryHealthPercent != null
+      ? `${offer.batteryHealthPercent}% battery`
+      : null,
+    offer.purchaseDate ? `purchased ${offer.purchaseDate}` : null,
+  ].filter(Boolean);
+
   return (
-    <Stack gap={2}>
-      <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-        {label}
-      </Text>
-      {children}
-    </Stack>
+    <Card
+      withBorder
+      radius="sm"
+      padding="sm"
+      bg="var(--mantine-color-body)"
+      style={{ opacity: offer.active ? 1 : 0.6 }}
+    >
+      <Group justify="space-between" align="center" wrap="nowrap" gap="md">
+        <Group gap="sm" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
+          <Avatar radius="sm" size="md" color="initials">
+            {offer.seller.name.slice(0, 2).toUpperCase()}
+          </Avatar>
+
+          <Stack gap={2} style={{ minWidth: 0 }}>
+            <Group gap={6} wrap="wrap">
+              <Text fw={600} size="sm">
+                {offer.seller.name}
+              </Text>
+              {offer.seller.verified && (
+                <Badge color="blue" variant="light" size="xs">
+                  Verified
+                </Badge>
+              )}
+              <Badge
+                color={availabilityColor[offer.availability]}
+                variant="light"
+                size="xs"
+              >
+                {availabilityLabel[offer.availability]}
+              </Badge>
+              <Badge variant="outline" color="gray" size="xs">
+                {conditionLabel[offer.condition]}
+              </Badge>
+              {!offer.active && (
+                <Badge color="gray" variant="filled" size="xs">
+                  Inactive
+                </Badge>
+              )}
+            </Group>
+
+            {offer.seller.location && (
+              <Text size="xs" c="dimmed">
+                {offer.seller.location}
+              </Text>
+            )}
+
+            {usedDetails.length > 0 && (
+              <Text size="xs" c="dimmed">
+                {usedDetails.join(" · ")}
+              </Text>
+            )}
+
+            <OfferSpecsInline offer={offer} />
+
+            {offer.usedConditionNotes && (
+              <Text size="xs" c="dimmed" lineClamp={1}>
+                {offer.usedConditionNotes}
+              </Text>
+            )}
+
+            <Text size="xs" c="dimmed">
+              Last seen {formatDateTime(offer.lastSeenAt)}
+            </Text>
+          </Stack>
+        </Group>
+
+        <Stack gap={4} align="flex-end" style={{ flexShrink: 0 }}>
+          <Group gap={8} align="baseline" wrap="nowrap">
+            {offer.priceWithoutDiscount != null && (
+              <Text size="xs" c="dimmed" td="line-through">
+                {formatPrice(offer.priceWithoutDiscount, offer.currency)}
+              </Text>
+            )}
+            <Text fw={700} size="lg" style={{ whiteSpace: "nowrap" }}>
+              {formatPrice(offer.price, offer.currency)}
+            </Text>
+          </Group>
+
+          {offer.url ? (
+            <Button
+              component="a"
+              href={offer.url}
+              target="_blank"
+              rel="noreferrer"
+              size="xs"
+              variant="filled"
+            >
+              View offer »
+            </Button>
+          ) : (
+            <Button size="xs" variant="filled" disabled>
+              No link
+            </Button>
+          )}
+        </Stack>
+      </Group>
+    </Card>
   );
 }
 
@@ -187,31 +211,106 @@ export function ProductSourcesTab() {
   }
 
   return (
-    <SimpleGrid cols={1} spacing="md">
+    <Stack gap="md">
       {sources.map((source) => {
         const canResync = Boolean(source.source) && Boolean(source.url);
+        const scraped = source.scrapedProduct;
+        const errorCount = source.specErrors
+          ? Object.keys(source.specErrors).length
+          : 0;
 
         return (
           <Card key={source.id} withBorder radius="md" padding="md">
             <Stack gap="sm">
-              <Group justify="space-between" align="flex-start">
-                <Group gap="xs">
-                  {source.source ? (
-                    <Text fw={600}>{source.source.name}</Text>
-                  ) : (
-                    <Text fw={600} c="dimmed">
-                      Manual
+              {/* Identity strip — mirrors the shop/product header of a price-comparison row */}
+              <Group justify="space-between" align="flex-start" wrap="nowrap">
+                <Stack gap={2} style={{ minWidth: 0 }}>
+                  <Group gap={8} wrap="wrap">
+                    {source.source ? (
+                      <Text fw={700} size="sm">
+                        {source.source.name}
+                      </Text>
+                    ) : (
+                      <Text fw={700} size="sm" c="dimmed">
+                        Manual entry
+                      </Text>
+                    )}
+                    <Badge
+                      color={source.specValid ? "green" : "red"}
+                      variant="light"
+                      size="sm"
+                    >
+                      {source.specValid ? "Valid" : "Invalid"}
+                    </Badge>
+                    {source.deduplicated && (
+                      <Badge color="orange" variant="light" size="sm">
+                        Deduplicated
+                      </Badge>
+                    )}
+                    {errorCount > 0 && (
+                      <Tooltip
+                        label={
+                          <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
+                            {JSON.stringify(source.specErrors, null, 2)}
+                          </pre>
+                        }
+                        multiline
+                        w={400}
+                        withArrow
+                      >
+                        <Badge
+                          color="red"
+                          variant="light"
+                          size="sm"
+                          style={{ cursor: "pointer" }}
+                        >
+                          {errorCount} spec error{errorCount === 1 ? "" : "s"}
+                        </Badge>
+                      </Tooltip>
+                    )}
+                  </Group>
+
+                  {scraped?.displayName && (
+                    <Text size="md" fw={600} lineClamp={1}>
+                      {source.url ? (
+                        <Anchor
+                          href={source.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          underline="hover"
+                          c="inherit"
+                        >
+                          {scraped.displayName}
+                        </Anchor>
+                      ) : (
+                        scraped.displayName
+                      )}
                     </Text>
                   )}
-                  <Badge color={source.specValid ? "green" : "red"} size="sm">
-                    {source.specValid ? "Valid" : "Invalid"}
-                  </Badge>
-                  {source.deduplicated && (
-                    <Badge color="orange" variant="light" size="sm">
-                      Deduplicated
-                    </Badge>
-                  )}
-                </Group>
+
+                  <Group gap={12} wrap="wrap">
+                    {(scraped?.brand || scraped?.model) && (
+                      <Text size="xs" c="dimmed">
+                        {[scraped?.brand, scraped?.model]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </Text>
+                    )}
+                    {scraped?.releaseYear && (
+                      <Text size="xs" c="dimmed">
+                        Released {scraped.releaseYear}
+                      </Text>
+                    )}
+                    {source.externalId && (
+                      <Text size="xs" c="dimmed">
+                        SKU {source.externalId}
+                      </Text>
+                    )}
+                    <Text size="xs" c="dimmed">
+                      Updated {formatDateTime(source.lastUpdated)}
+                    </Text>
+                  </Group>
+                </Stack>
 
                 <CopyButton value={source.id}>
                   {({ copied, copy }) => (
@@ -219,7 +318,7 @@ export function ProductSourcesTab() {
                       <Badge
                         color={copied ? "green" : "gray"}
                         variant="outline"
-                        style={{ cursor: "pointer" }}
+                        style={{ cursor: "pointer", flexShrink: 0 }}
                         onClick={copy}
                       >
                         {source.id.slice(0, 8)}…
@@ -229,66 +328,12 @@ export function ProductSourcesTab() {
                 </CopyButton>
               </Group>
 
-              {source.url && (
-                <Anchor
-                  href={source.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  size="sm"
-                  style={{ wordBreak: "break-all" }}
-                >
-                  {source.url}
-                </Anchor>
-              )}
-
-              {source.specErrors && Object.keys(source.specErrors).length ? (
-                <Tooltip
-                  label={
-                    <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
-                      {JSON.stringify(source.specErrors, null, 2)}
-                    </pre>
-                  }
-                  multiline
-                  w={400}
-                  withArrow
-                >
-                  <Badge
-                    color="red"
-                    variant="light"
-                    style={{ cursor: "pointer", alignSelf: "flex-start" }}
-                  >
-                    {Object.keys(source.specErrors).length} spec error
-                    {Object.keys(source.specErrors).length === 1 ? "" : "s"}
-                  </Badge>
-                </Tooltip>
-              ) : null}
-
-              <Divider />
-
-              <SimpleGrid cols={2} spacing="sm">
-                <SourceField label="External ID">
-                  <Text size="sm">{source.externalId ?? "—"}</Text>
-                </SourceField>
-
-                <SourceField label="Source name">
-                  <Text size="sm">{source.sourceName ?? "—"}</Text>
-                </SourceField>
-
-                <SourceField label="Normalized source name">
-                  <Text size="sm">{source.normalizedSourceName ?? "—"}</Text>
-                </SourceField>
-
-                <SourceField label="Last updated">
-                  <Text size="sm">{formatDateTime(source.lastUpdated)}</Text>
-                </SourceField>
-              </SimpleGrid>
-
               {source.offers && source.offers.length > 0 && (
                 <>
                   <Divider label="Offers" labelPosition="left" />
                   <Stack gap="xs">
                     {source.offers.map((offer) => (
-                      <OfferCard key={offer.id} offer={offer} />
+                      <OfferRow key={offer.id} offer={offer} />
                     ))}
                   </Stack>
                 </>
@@ -310,6 +355,6 @@ export function ProductSourcesTab() {
           </Card>
         );
       })}
-    </SimpleGrid>
+    </Stack>
   );
 }

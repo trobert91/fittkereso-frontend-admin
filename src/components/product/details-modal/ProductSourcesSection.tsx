@@ -120,7 +120,9 @@ export function ProductSourcesSection({
         <Table.Thead>
           <Table.Tr>
             <Table.Th>Supplier</Table.Th>
-            <Table.Th>Source name</Table.Th>
+            <Table.Th>Display name</Table.Th>
+            <Table.Th>Brand / model</Table.Th>
+            <Table.Th>Release year</Table.Th>
             <Table.Th>Normalized</Table.Th>
             <Table.Th>External ID</Table.Th>
             <Table.Th>URL</Table.Th>
@@ -138,7 +140,12 @@ export function ProductSourcesSection({
             return (
               <Table.Tr key={source.id}>
                 <Table.Td>{source.source?.name ?? "Manual"}</Table.Td>
-                <Table.Td>{source.sourceName ?? "—"}</Table.Td>
+                <Table.Td>{source.scrapedProduct?.displayName ?? "—"}</Table.Td>
+                <Table.Td>
+                  {source.scrapedProduct?.brand ?? "—"} /{" "}
+                  {source.scrapedProduct?.model ?? "—"}
+                </Table.Td>
+                <Table.Td>{source.scrapedProduct?.releaseYear ?? "—"}</Table.Td>
                 <Table.Td>
                   {source.normalizedSourceName ? (
                     <Code>{source.normalizedSourceName}</Code>

@@ -13,6 +13,7 @@ import { CustomTextInput } from "./CustomTextInput";
 import {
   selectManualSpecs,
   selectProduct,
+  selectProductError,
   selectProductSaveInProgress,
   setManualSpecs,
   updateProductManualSpecs,
@@ -70,6 +71,7 @@ export const ProductSpecForm: React.FC<{
   const product = useSelector(selectProduct);
   const manualSpecs = useSelector(selectManualSpecs);
   const saveInProgress = useSelector(selectProductSaveInProgress);
+  const error = useSelector(selectProductError);
   const [formData, setFormData] = React.useState<Record<string, any>>({});
 
   const defaultValues = useMemo(
@@ -126,22 +128,37 @@ export const ProductSpecForm: React.FC<{
     const id = product?.id;
     if (!id) return;
 
-    await dispatch(
-      updateProductManualSpecs({
-        id,
-        data: {
-          specs: formData,
-        },
-      })
-    ).unwrap();
+    try {
+      await dispatch(
+        updateProductManualSpecs({
+          id,
+          data: {
+            specs: formData,
+          },
+        })
+      ).unwrap();
 
-    notifications.show({
-      title: "Success",
-      message: "Product specifications updated successfully.",
-      color: "green",
-      position: "top-right",
-    });
+      notifications.show({
+        title: "Success",
+        message: "Product specifications updated successfully.",
+        color: "green",
+        position: "top-right",
+      });
+    } catch {
+      // Error is surfaced via the selectProductError effect below.
+    }
   }, [dispatch, product?.id, formData]);
+
+  useEffect(() => {
+    if (error) {
+      notifications.show({
+        title: "Error",
+        message: error,
+        color: "red",
+        position: "top-right",
+      });
+    }
+  }, [error]);
 
   if (!manualSpecs) {
     return <LoadingOverlay visible />;

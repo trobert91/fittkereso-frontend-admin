@@ -81,7 +81,9 @@ export const updateProductManualSpecs = createAsyncThunk<
   try {
     return await postProductSpecUpdate(id, data);
   } catch (err: any) {
-    return thunkApi.rejectWithValue("Failed to update manual specs");
+    return thunkApi.rejectWithValue(
+      err?.message || "Failed to update manual specs"
+    );
   }
 });
 
