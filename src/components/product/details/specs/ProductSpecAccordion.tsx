@@ -129,12 +129,14 @@ export const ProductSpecAccordion: React.FC<{
                 </Alert>
               )}
 
-              <JsonView
-                value={latest.specs}
-                collapsed={false}
-                style={themeStyle}
-                objectSortKeys={true}
-              />
+              {latest.scrapedProduct?.specs && (
+                <JsonView
+                  value={latest.scrapedProduct.specs}
+                  collapsed={false}
+                  style={themeStyle}
+                  objectSortKeys={true}
+                />
+              )}
             </Accordion.Panel>
           </Accordion.Item>
         );

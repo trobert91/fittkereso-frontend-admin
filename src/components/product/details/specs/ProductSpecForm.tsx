@@ -112,7 +112,7 @@ export const ProductSpecForm: React.FC<{
 
   useEffect(() => {
     const manual =
-      product?.sources?.find((s) => !s.source)?.specs || {};
+      product?.sources?.find((s) => !s.source)?.scrapedProduct?.specs || {};
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormAndManualSpecs(manual);

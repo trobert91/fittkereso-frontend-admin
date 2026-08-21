@@ -133,9 +133,8 @@ export function ProductSourcesSection({
         </Table.Thead>
         <Table.Tbody>
           {sources.map((source) => {
-            const specCount = source.specs
-              ? Object.keys(source.specs).length
-              : 0;
+            const specs = source.scrapedProduct?.specs;
+            const specCount = specs ? Object.keys(specs).length : 0;
             return (
               <Table.Tr key={source.id}>
                 <Table.Td>{source.source?.name ?? "Manual"}</Table.Td>
@@ -185,7 +184,7 @@ export function ProductSourcesSection({
                 <Table.Td>
                   {specCount > 0 ? (
                     <JsonPopover
-                      data={source.specs}
+                      data={specs}
                       trigger={
                         <Button variant="light" color="gray" size="compact-xs">
                           {specCount}

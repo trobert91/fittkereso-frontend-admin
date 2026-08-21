@@ -113,7 +113,8 @@ export const CustomSelectInput = function (props: WidgetProps) {
   }, [schema?.meta?.unit]);
 
   const options = useMemo(() => {
-    return ((schema.items as any)?.enum ?? []).map((opt: any) => ({
+    const enumValues = schema.enum ?? (schema.items as any)?.enum ?? [];
+    return enumValues.map((opt: any) => ({
       value: opt,
       label: opt,
     }));

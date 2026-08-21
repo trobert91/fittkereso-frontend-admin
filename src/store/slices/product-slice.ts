@@ -232,7 +232,8 @@ export const productSlice = createSlice({
 
         const product = action.payload;
         const manualSpecs =
-          product.sources?.find((s) => !s.source)?.specs ?? null;
+          product.sources?.find((s) => !s.source)?.scrapedProduct?.specs ??
+          null;
 
         state.product = product;
         state.manualSpecs = manualSpecs;

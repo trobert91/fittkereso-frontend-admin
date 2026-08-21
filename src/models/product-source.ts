@@ -11,7 +11,10 @@ export interface ProductSourceRecord {
   id: string;
   url?: string;
   externalId?: string;
-  specs: ProductSpecs;
+  // The full scraped payload this record was built from — specs live at
+  // scrapedProduct.specs, not as a separate top-level field. See
+  // ProductSourceRecord.scrapedProduct on the backend entity.
+  scrapedProduct?: { specs?: ProductSpecs };
   specValid?: boolean;
   specErrors?: Record<string, any>;
   lastUpdated: string;

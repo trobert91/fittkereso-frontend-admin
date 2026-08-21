@@ -18,7 +18,6 @@ export interface SpecDefinitionMeta {
   unit?: string;
   order?: number;
   examples?: string[];
-  options?: string[];
   useForExtraction?: boolean;
 }
 
@@ -26,6 +25,8 @@ export interface SpecDefinitionProperty {
   type: "string" | "number" | "boolean" | "array" | "object";
   title: string;
   meta?: SpecDefinitionMeta;
+  /** Closed set of allowed values for a categorical string field. */
+  enum?: string[];
 }
 
 export interface SpecDefinitionJsonSchema {
