@@ -7,6 +7,15 @@ export enum ProductSourceType {
   manual = "manual",
 }
 
+// A single raw label/value row exactly as scraped, before deterministic
+// mapping to canonical field names — see ScrapedProductSpec on the backend.
+export interface ScrapedProductSpec {
+  name: string;
+  sectionTitle?: string;
+  description?: string;
+  values?: string[];
+}
+
 export interface ProductSourceRecord {
   id: string;
   url?: string;
@@ -21,6 +30,7 @@ export interface ProductSourceRecord {
     displayName?: string;
     releaseYear?: number;
     specs?: ProductSpecs;
+    rawSpecs?: ScrapedProductSpec[];
   };
   specValid?: boolean;
   specErrors?: Record<string, any>;

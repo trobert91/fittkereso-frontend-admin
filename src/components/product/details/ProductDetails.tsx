@@ -2,7 +2,7 @@
 
 import { Alert, Stack, Tabs } from "@mantine/core";
 import { GrGallery } from "react-icons/gr";
-import { FaDatabase, FaEdit, FaList, FaStar, FaTable, FaTags, FaTasks } from "react-icons/fa";
+import { FaDatabase, FaEdit, FaList, FaTable, FaTags, FaTasks } from "react-icons/fa";
 import { useAppSelector } from "@/store/store-hooks";
 import {
   selectProduct,
@@ -17,7 +17,6 @@ import { IoMdAlert } from "react-icons/io";
 import { ProductSourcesTab } from "./sources/ProductSourcesTab";
 import { ProductScrapeTasksTab } from "./scrape-tasks/ProductScrapeTasksTab";
 import { ProductAliasesTab } from "./aliases/ProductAliasesTab";
-import { ProductRatingTab } from "./rating/ProductRatingTab";
 
 export const ProductDetails = () => {
   const product = useAppSelector(selectProduct);
@@ -55,9 +54,6 @@ export const ProductDetails = () => {
           <Tabs.Tab value="specsEdit" leftSection={<FaEdit size={12} />}>
             Edit specs
           </Tabs.Tab>
-          <Tabs.Tab value="rating" leftSection={<FaStar size={12} />}>
-            Rating
-          </Tabs.Tab>
           <Tabs.Tab value="sources" leftSection={<FaDatabase size={12} />}>
             Sources
           </Tabs.Tab>
@@ -83,10 +79,6 @@ export const ProductDetails = () => {
 
         <Tabs.Panel value="specsEdit" pt="lg">
           <ProductSpecEditor product={product} />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="rating" pt="lg">
-          <ProductRatingTab />
         </Tabs.Panel>
 
         <Tabs.Panel value="sources" pt="lg">

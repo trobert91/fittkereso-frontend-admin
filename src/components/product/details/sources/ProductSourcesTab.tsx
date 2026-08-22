@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Accordion,
   Anchor,
   Avatar,
   Badge,
@@ -16,6 +17,9 @@ import {
 import { selectProduct } from "@/store/slices/product-slice";
 import { useAppSelector } from "@/store/store-hooks";
 import { Offer, OfferAvailability, OfferCondition } from "@/models/offer";
+import { ScrapedProductSpec } from "@/models/product-source";
+import { OrderedSpec, ProductSpecs } from "@/models/product-specs";
+import { AdminSpecTable } from "../specs/AdminSpecTable";
 import { DeleteSourceButton } from "./DeleteSourceButton";
 import { ResyncSourceButton } from "./ResyncSourceButton";
 
@@ -197,6 +201,59 @@ function OfferRow({ offer }: { offer: Offer }) {
   );
 }
 
+// Reshapes a source's raw specs/specs into AdminSpecTable's input shape so
+// the "Specs"/"Raw specs" accordion panels below render with the exact same
+// component (and visual language) as the "Specifications" tab.
+function toOrderedSpecs(specs?: ProductSpecs): OrderedSpec[] {
+  return Object.entries(specs ?? {})
+    .filter(([, value]) => value !== undefined && value !== null && value !== "")
+    .map(([key, value]) => ({ key, label: key, value }));
+}
+
+function toOrderedRawSpecs(rawSpecs?: ScrapedProductSpec[]): OrderedSpec[] {
+  return (rawSpecs ?? []).map((spec, index) => ({
+    key: `${spec.name}-${index}`,
+    label: spec.sectionTitle ? `${spec.sectionTitle} / ${spec.name}` : spec.name,
+    value: spec.values?.length ? spec.values.join(", ") : (spec.description ?? "—"),
+  }));
+}
+
+// Specs/raw specs are secondary detail on a source card — collapsed by
+// default so the card stays scannable, expandable on demand.
+function SourceSpecsAccordion({
+  specs,
+  rawSpecs,
+}: {
+  specs?: ProductSpecs;
+  rawSpecs?: ScrapedProductSpec[];
+}) {
+  const orderedSpecs = toOrderedSpecs(specs);
+  const orderedRawSpecs = toOrderedRawSpecs(rawSpecs);
+
+  if (!orderedSpecs.length && !orderedRawSpecs.length) return null;
+
+  return (
+    <Accordion multiple variant="separated">
+      {orderedSpecs.length > 0 && (
+        <Accordion.Item value="specs">
+          <Accordion.Control>Specs ({orderedSpecs.length})</Accordion.Control>
+          <Accordion.Panel>
+            <AdminSpecTable specs={orderedSpecs} />
+          </Accordion.Panel>
+        </Accordion.Item>
+      )}
+      {orderedRawSpecs.length > 0 && (
+        <Accordion.Item value="rawSpecs">
+          <Accordion.Control>Raw specs ({orderedRawSpecs.length})</Accordion.Control>
+          <Accordion.Panel>
+            <AdminSpecTable specs={orderedRawSpecs} />
+          </Accordion.Panel>
+        </Accordion.Item>
+      )}
+    </Accordion>
+  );
+}
+
 export function ProductSourcesTab() {
   const product = useAppSelector(selectProduct);
 
@@ -338,6 +395,8 @@ export function ProductSourcesTab() {
                   </Stack>
                 </>
               )}
+
+              <SourceSpecsAccordion specs={scraped?.specs} rawSpecs={scraped?.rawSpecs} />
 
               <Divider />
 
