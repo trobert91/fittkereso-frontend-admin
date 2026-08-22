@@ -9,6 +9,7 @@ import {
   Select,
   Switch,
   Group,
+  NumberInput,
 } from "@mantine/core";
 import { useAppDispatch, useAppSelector } from "@/store/store-hooks";
 import { useEffect } from "react";
@@ -45,6 +46,8 @@ export const SellerDetailsForm = () => {
       location: seller?.location ?? "",
       verified: seller?.verified ?? false,
       active: seller?.active ?? true,
+      maxConcurrent: seller?.maxConcurrent ?? null,
+      requestsPerHour: seller?.requestsPerHour ?? null,
     },
   });
 
@@ -60,6 +63,8 @@ export const SellerDetailsForm = () => {
         location: seller.location ?? "",
         verified: seller.verified ?? false,
         active: seller.active ?? true,
+        maxConcurrent: seller.maxConcurrent ?? null,
+        requestsPerHour: seller.requestsPerHour ?? null,
       });
     }
   }, [seller, reset]);
@@ -76,6 +81,8 @@ export const SellerDetailsForm = () => {
           contactEmail: values.contactEmail || undefined,
           contactPhone: values.contactPhone || undefined,
           location: values.location || undefined,
+          maxConcurrent: values.maxConcurrent ?? null,
+          requestsPerHour: values.requestsPerHour ?? null,
         },
       })
     );
@@ -162,6 +169,44 @@ export const SellerDetailsForm = () => {
           {...register("location")}
           error={errors.location?.message}
         />
+
+        <Group grow>
+          <Controller
+            name="maxConcurrent"
+            control={control}
+            render={({ field }) => (
+              <NumberInput
+                label="Max Concurrent (combined)"
+                description="Caps combined concurrent scrapes across all of this seller's product sources. Leave empty for no seller-level cap."
+                placeholder="No cap"
+                min={1}
+                step={1}
+                value={field.value ?? ""}
+                onChange={(value) =>
+                  field.onChange(value === "" ? null : Number(value))
+                }
+              />
+            )}
+          />
+
+          <Controller
+            name="requestsPerHour"
+            control={control}
+            render={({ field }) => (
+              <NumberInput
+                label="Requests Per Hour (combined)"
+                description="Caps combined requests/hour across all of this seller's product sources. Leave empty for no seller-level cap."
+                placeholder="No cap"
+                min={1}
+                step={1}
+                value={field.value ?? ""}
+                onChange={(value) =>
+                  field.onChange(value === "" ? null : Number(value))
+                }
+              />
+            )}
+          />
+        </Group>
 
         <Group>
           <Controller

@@ -125,23 +125,6 @@ export function ProductSourceTable() {
           );
         },
       }),
-      columnHelper.accessor("type", {
-        id: "type",
-        header: ({ column }) => (
-          <Text
-            fw={500}
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            style={{ cursor: "pointer" }}
-          >
-            Type
-          </Text>
-        ),
-        cell: (props) => (
-          <Badge tt="none" variant="light" color="gray">
-            {props.getValue()}
-          </Badge>
-        ),
-      }),
       columnHelper.accessor("schedulingEnabled", {
         id: "schedulingEnabled",
         header: ({ column }) => (
@@ -466,7 +449,7 @@ export function ProductSourceTable() {
             <Table.Tbody>
               {isEmpty(table.getRowModel().rows) ? (
                 <Table.Tr>
-                  <Table.Td colSpan={16}>
+                  <Table.Td colSpan={15}>
                     <Center>No product sources found</Center>
                   </Table.Td>
                 </Table.Tr>

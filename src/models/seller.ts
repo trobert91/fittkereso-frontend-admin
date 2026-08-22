@@ -14,5 +14,7 @@ export interface Seller extends BaseEntity {
   location?: string;
   verified: boolean;
   active: boolean;
+  maxConcurrent?: number | null;
+  requestsPerHour?: number | null;
   productSources?: ProductSource[];
 }

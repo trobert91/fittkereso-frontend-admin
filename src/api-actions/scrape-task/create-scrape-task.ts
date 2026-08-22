@@ -4,7 +4,6 @@ import { AxiosError } from "axios";
 
 export interface ScrapeTaskCreateDto {
   queue: ScrapeQueueName;
-  sourceId: string;
   productId?: string;
   url: string;
   scheduledAt?: string;

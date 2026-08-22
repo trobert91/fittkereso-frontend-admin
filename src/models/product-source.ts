@@ -28,6 +28,9 @@ export interface ProductSourceRecord {
     brand?: string;
     model?: string;
     displayName?: string;
+    // The raw, unfiltered title/model text exactly as scraped, before
+    // brand/marketing/size/color boilerplate is stripped into `model`.
+    originalName?: string;
     releaseYear?: number;
     specs?: ProductSpecs;
     rawSpecs?: ScrapedProductSpec[];

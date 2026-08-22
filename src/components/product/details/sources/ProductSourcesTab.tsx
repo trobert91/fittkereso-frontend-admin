@@ -345,6 +345,13 @@ export function ProductSourcesTab() {
                     </Text>
                   )}
 
+                  {scraped?.originalName &&
+                    scraped.originalName !== scraped?.model && (
+                      <Text size="xs" c="dimmed" lineClamp={1}>
+                        Original title: {scraped.originalName}
+                      </Text>
+                    )}
+
                   <Group gap={12} wrap="wrap">
                     {(scraped?.brand || scraped?.model) && (
                       <Text size="xs" c="dimmed">

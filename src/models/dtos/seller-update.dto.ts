@@ -10,4 +10,6 @@ export interface SellerUpdateDto {
   location?: string;
   verified?: boolean;
   active?: boolean;
+  maxConcurrent?: number | null;
+  requestsPerHour?: number | null;
 }
