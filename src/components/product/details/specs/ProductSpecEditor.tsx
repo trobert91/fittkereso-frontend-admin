@@ -1,5 +1,5 @@
 import React from "react";
-import { SimpleGrid } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { ProductSpecAccordion } from "./ProductSpecAccordion";
 import { ProductModel } from "@/models/product-model";
 import { ProductSpecForm } from "./ProductSpecForm";
@@ -43,13 +43,13 @@ export const ProductSpecEditor: React.FC<{ product: ProductModel }> = ({
   }
 
   return (
-    <SimpleGrid cols={2} spacing="lg">
+    <Stack gap="lg">
       <ProductSpecAccordion product={product} schema={schema} />
 
       <ProductSpecForm
         jsonSchema={schema}
         uiSchema={product.productCategory.uiSchema}
       />
-    </SimpleGrid>
+    </Stack>
   );
 };
