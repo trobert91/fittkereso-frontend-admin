@@ -33,6 +33,10 @@ export interface ProductSourceRecord {
     originalName?: string;
     releaseYear?: number;
     specs?: ProductSpecs;
+    // The deterministic, label-matching spec mapping before the LLM
+    // post-process pass merges its own contribution on top to produce
+    // `specs` above — also exactly what was sent to the LLM as input.
+    extractedSpecs?: ProductSpecs;
     rawSpecs?: ScrapedProductSpec[];
   };
   specValid?: boolean;

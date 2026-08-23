@@ -129,6 +129,7 @@ export function ProductSourcesSection({
             <Table.Th>Spec valid</Table.Th>
             <Table.Th>Spec errors</Table.Th>
             <Table.Th>Specs</Table.Th>
+            <Table.Th>Extracted specs</Table.Th>
             <Table.Th>Deduplicated</Table.Th>
             <Table.Th>Last updated</Table.Th>
           </Table.Tr>
@@ -137,6 +138,10 @@ export function ProductSourcesSection({
           {sources.map((source) => {
             const specs = source.scrapedProduct?.specs;
             const specCount = specs ? Object.keys(specs).length : 0;
+            const extractedSpecs = source.scrapedProduct?.extractedSpecs;
+            const extractedSpecCount = extractedSpecs
+              ? Object.keys(extractedSpecs).length
+              : 0;
             return (
               <Table.Tr key={source.id}>
                 <Table.Td>{source.source?.name ?? "Manual"}</Table.Td>
@@ -195,6 +200,22 @@ export function ProductSourcesSection({
                       trigger={
                         <Button variant="light" color="gray" size="compact-xs">
                           {specCount}
+                        </Button>
+                      }
+                    />
+                  ) : (
+                    <Text size="xs" c="dimmed">
+                      —
+                    </Text>
+                  )}
+                </Table.Td>
+                <Table.Td>
+                  {extractedSpecCount > 0 ? (
+                    <JsonPopover
+                      data={extractedSpecs}
+                      trigger={
+                        <Button variant="light" color="gray" size="compact-xs">
+                          {extractedSpecCount}
                         </Button>
                       }
                     />
