@@ -79,6 +79,8 @@ export interface SpecMatchDetails {
   details: SpecMatchDetail[];
 }
 
+export type ProductDuplicateOrigin = "scrape_time" | "nightly_detection";
+
 export interface ProductDuplicateRecord {
   id: string;
   createdAt: string;
@@ -92,11 +94,15 @@ export interface ProductDuplicateRecord {
   mergedAt?: string;
   reviewedAt?: string;
   reviewNote?: string;
+  /** How this pair was discovered — absent on rows written before this field
+   *  existed (all of which came from the nightly job). */
+  origin?: ProductDuplicateOrigin;
 }
 
 export interface ProductDuplicatePairSearchParams {
   decision?: ProductDuplicateDecision;
   categoryId?: string;
+  origin?: ProductDuplicateOrigin;
   page?: number;
   pageSize?: number;
 }

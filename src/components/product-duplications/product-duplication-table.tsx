@@ -26,6 +26,7 @@ import {
 import {
   ProductDuplicateRecord,
   ProductDuplicateDecision,
+  ProductDuplicateOrigin,
   deleteProductDuplicatePair,
 } from "@/api-actions/product/product-duplicates";
 import { useDuplicateSearch } from "@/hooks/useDuplicateSearch";
@@ -61,6 +62,16 @@ const DECISION_COLORS: Record<ProductDuplicateDecision, string> = {
   rejected: "red",
 };
 
+const ORIGIN_OPTIONS: { value: ProductDuplicateOrigin; label: string }[] = [
+  { value: "scrape_time", label: "Scrape-time (ambiguous match)" },
+  { value: "nightly_detection", label: "Nightly detection" },
+];
+
+const ORIGIN_LABELS: Record<ProductDuplicateOrigin, string> = {
+  scrape_time: "Scrape-time",
+  nightly_detection: "Nightly detection",
+};
+
 export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
   function ProductDuplicationTable(_props, ref) {
   const [data, setData] = useState<ProductDuplicateRecord[]>([]);
@@ -71,6 +82,7 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
   const [decisionFilter, setDecisionFilter] = useState<string | null>(
     "pending_review",
   );
+  const [originFilter, setOriginFilter] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] =
     useState<DuplicatePairConfirmAction | null>(null);
 
@@ -85,6 +97,7 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
       pageSize,
       categoryId: categoryFilter || undefined,
       decision: (decisionFilter as ProductDuplicateDecision) || undefined,
+      origin: (originFilter as ProductDuplicateOrigin) || undefined,
     });
   };
 
@@ -117,7 +130,7 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
   useEffect(() => {
     doSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, categoryFilter, decisionFilter]);
+  }, [page, pageSize, categoryFilter, decisionFilter, originFilter]);
 
   const columns = useMemo(
     () => [
@@ -205,13 +218,24 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
           const row = props.row.original;
           return (
             <Stack gap={4}>
-              <Badge
-                color={DECISION_COLORS[row.decision]}
-                variant="light"
-                size="sm"
-              >
-                {row.decision.replace("_", " ")}
-              </Badge>
+              <Group gap={4}>
+                <Badge
+                  color={DECISION_COLORS[row.decision]}
+                  variant="light"
+                  size="sm"
+                >
+                  {row.decision.replace("_", " ")}
+                </Badge>
+                {row.origin && (
+                  <Badge
+                    color={row.origin === "scrape_time" ? "grape" : "gray"}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {ORIGIN_LABELS[row.origin]}
+                  </Badge>
+                )}
+              </Group>
               {row.pendingReasons && row.pendingReasons.length > 0 && (
                 <Stack gap={2}>
                   {row.pendingReasons.map((reason, i) => (
@@ -360,6 +384,18 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
             }}
             clearable
             w={200}
+          />
+          <Select
+            label="Origin"
+            placeholder="All origins"
+            data={ORIGIN_OPTIONS}
+            value={originFilter}
+            onChange={(value) => {
+              setOriginFilter(value);
+              setPage(1);
+            }}
+            clearable
+            w={220}
           />
         </Group>
       </Card>
