@@ -80,7 +80,7 @@ function OfferSpecsInline({ offer }: { offer: Offer }) {
   return (
     <Group gap={6}>
       {entries.map(([key, value]) => (
-        <Badge key={key} variant="light" color="gray" size="xs" tt="none">
+        <Badge key={key} variant="light" color="gray" size="md" tt="none">
           {key}: {Array.isArray(value) ? value.join(", ") : String(value)}
         </Badge>
       ))}
@@ -120,22 +120,22 @@ function OfferRow({ offer }: { offer: Offer }) {
                 {offer.seller.name}
               </Text>
               {offer.seller.verified && (
-                <Badge color="blue" variant="light" size="xs">
+                <Badge color="blue" variant="light" size="sm">
                   Verified
                 </Badge>
               )}
               <Badge
                 color={availabilityColor[offer.availability]}
                 variant="light"
-                size="xs"
+                size="sm"
               >
                 {availabilityLabel[offer.availability]}
               </Badge>
-              <Badge variant="outline" color="gray" size="xs">
+              <Badge variant="outline" color="gray" size="sm">
                 {conditionLabel[offer.condition]}
               </Badge>
               {!offer.active && (
-                <Badge color="gray" variant="filled" size="xs">
+                <Badge color="gray" variant="filled" size="sm">
                   Inactive
                 </Badge>
               )}

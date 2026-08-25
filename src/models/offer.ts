@@ -42,5 +42,6 @@ export interface Offer extends BaseEntity {
   serviceHistory?: string;
   usedConditionNotes?: string;
 
+  locations?: string[];
   specs?: ProductSpecs;
 }
