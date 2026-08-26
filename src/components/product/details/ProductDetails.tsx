@@ -3,6 +3,7 @@
 import { Alert, Stack, Tabs } from "@mantine/core";
 import { GrGallery } from "react-icons/gr";
 import { FaDatabase, FaEdit, FaList, FaTable, FaTags, FaTasks } from "react-icons/fa";
+import { BsTag } from "react-icons/bs";
 import { useAppSelector } from "@/store/store-hooks";
 import {
   selectProduct,
@@ -15,6 +16,7 @@ import { AdminSpecTable } from "./specs/AdminSpecTable";
 import { ProductHeroHeader } from "./hero/ProductHeroHeader";
 import { IoMdAlert } from "react-icons/io";
 import { ProductSourcesTab } from "./sources/ProductSourcesTab";
+import { ProductOffersTab } from "./offers/ProductOffersTab";
 import { ProductScrapeTasksTab } from "./scrape-tasks/ProductScrapeTasksTab";
 import { ProductAliasesTab } from "./aliases/ProductAliasesTab";
 
@@ -57,6 +59,9 @@ export const ProductDetails = () => {
           <Tabs.Tab value="sources" leftSection={<FaDatabase size={12} />}>
             Sources
           </Tabs.Tab>
+          <Tabs.Tab value="offers" leftSection={<BsTag size={12} />}>
+            Offers
+          </Tabs.Tab>
           <Tabs.Tab value="scrapeTasks" leftSection={<FaTasks size={12} />}>
             Scrape Tasks
           </Tabs.Tab>
@@ -83,6 +88,10 @@ export const ProductDetails = () => {
 
         <Tabs.Panel value="sources" pt="lg">
           <ProductSourcesTab />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="offers" pt="lg">
+          <ProductOffersTab />
         </Tabs.Panel>
 
         <Tabs.Panel value="scrapeTasks" pt="lg">
