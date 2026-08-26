@@ -12,18 +12,13 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { format } from "date-fns";
 import { useAppSelector } from "@/store/store-hooks";
 import { selectSeller } from "@/store/slices/seller-slice";
 import { ProductSource } from "@/models/dtos/product-source-search-models";
 import { useSellerProductSourceSearch } from "@/hooks/useSellerProductSourceSearch";
 import { CreateProductSourceAction } from "./CreateProductSourceAction";
 import { EditProductSourceModal } from "./EditProductSourceModal";
-
-const formatDate = (value?: string | null): string => {
-  if (!value) return "-";
-  return format(new Date(value), "yyyy-MM-dd HH:mm:ss");
-};
+import { formatDate } from "@/utils/date";
 
 export function SellerProductSourcesTab() {
   const seller = useAppSelector(selectSeller);

@@ -21,13 +21,13 @@ import {
 } from "@mantine/core";
 import { isArray, isEmpty } from "lodash";
 import Image from "next/image";
-import { format } from "date-fns";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
 import { LuExternalLink } from "react-icons/lu";
 import { ProductCategory } from "@/models/product-category";
 import { useCategorySearch } from "@/hooks/useCategorySearch";
 import { CategorySearchParams } from "@/models/dtos/category-search-models";
+import { formatDate } from "@/utils/date";
 
 //
 // Component
@@ -166,10 +166,7 @@ export function CategoryTable() {
             Created
           </Text>
         ),
-        cell: (props) => {
-          const date = new Date(props.getValue() as string);
-          return format(date, "yyyy-MM-dd HH:mm:ss");
-        },
+        cell: (props) => formatDate(props.getValue() as string),
       }),
 
       columnHelper.accessor("updatedAt", {
@@ -183,10 +180,7 @@ export function CategoryTable() {
             Updated
           </Text>
         ),
-        cell: (props) => {
-          const date = new Date(props.getValue() as string);
-          return format(date, "yyyy-MM-dd HH:mm:ss");
-        },
+        cell: (props) => formatDate(props.getValue() as string),
       }),
     ],
     [columnHelper]

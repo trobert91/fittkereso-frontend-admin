@@ -16,6 +16,7 @@ import { useAppSelector } from "@/store/store-hooks";
 import { selectProduct } from "@/store/slices/product-slice";
 import { ProductRatingBar } from "@/components/product/product-rating-bar";
 import { ProductRating, ProductRatingHighlight } from "@/models/rating-types";
+import { formatDate } from "@/utils/date";
 
 export const ProductRatingTab = () => {
   const product = useAppSelector(selectProduct);
@@ -65,7 +66,7 @@ function RatingSummaryCard({ rating }: { rating: ProductRating }) {
 
 function ReviewAnalysisCard({ rating }: { rating: ProductRating }) {
   const generatedAt = rating.lastSummaryGeneratedAt
-    ? new Date(rating.lastSummaryGeneratedAt).toLocaleString()
+    ? formatDate(rating.lastSummaryGeneratedAt)
     : null;
 
   return (

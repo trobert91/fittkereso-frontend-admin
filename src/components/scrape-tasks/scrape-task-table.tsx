@@ -33,7 +33,6 @@ import { useClipboard } from "@mantine/hooks";
 import { FiCopy, FiCheck } from "react-icons/fi";
 import { useDisclosure } from "@mantine/hooks";
 import { isEmpty } from "lodash";
-import { format } from "date-fns";
 import {
   ScrapeTask,
   ScrapeTaskSearchParams,
@@ -44,6 +43,7 @@ import {
 import { useScrapeTaskSearch } from "@/hooks/useScrapeTaskSearch";
 import { routes } from "@/utils/routes";
 import Link from "next/link";
+import { formatDate } from "@/utils/date";
 
 const getColorForTaskStatus = (status: TaskStatus): string => {
   switch (status) {
@@ -58,11 +58,6 @@ const getColorForTaskStatus = (status: TaskStatus): string => {
     default:
       return "gray";
   }
-};
-
-const formatDate = (value?: string | null): string => {
-  if (!value) return "-";
-  return format(new Date(value), "yyyy-MM-dd HH:mm:ss");
 };
 
 export function ScrapeTaskTable() {

@@ -7,11 +7,11 @@ export type CustomDate = Date;
 /**
  * Formats a date using date-fns.
  * @param value Date, string, or Date-like input
- * @param format Format string (default: dd-MM-yyyy)
+ * @param format Format string (default: "yyyy MM dd. HH:mm:ss")
  */
 export function formatDate(
-  value: Date | string | undefined,
-  format = "yyyy-MM-dd HH:mm:ss"
+  value: Date | string | undefined | null,
+  format = "yyyy MM dd. HH:mm:ss"
 ): string {
   if (!value) return "";
 

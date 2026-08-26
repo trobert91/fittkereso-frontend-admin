@@ -32,12 +32,12 @@ import { ProductSearchParams } from "@/models/dtos/product-search-models";
 import { useProductSearch } from "@/hooks/useProductSearch";
 import { isEmpty } from "lodash";
 import Image from "next/image";
-import { format } from "date-fns";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
 import { LuExternalLink } from "react-icons/lu";
 import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
 import { ProductCategory } from "@/models/product-category";
+import { formatDate } from "@/utils/date";
 import { postCategorySearch } from "@/api-actions/category/category-search";
 import { Brand } from "@/models/brand";
 import debounce from "lodash/debounce";
@@ -380,10 +380,7 @@ export function ProductTable({
             Created
           </Text>
         ),
-        cell: (props) => {
-          const date = new Date(props.getValue() as string);
-          return format(date, "yyyy-MM-dd HH:mm:ss");
-        },
+        cell: (props) => formatDate(props.getValue() as string),
       }),
 
       columnHelper.accessor("updatedAt", {
@@ -397,10 +394,7 @@ export function ProductTable({
             Updated
           </Text>
         ),
-        cell: (props) => {
-          const date = new Date(props.getValue() as string);
-          return format(date, "yyyy-MM-dd HH:mm:ss");
-        },
+        cell: (props) => formatDate(props.getValue() as string),
       }),
     ],
     [columnHelper]

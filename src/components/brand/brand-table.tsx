@@ -21,13 +21,13 @@ import {
   Group,
 } from "@mantine/core";
 import { isEmpty } from "lodash";
-import { format } from "date-fns";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
 import { LuExternalLink } from "react-icons/lu";
 import { Brand } from "@/models/brand";
 import { useBrandSearch } from "@/hooks/useBrandSearch";
 import { BrandSearchParams } from "@/models/dtos/brand-search-models";
+import { formatDate } from "@/utils/date";
 
 export function BrandTable() {
   const [data, setData] = useState<Brand[]>([]);
@@ -122,10 +122,7 @@ export function BrandTable() {
             Created
           </Text>
         ),
-        cell: (props) => {
-          const date = new Date(props.getValue() as string);
-          return format(date, "yyyy-MM-dd HH:mm:ss");
-        },
+        cell: (props) => formatDate(props.getValue() as string),
       }),
 
       columnHelper.accessor("updatedAt", {
@@ -141,10 +138,7 @@ export function BrandTable() {
             Updated
           </Text>
         ),
-        cell: (props) => {
-          const date = new Date(props.getValue() as string);
-          return format(date, "yyyy-MM-dd HH:mm:ss");
-        },
+        cell: (props) => formatDate(props.getValue() as string),
       }),
     ],
     [columnHelper]

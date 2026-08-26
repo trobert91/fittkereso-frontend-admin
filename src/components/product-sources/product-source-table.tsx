@@ -23,7 +23,6 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { format } from "date-fns";
 import { isEmpty, isNil } from "lodash";
 import {
   ProductSource,
@@ -33,14 +32,7 @@ import {
 import { useProductSourceSearch } from "@/hooks/useProductSourceSearch";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
-
-const formatDate = (value?: string | null): string => {
-  if (!value) {
-    return "-";
-  }
-
-  return format(new Date(value), "yyyy-MM-dd HH:mm:ss");
-};
+import { formatDate } from "@/utils/date";
 
 export function ProductSourceTable() {
   const [data, setData] = useState<ProductSource[]>([]);

@@ -28,7 +28,6 @@ import {
 import { useDebouncedValue } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { isEmpty } from "lodash";
-import { format } from "date-fns";
 import Link from "next/link";
 import { LuExternalLink } from "react-icons/lu";
 import { PiPower } from "react-icons/pi";
@@ -37,11 +36,7 @@ import { Seller } from "@/models/seller";
 import { useSellerSearch } from "@/hooks/useSellerSearch";
 import { SellerSearchParams } from "@/models/dtos/seller-search-models";
 import { postSellerUpdate } from "@/api-actions/seller/seller-update";
-
-const formatDate = (value?: string | null): string => {
-  if (!value) return "-";
-  return format(new Date(value), "yyyy-MM-dd HH:mm:ss");
-};
+import { formatDate } from "@/utils/date";
 
 export function SellerTable() {
   const [data, setData] = useState<Seller[]>([]);

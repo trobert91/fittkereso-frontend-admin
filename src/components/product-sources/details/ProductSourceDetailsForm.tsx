@@ -19,14 +19,7 @@ import {
   updateProductSource,
 } from "@/store/slices/product-source-slice";
 import { ProductSourceUpdateDto } from "@/models/dtos/product-source-update.dto";
-
-const formatDate = (value?: string | null): string => {
-  if (!value) {
-    return "-";
-  }
-
-  return new Date(value).toLocaleString();
-};
+import { formatDate } from "@/utils/date";
 
 export function ProductSourceDetailsForm() {
   const dispatch = useAppDispatch();

@@ -4,6 +4,7 @@ import { Anchor, Badge, Table, Text } from "@mantine/core";
 import { selectProduct } from "@/store/slices/product-slice";
 import { useAppSelector } from "@/store/store-hooks";
 import { TaskStatus } from "@/models/dtos/scrape-task-search-models";
+import { formatDate } from "@/utils/date";
 
 const getColorForTaskStatus = (status: TaskStatus): string => {
   switch (status) {
@@ -18,19 +19,6 @@ const getColorForTaskStatus = (status: TaskStatus): string => {
     default:
       return "gray";
   }
-};
-
-const formatDateTime = (value?: string | null): string => {
-  if (!value) {
-    return "—";
-  }
-
-  const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "—";
-  }
-
-  return parsedDate.toLocaleString();
 };
 
 export function ProductScrapeTasksTab() {
@@ -104,9 +92,9 @@ export function ProductScrapeTasksTab() {
               </Text>
             </Table.Td>
 
-            <Table.Td>{formatDateTime(task.lastRunAt)}</Table.Td>
+            <Table.Td>{formatDate(task.lastRunAt) || "—"}</Table.Td>
 
-            <Table.Td>{formatDateTime(task.createdAt)}</Table.Td>
+            <Table.Td>{formatDate(task.createdAt) || "—"}</Table.Td>
           </Table.Tr>
         ))}
       </Table.Tbody>

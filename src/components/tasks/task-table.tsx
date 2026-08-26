@@ -28,9 +28,9 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { isEmpty } from "lodash";
-import { format } from "date-fns";
 import { Task, TaskSearchParams, TaskStatus, QueueName } from "@/models/dtos/task-search-models";
 import { useTaskSearch } from "@/hooks/useTaskSearch";
+import { formatDate } from "@/utils/date";
 
 const getColorForTaskStatus = (status: TaskStatus): string => {
   switch (status) {
@@ -45,11 +45,6 @@ const getColorForTaskStatus = (status: TaskStatus): string => {
     default:
       return "gray";
   }
-};
-
-const formatDate = (value?: string | null): string => {
-  if (!value) return "-";
-  return format(new Date(value), "yyyy-MM-dd HH:mm:ss");
 };
 
 export function TaskTable() {

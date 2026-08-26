@@ -10,16 +10,10 @@ import {
   Table,
   Text,
 } from "@mantine/core";
-import { format } from "date-fns";
 import { ReactNode } from "react";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import { ProductSourceRecord } from "@/models/product-source";
-
-function formatTimestamp(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return format(date, "yyyy-MM-dd HH:mm");
-}
+import { formatDate } from "@/utils/date";
 
 function SpecValidCell({ source }: { source: ProductSourceRecord }) {
   if (source.specValid == null) {
@@ -236,7 +230,7 @@ export function ProductSourcesSection({
                     </Text>
                   )}
                 </Table.Td>
-                <Table.Td>{formatTimestamp(source.lastUpdated)}</Table.Td>
+                <Table.Td>{formatDate(source.lastUpdated)}</Table.Td>
               </Table.Tr>
             );
           })}
