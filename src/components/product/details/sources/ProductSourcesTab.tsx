@@ -154,7 +154,7 @@ function ProductSourceCard({
               )}
               {source.externalId && (
                 <Text size="xs" c="dimmed">
-                  SKU {source.externalId}
+                  externalId: {source.externalId}
                 </Text>
               )}
               <Text size="xs" c="dimmed">

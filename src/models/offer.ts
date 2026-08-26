@@ -31,7 +31,7 @@ export interface Offer extends BaseEntity {
   currency: string;
   url?: string;
   availability: OfferAvailability;
-  sourceListingId?: string;
+  externalId?: string;
   lastSeenAt: string;
   active: boolean;
 

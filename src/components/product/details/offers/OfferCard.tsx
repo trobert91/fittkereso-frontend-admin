@@ -76,6 +76,11 @@ export function OfferCard({
     offer.purchaseDate ? `purchased ${offer.purchaseDate}` : null,
   ].filter(Boolean);
 
+  const metaDetails = [
+    offer.externalId ? `externalId: ${offer.externalId}` : null,
+    offer.locations?.length ? offer.locations.join(", ") : null,
+  ].filter(Boolean);
+
   return (
     <Card
       withBorder
@@ -92,9 +97,9 @@ export function OfferCard({
             </Avatar>
           )}
 
-          <Stack gap={2} style={{ minWidth: 0 }}>
-            <Group gap={6} wrap="wrap">
-              <Text fw={600} size="sm">
+          <Stack gap={4} style={{ minWidth: 0 }}>
+            <Group gap={6} wrap="nowrap" style={{ overflow: "hidden" }}>
+              <Text fw={600} size="sm" style={{ flexShrink: 0 }}>
                 {offer.seller.name}
               </Text>
               {offer.seller.verified && (
@@ -131,11 +136,23 @@ export function OfferCard({
               </Text>
             )}
 
+            {metaDetails.length > 0 && (
+              <Text size="xs" c="dimmed">
+                {metaDetails.join(" · ")}
+              </Text>
+            )}
+
             <OfferSpecsInline offer={offer} />
 
             {!compact && offer.usedConditionNotes && (
               <Text size="xs" c="dimmed" lineClamp={1}>
                 {offer.usedConditionNotes}
+              </Text>
+            )}
+
+            {!compact && offer.serviceHistory && (
+              <Text size="xs" c="dimmed" lineClamp={1}>
+                Service history: {offer.serviceHistory}
               </Text>
             )}
 
