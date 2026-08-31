@@ -69,7 +69,7 @@ export function TriggerDetectionModal({
       notifications.show({
         color: "green",
         title: "Duplicate detection completed",
-        message: `${summary.totalPairsEvaluated} pairs evaluated, ${summary.autoMerged} auto-merged, ${summary.pendingReview} pending review`,
+        message: `${summary.totalPairsEvaluated} pairs evaluated, ${summary.recorded} queued for review, ${summary.skipped} skipped`,
       });
 
       setOpened(false);
@@ -111,7 +111,8 @@ export function TriggerDetectionModal({
           <Stack gap="md">
             <Text size="sm" c="dimmed">
               Run the duplicate detection pipeline. Optionally select a category
-              to limit the scan.
+              to limit the scan. Nothing is merged — every pair it finds is
+              queued here for you to accept or decline.
             </Text>
 
             {categoriesLoading ? (

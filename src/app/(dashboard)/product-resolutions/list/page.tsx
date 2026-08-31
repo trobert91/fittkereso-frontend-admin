@@ -3,7 +3,10 @@
 import { useRef } from "react";
 import { CommonPage } from "@/components/common-page";
 import { PageHeader } from "@/components/page-header";
-import { ProductResolutionTable, ProductResolutionTableRef } from "@/components/product-resolutions/resolution-table";
+import {
+  ProductResolutionList,
+  ProductResolutionListRef,
+} from "@/components/product-resolutions/resolution-list";
 import { TriggerDetectionModal } from "@/components/product-resolutions/trigger-detection-modal";
 import { routes } from "@/utils/routes";
 
@@ -13,7 +16,7 @@ const breadcrumbs = [
 ];
 
 export default function ProductResolutionsPage() {
-  const tableRef = useRef<ProductResolutionTableRef>(null);
+  const listRef = useRef<ProductResolutionListRef>(null);
 
   return (
     <CommonPage>
@@ -22,12 +25,12 @@ export default function ProductResolutionsPage() {
         breadcrumbs={breadcrumbs}
         actions={
           <TriggerDetectionModal
-            onComplete={() => tableRef.current?.refresh()}
+            onComplete={() => listRef.current?.refresh()}
           />
         }
       />
 
-      <ProductResolutionTable ref={tableRef} />
+      <ProductResolutionList ref={listRef} />
     </CommonPage>
   );
 }

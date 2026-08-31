@@ -1,4 +1,5 @@
 import { Offer } from "./offer";
+import type { ProductModel } from "./product-model";
 import { ProductSpecs } from "./product-specs";
 
 export enum ProductSourceType {
@@ -28,6 +29,11 @@ export interface ProductSourceRecord {
   id: string;
   url?: string;
   externalId?: string;
+  // The product this listing currently sits on. Only populated where the
+  // backend joins it (the product-resolution review queue) — a merge can move
+  // a listing after a decision was recorded, so this is the live answer to
+  // "where did this end up", unlike a resolution's stored `resolvedProduct`.
+  model?: ProductModel;
   // The full scraped payload this record was built from — specs and the
   // listing's own brand/model/displayName/releaseYear live here, not as
   // separate top-level fields. See ProductSourceRecord.scrapedProduct on

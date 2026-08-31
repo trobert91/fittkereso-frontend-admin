@@ -30,7 +30,7 @@ import {
 import { ProductModel } from "@/models/product-model";
 import { ProductSearchParams } from "@/models/dtos/product-search-models";
 import { useProductSearch } from "@/hooks/useProductSearch";
-import { isEmpty } from "lodash";
+import { compact, isEmpty } from "lodash";
 import Image from "next/image";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
@@ -39,6 +39,8 @@ import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
 import { ProductCategory } from "@/models/product-category";
 import { formatDate } from "@/utils/date";
 import { postCategorySearch } from "@/api-actions/category/category-search";
+import { getCategoryById } from "@/api-actions/category/get-category";
+import { getBrandById } from "@/api-actions/brand/get-brand";
 import { Brand } from "@/models/brand";
 import debounce from "lodash/debounce";
 import { postBrandSearch } from "@/api-actions/brand/brand-search";
