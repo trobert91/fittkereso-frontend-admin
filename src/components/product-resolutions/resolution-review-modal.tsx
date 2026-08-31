@@ -23,7 +23,6 @@ import { ScoreRing } from "@/components/score-ring";
 import { ColoredBadge } from "@/components/colored-badge";
 import { ResolutionActions } from "./resolution-actions";
 import { ResolutionCandidateStrip } from "./resolution-candidate-strip";
-import { ResolutionDecisionTimeline } from "./resolution-decision-timeline";
 import { ResolutionEvidence } from "./resolution-evidence";
 import { ResolutionPairStrip } from "./resolution-pair-strip";
 import {
@@ -112,7 +111,10 @@ export function ResolutionReviewModal({
                     showMergeDirection={!item.state.lastPerformed}
                   />
                 ) : (
-                  <ResolutionCandidateStrip resolution={item.resolution} />
+                  <ResolutionCandidateStrip
+                    resolution={item.resolution}
+                    listing={item.listing}
+                  />
                 )}
               </Card.Section>
 
@@ -120,9 +122,6 @@ export function ResolutionReviewModal({
                 <ResolutionEvidence item={item} />
               </Card.Section>
             </Card>
-
-            <Divider label="Decision history" labelPosition="left" />
-            <ResolutionDecisionTimeline resolution={item.resolution} />
 
             <Divider label="Your decision" labelPosition="left" />
             <Textarea

@@ -61,6 +61,9 @@ export function ResolutionPairStrip({
       <ResolutionProductCard
         product={product}
         specs
+        // The product that survives is the outcome under review here, so it
+        // carries the same green treatment the chosen candidate does.
+        selected={isTarget}
         onClick={() => setDetailProductId(product.id)}
         badges={
           <>
@@ -69,7 +72,7 @@ export function ResolutionPairStrip({
                 label="Accepting merges into this product — it is the older of the two, so it is the one that survives."
                 withArrow
               >
-                <Badge color="green" variant="light" size="xs" tt="none">
+                <Badge color="green" variant="filled" size="xs" tt="none">
                   survives merge
                 </Badge>
               </Tooltip>
@@ -97,7 +100,9 @@ export function ResolutionPairStrip({
 
   return (
     <>
-      <Group align="flex-start" gap="md" wrap="wrap">
+      {/* `stretch` so both products are the same height regardless of how many
+          spec badges each carries — see the candidate strip. */}
+      <Group align="stretch" gap="md" wrap="wrap">
         {cardFor(productA)}
 
         <Center style={{ minHeight: 130 }}>

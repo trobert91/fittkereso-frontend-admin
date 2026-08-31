@@ -35,6 +35,16 @@ export const OPEN_RESOLUTION_STATUSES: ProductResolutionStatus[] = [
   "failed",
 ];
 
+/** Every status, for the filter's "All" option. Sending these explicitly is
+ *  what distinguishes "show me everything" from sending nothing, which the
+ *  backend reads as the open-statuses default. */
+export const ALL_RESOLUTION_STATUSES: ProductResolutionStatus[] = [
+  "pending",
+  "failed",
+  "done",
+  "superseded",
+];
+
 // --- Decision log ---
 
 export type ResolutionActor = "system" | "admin";
@@ -264,11 +274,34 @@ export interface ProductResolutionRecord {
   decisionSnapshot?: ProductResolutionDecisionSnapshot;
 }
 
+/**
+ * The scraped listing, reduced to what gets compared against the product it was
+ * matched to. A server-side projection of the `scrapedProduct` blob — that blob
+ * carries every spec variant and the raw description, so it is not shipped with
+ * list results.
+ */
+export interface ResolutionListingSummary {
+  brand?: string;
+  /** The raw listing title, before boilerplate was stripped into `model`.
+   *  Only some sources expose one. */
+  originalName?: string;
+  displayName?: string;
+  url?: string;
+  imageUrl?: string;
+  /** From the cheapest scraped offer — the same rule the product uses to
+   *  denormalize its own `price`, so the two are directly comparable. */
+  price?: number;
+  priceWithoutDiscount?: number;
+  currency?: string;
+  offerCount?: number;
+}
+
 /** One row plus what can be done to it. Every read and write endpoint returns
  *  this shape, so an action's response is enough to re-render the card. */
 export interface ResolutionListItem {
   resolution: ProductResolutionRecord;
   state: ProductResolutionState;
+  listing?: ResolutionListingSummary;
 }
 
 // --- Search ---

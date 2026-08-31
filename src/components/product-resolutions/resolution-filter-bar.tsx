@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
+  ALL_RESOLUTION_STATUSES,
   ProductResolutionFlow,
   ProductResolutionOrigin,
   ProductResolutionSearchParams,
@@ -40,6 +41,16 @@ const ACCEPTED_OPTIONS = [
   { value: "any", label: "Any" },
   { value: "true", label: "Accepted" },
   { value: "false", label: "Not accepted" },
+];
+
+/** Meta-option that expands to every status on selection, rather than being a
+ *  value of its own — so `params.statuses` only ever holds real statuses and
+ *  never leaks a sentinel into the request. */
+const ALL_STATUSES_VALUE = "__all__";
+
+const STATUS_FILTER_OPTIONS = [
+  { value: ALL_STATUSES_VALUE, label: "All statuses" },
+  ...STATUS_OPTIONS,
 ];
 
 export function ResolutionFilterBar({
@@ -73,6 +84,21 @@ export function ResolutionFilterBar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery]);
 
+  // "All statuses" is a shortcut, not a value: picking it fills in the four
+  // concrete statuses so the chips show exactly what is being requested and
+  // individual ones can then be removed. Clearing the field falls back to the
+  // backend's default, which is the open statuses — not everything.
+  const handleStatusChange = (value: string[]) => {
+    if (value.includes(ALL_STATUSES_VALUE)) {
+      onChange({ statuses: ALL_RESOLUTION_STATUSES });
+      return;
+    }
+
+    onChange({
+      statuses: value.length ? (value as ProductResolutionStatus[]) : undefined,
+    });
+  };
+
   const categoryOptions = useMemo(
     () => categories.map((category) => ({ value: category.id, label: category.name })),
     [categories],
@@ -89,15 +115,9 @@ export function ResolutionFilterBar({
         <MultiSelect
           label="Status"
           placeholder="Open (pending + failed)"
-          data={STATUS_OPTIONS}
+          data={STATUS_FILTER_OPTIONS}
           value={params.statuses ?? []}
-          onChange={(value) =>
-            onChange({
-              statuses: value.length
-                ? (value as ProductResolutionStatus[])
-                : undefined,
-            })
-          }
+          onChange={handleStatusChange}
           clearable
           w={260}
         />

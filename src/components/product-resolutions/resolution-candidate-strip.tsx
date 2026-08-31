@@ -7,6 +7,7 @@ import { LuPlus } from "react-icons/lu";
 import {
   ProductResolutionCandidateRecord,
   ProductResolutionRecord,
+  ResolutionListingSummary,
 } from "@/api-actions/product/product-resolutions";
 import { ProductDetailsModal } from "@/components/product/details-modal";
 import { ResolutionListingCard, ResolutionProductCard } from "./resolution-product-card";
@@ -25,8 +26,10 @@ const STRIP_LIMIT = 2;
  */
 export function ResolutionCandidateStrip({
   resolution,
+  listing,
 }: {
   resolution: ProductResolutionRecord;
+  listing?: ResolutionListingSummary;
 }) {
   const [detailProductId, setDetailProductId] = useState<string | null>(null);
 
@@ -67,8 +70,13 @@ export function ResolutionCandidateStrip({
 
   return (
     <>
-      <Group align="flex-start" gap="md" wrap="wrap">
+      {/* `stretch` so every card in the row is the tallest one's height —
+          cards carry different amounts of metadata (specs, gate badges, a
+          price), and ragged bottoms make them read as unrelated rather than as
+          a set being compared. */}
+      <Group align="stretch" gap="md" wrap="wrap">
         <ResolutionListingCard
+          listing={listing}
           title={listingTitle}
           subtitle={
             input?.category?.name ?? input?.categoryHint ?? undefined
@@ -151,11 +159,12 @@ function CandidateCard({
       score={candidate.matchScore}
       scoreLabel={`match score: ${Math.round(candidate.matchScore ?? 0)} · recalled via ${candidate.source.split("_").join(" ")}`}
       dimmed={!chosen && !passed}
+      selected={chosen}
       onClick={onOpen}
       badges={
         <>
           {chosen && (
-            <Badge color="blue" variant="filled" size="xs" tt="none">
+            <Badge color="green" variant="filled" size="xs" tt="none">
               chosen
             </Badge>
           )}

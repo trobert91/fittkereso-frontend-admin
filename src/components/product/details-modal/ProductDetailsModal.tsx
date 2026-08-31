@@ -21,6 +21,7 @@ import { ProductModel } from "@/models/product-model";
 import { getProductById } from "@/api-actions/product/get-product";
 import { ScoreRing } from "@/components/score-ring";
 import { AdminSpecTable } from "../details/specs/AdminSpecTable";
+import { ProductOffersList } from "../details/offers/ProductOffersList";
 import { OrderedSpec } from "@/models/product-specs";
 import { routes } from "@/utils/routes";
 import { ProductAliasesSection } from "./ProductAliasesSection";
@@ -153,6 +154,10 @@ const ProductDetailsModalContent = ({ product }: { product: ProductModel }) => {
 
       <Section title="Specifications">
         <SpecsBlock specs={product.orderedSpecs ?? []} />
+      </Section>
+
+      <Section title="Offers">
+        <ProductOffersList offers={product.offers} />
       </Section>
 
       <Section title="Sources">

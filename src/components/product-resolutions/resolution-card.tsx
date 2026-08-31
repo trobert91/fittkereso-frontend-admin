@@ -20,7 +20,7 @@ import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import Link from "next/link";
 import { isEmpty } from "lodash";
-import { FaCheck, FaCopy, FaTimes } from "react-icons/fa";
+import { FaCheck, FaCopy, FaHistory, FaTimes } from "react-icons/fa";
 import { IoChevronDown, IoChevronUp, IoEye, IoTrash, IoWarning } from "react-icons/io5";
 import { LuExternalLink } from "react-icons/lu";
 import { MdRateReview } from "react-icons/md";
@@ -37,6 +37,7 @@ import { routes } from "@/utils/routes";
 import { ResolutionActions } from "./resolution-actions";
 import { ResolutionCandidateStrip } from "./resolution-candidate-strip";
 import { ResolutionEvidence } from "./resolution-evidence";
+import { ResolutionHistoryModal } from "./resolution-history-modal";
 import { ResolutionPairStrip } from "./resolution-pair-strip";
 import { ResolutionReviewModal } from "./resolution-review-modal";
 import {
@@ -75,11 +76,13 @@ export function ResolutionCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [justActed, setJustActed] = useState(false);
 
   const { resolution, state } = item;
   const statusColor = STATUS_COLORS[resolution.status] ?? "gray";
+  const decisionCount = resolution.decisions?.length ?? 0;
 
   const handleUpdated = (updated: ResolutionListItem) => {
     // Keep the row on screen after a decision instead of letting it vanish out
@@ -208,11 +211,30 @@ export function ResolutionCard({
               )}
             </Group>
 
-            <RowMenu
-              resolution={resolution}
-              listingProductId={state.listingProductId}
-              onDelete={handleDelete}
-            />
+            <Group gap={4} wrap="nowrap">
+              <Tooltip
+                label={`Decision history — ${decisionCount} entr${decisionCount === 1 ? "y" : "ies"}`}
+                withArrow
+              >
+                <Button
+                  size="compact-xs"
+                  variant="light"
+                  color="gray"
+                  leftSection={<FaHistory size={10} />}
+                  onClick={() => setHistoryOpen(true)}
+                  disabled={decisionCount === 0}
+                >
+                  history
+                  {decisionCount > 1 ? ` (${decisionCount})` : ""}
+                </Button>
+              </Tooltip>
+
+              <RowMenu
+                resolution={resolution}
+                listingProductId={state.listingProductId}
+                onDelete={handleDelete}
+              />
+            </Group>
           </Group>
         </Card.Section>
 
@@ -227,7 +249,10 @@ export function ResolutionCard({
               showMergeDirection={!state.lastPerformed}
             />
           ) : (
-            <ResolutionCandidateStrip resolution={resolution} />
+            <ResolutionCandidateStrip
+              resolution={resolution}
+              listing={item.listing}
+            />
           )}
         </Card.Section>
 
@@ -281,6 +306,12 @@ export function ResolutionCard({
         resolutionId={reviewOpen ? resolution.id : null}
         onClose={() => setReviewOpen(false)}
         onUpdated={handleUpdated}
+      />
+
+      <ResolutionHistoryModal
+        resolution={resolution}
+        opened={historyOpen}
+        onClose={() => setHistoryOpen(false)}
       />
     </>
   );

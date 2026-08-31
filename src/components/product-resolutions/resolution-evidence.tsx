@@ -28,6 +28,7 @@ import { formatDate } from "@/utils/date";
 import { routes } from "@/utils/routes";
 import { GateBadges } from "./gate-badges";
 import { SpecMatchTable } from "./spec-match-table";
+import { ListingPrice, formatPrice } from "./resolution-product-card";
 import { productLookup } from "./resolution-labels";
 
 /**
@@ -152,12 +153,27 @@ function CandidateDetail({
   onOpen: () => void;
 }) {
   return (
-    <Card withBorder p="sm" radius="sm">
+    <Card
+      withBorder
+      p="sm"
+      radius="sm"
+      // Same green treatment as the candidate strip, so the chosen candidate is
+      // recognisable in both places without re-reading the badges.
+      style={
+        chosen
+          ? {
+              borderColor: "var(--mantine-color-green-6)",
+              borderWidth: 2,
+              background: "var(--mantine-color-green-light)",
+            }
+          : undefined
+      }
+    >
       <Stack gap={8}>
         <Group justify="space-between" wrap="nowrap">
           <Group gap="xs" wrap="nowrap">
             {chosen && (
-              <Badge color="blue" variant="filled" size="sm" tt="none">
+              <Badge color="green" variant="filled" size="sm" tt="none">
                 chosen
               </Badge>
             )}
@@ -413,7 +429,7 @@ function Field({ label, value }: { label: string; value?: string }) {
  * without noticing that is how a correction goes to the wrong product.
  */
 function ListingPanel({ item }: { item: ResolutionListItem }) {
-  const { resolution, state } = item;
+  const { resolution, state, listing } = item;
   const record = resolution.sourceRecord;
 
   if (!record) {
@@ -449,9 +465,34 @@ function ListingPanel({ item }: { item: ResolutionListItem }) {
         )}
       </Group>
 
-      {record.url && (
-        <Anchor href={record.url} target="_blank" size="xs" truncate>
-          {record.url}
+      {listing?.originalName && (
+        <Text size="sm">
+          <Text span c="dimmed" size="xs">
+            listing title:{" "}
+          </Text>
+          {listing.originalName}
+        </Text>
+      )}
+
+      {/* Both prices come from the cheapest offer on each side, so this is a
+          like-for-like comparison with the product below. */}
+      {listing?.price != null && (
+        <Group gap="xs" align="baseline">
+          <Text size="xs" c="dimmed">
+            listing price:
+          </Text>
+          <ListingPrice listing={listing} />
+        </Group>
+      )}
+
+      {(record.url ?? listing?.url) && (
+        <Anchor
+          href={record.url ?? listing?.url}
+          target="_blank"
+          size="xs"
+          truncate
+        >
+          {record.url ?? listing?.url}
         </Anchor>
       )}
 
@@ -465,7 +506,7 @@ function ListingPanel({ item }: { item: ResolutionListItem }) {
       )}
 
       {current && (
-        <Group gap="xs">
+        <Group gap="xs" align="baseline">
           <Text size="sm" c="dimmed">
             Currently on:
           </Text>
@@ -481,6 +522,11 @@ function ListingPanel({ item }: { item: ResolutionListItem }) {
           {current.brand?.name && (
             <Text size="xs" c="dimmed">
               {current.brand.name}
+            </Text>
+          )}
+          {current.price != null && (
+            <Text size="sm" fw={600}>
+              {formatPrice(current.price)}
             </Text>
           )}
         </Group>
