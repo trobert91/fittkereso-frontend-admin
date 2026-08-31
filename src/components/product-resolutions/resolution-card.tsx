@@ -5,6 +5,7 @@ import {
   ActionIcon,
   Anchor,
   Badge,
+  Box,
   Button,
   Card,
   Collapse,
@@ -30,7 +31,6 @@ import {
   ProductResolutionRecord,
   ResolutionListItem,
 } from "@/api-actions/product/product-resolutions";
-import { ScoreRing } from "@/components/score-ring";
 import { ColoredBadge } from "@/components/colored-badge";
 import { formatDate } from "@/utils/date";
 import { routes } from "@/utils/routes";
@@ -39,6 +39,7 @@ import { ResolutionCandidateStrip } from "./resolution-candidate-strip";
 import { ResolutionEvidence } from "./resolution-evidence";
 import { ResolutionHistoryModal } from "./resolution-history-modal";
 import { ResolutionPairStrip } from "./resolution-pair-strip";
+import { ResolutionPriorityRing } from "./resolution-priority-ring";
 import { ResolutionReviewModal } from "./resolution-review-modal";
 import {
   ACTION_KIND_LABELS,
@@ -137,16 +138,27 @@ export function ResolutionCard({
         >
           <Group justify="space-between" wrap="nowrap" align="flex-start">
             <Group gap="xs" wrap="wrap">
+              {/* The ordering key leads the card: it is the reason this row is
+                  where it is on the page, and clicking it shows why. */}
+              <ResolutionPriorityRing
+                priority={resolution.priority}
+                breakdown={resolution.priorityBreakdown}
+              />
+
               <Badge color={statusColor} variant="light" size="sm" tt="none">
                 {STATUS_LABELS[resolution.status]}
               </Badge>
 
-              <ScoreRing
-                rate={resolution.similarityScore}
-                size={30}
-                thickness={4}
-                tooltip={`similarity: ${resolution.similarityScore}`}
-              />
+              <Tooltip
+                label="How alike the two things look. Not a measure of whether the decision was right — that is confidence."
+                withArrow
+                multiline
+                maw={300}
+              >
+                <Badge color="gray" variant="light" size="sm" tt="none">
+                  similarity: {resolution.similarityScore}
+                </Badge>
+              </Tooltip>
 
               <Button
                 size="compact-xs"
@@ -180,10 +192,19 @@ export function ResolutionCard({
               )}
 
               {resolution.decisionConfidence != null && (
-                <ColoredBadge
-                  value={resolution.decisionConfidence}
-                  label="confidence"
-                />
+                <Tooltip
+                  label="How sure we are the outcome was right — whichever outcome it was. A confident rejection scores high here, not zero."
+                  withArrow
+                  multiline
+                  maw={300}
+                >
+                  <Box style={{ display: "inline-flex" }}>
+                    <ColoredBadge
+                      value={resolution.decisionConfidence}
+                      label="confidence"
+                    />
+                  </Box>
+                </Tooltip>
               )}
 
               <SignalBadges resolution={resolution} />

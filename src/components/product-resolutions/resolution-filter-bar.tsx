@@ -30,7 +30,7 @@ import {
 } from "./resolution-labels";
 
 const SORT_OPTIONS: { value: ProductResolutionSortField; label: string }[] = [
-  { value: "relevance", label: "Review order" },
+  { value: "priority", label: "Priority" },
   { value: "similarityScore", label: "Similarity" },
   { value: "decisionConfidence", label: "Confidence" },
   { value: "createdAt", label: "Created" },
@@ -210,6 +210,22 @@ export function ResolutionFilterBar({
           w={130}
         />
 
+        <NumberInput
+          label="Min priority"
+          description="Work a band"
+          placeholder="0"
+          min={0}
+          max={100}
+          value={params.minPriority ?? ""}
+          onChange={(value) =>
+            onChange({
+              minPriority:
+                value === "" || value === null ? undefined : Number(value),
+            })
+          }
+          w={130}
+        />
+
         <TextInput
           label="Search"
           placeholder="Product name or anchor key"
@@ -221,13 +237,15 @@ export function ResolutionFilterBar({
         <Select
           label="Sort by"
           data={SORT_OPTIONS}
-          value={params.sortBy ?? "relevance"}
+          value={params.sortBy ?? "priority"}
           onChange={(value) =>
-            onChange({ sortBy: (value as ProductResolutionSortField) ?? "relevance" })
+            onChange({ sortBy: (value as ProductResolutionSortField) ?? "priority" })
           }
           w={170}
         />
 
+        {/* Every sort option is a real column now, so the direction toggle
+            applies to all of them — including the default. */}
         <SegmentedControl
           data={[
             { value: "DESC", label: "Desc" },
@@ -236,9 +254,6 @@ export function ResolutionFilterBar({
           value={params.sortDir ?? "DESC"}
           onChange={(value) => onChange({ sortDir: value as "ASC" | "DESC" })}
           size="xs"
-          // Review order is a fixed multi-key ordering (pending first, then
-          // closest calls) — a direction toggle would not apply to it.
-          disabled={!params.sortBy || params.sortBy === "relevance"}
         />
       </Group>
     </Card>

@@ -16,7 +16,7 @@ import {
 import Link from "next/link";
 import { isEmpty, orderBy } from "lodash";
 import { IoWarning } from "react-icons/io5";
-import { LuExternalLink } from "react-icons/lu";
+import { LuExternalLink, LuFilterX } from "react-icons/lu";
 import {
   MatchResultComponents,
   ProductResolutionCandidateRecord,
@@ -29,7 +29,7 @@ import { routes } from "@/utils/routes";
 import { GateBadges } from "./gate-badges";
 import { SpecMatchTable } from "./spec-match-table";
 import { ListingPrice, formatPrice } from "./resolution-product-card";
-import { productLookup } from "./resolution-labels";
+import { filterReasonLabel, productLookup } from "./resolution-labels";
 
 /**
  * Everything behind the decision, in one block shared by the card's inline
@@ -214,7 +214,30 @@ function CandidateDetail({
         <GateBadges
           passed={candidate.gates?.passed ?? false}
           failedGates={candidate.gates?.failedGates ?? []}
+          filtered={candidate.filtered}
         />
+
+        {/* For a filtered candidate this string is the whole explanation —
+            there is no score breakdown or spec table below it, because it was
+            dropped before either was computed. Rendered inline rather than as
+            tooltip-only text: it is the one thing a reviewer opened this row
+            to read. */}
+        {candidate.filtered && (
+          <Alert
+            color="orange"
+            variant="light"
+            p="xs"
+            icon={<LuFilterX size={14} />}
+          >
+            <Text size="xs">
+              Excluded by the {filterReasonLabel(candidate.filtered.reason)}{" "}
+              filter:{" "}
+              <Text span size="xs" fw={600} ff="monospace">
+                {candidate.filtered.detail}
+              </Text>
+            </Text>
+          </Alert>
+        )}
 
         {candidate.matchComponents && (
           <MatchComponentBars components={candidate.matchComponents} />

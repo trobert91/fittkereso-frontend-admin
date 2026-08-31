@@ -152,3 +152,26 @@ export function failedGateCount(resolution: ProductResolutionRecord): number {
     (candidate) => !candidate.gates?.passed,
   ).length;
 }
+
+/** What the filter stage objected to, in reviewer language. The raw reasons are
+ *  pipeline-internal names; these say what the reviewer would say. */
+export const FILTER_REASON_LABELS: Record<string, string> = {
+  match_specs: "spec contradiction",
+  category: "wrong category",
+  brand: "wrong brand",
+};
+
+export function filterReasonLabel(reason: string): string {
+  return FILTER_REASON_LABELS[reason] ?? reason.split("_").join(" ");
+}
+
+/** Candidates the filter dropped before they were ever scored.
+ *
+ *  Worth surfacing separately from a gate failure: a gate-failed candidate was
+ *  compared and found wanting, while a filtered one was excluded on a single
+ *  contradiction and never competed at all. When the filter is miscalibrated —
+ *  a spec vocabulary mismatch between two shops, say — the right answer is
+ *  sitting in this list, which is why it must not read as "nothing recalled". */
+export function filteredCandidates(resolution: ProductResolutionRecord) {
+  return (resolution.candidates ?? []).filter((candidate) => candidate.filtered);
+}

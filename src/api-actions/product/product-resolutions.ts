@@ -172,6 +172,14 @@ export interface ProductResolutionCandidateRecord {
   matchScore?: number;
   matchComponents?: MatchResultComponents;
   gates: { passed: boolean; failedGates: string[] };
+  /** Set when the filter stage dropped this candidate on a brand, category, or
+   *  primary-spec contradiction — before it was ever scored. Such a candidate
+   *  has no `matchScore` or `specMatchDetails`: `detail` is the only account of
+   *  why it lost, e.g. `usageType MTB ≠ Összteleszkópos MTB`. */
+  filtered?: {
+    reason: "match_specs" | "category" | "brand";
+    detail: string;
+  };
   specMatchDetails?: SpecMatchDetails;
 }
 
@@ -229,6 +237,37 @@ export interface ProductResolutionDecisionSnapshot {
   evidenceSummary?: string;
 }
 
+// --- Priority ---
+
+/** One weighted term of the `impact` factor. */
+export interface PriorityFactor {
+  key: string;
+  /** 0–1. */
+  value: number;
+  weight: number;
+}
+
+/**
+ * The working behind a row's priority — `100 × uncertainty × impact ×
+ * statusWeight`.
+ *
+ * Multiplicative on purpose: a decision we are sure about needs no review
+ * however much rides on it, and one touching nothing needs none however unsure
+ * we are.
+ */
+export interface ResolutionPriorityBreakdown {
+  priority: number;
+  /** `1 − confidence`. */
+  uncertainty: number;
+  impact: number;
+  statusWeight: number;
+  confidence: number;
+  impactFactors: PriorityFactor[];
+  /** False when the blast radius was assumed rather than counted — a row the
+   *  nightly sweep has not reached yet. */
+  blastRadiusMeasured: boolean;
+}
+
 // --- The record ---
 
 export interface ProductResolutionRecord {
@@ -243,8 +282,16 @@ export interface ProductResolutionRecord {
   /** Append-only. Index 0 is always the producing system's own decision. */
   decisions?: ProductResolutionDecisionEntry[];
   similarityScore: number;
-  /** Denormalized from decisionSnapshot.confidence, for sorting/filtering. */
+  /** How sure we are the outcome was correct — whichever outcome it was, match
+   *  or create or reject. Not the decider's self-report, which is one weighted
+   *  input to it. */
   decisionConfidence?: number;
+  /** 0–100: how important it is that a human reviews this row, and the queue's
+   *  default order. Null until the nightly sweep has scored the row. */
+  priority?: number;
+  /** The terms that produced the priority, so a surprising rank can be traced
+   *  to the one that caused it. */
+  priorityBreakdown?: ResolutionPriorityBreakdown;
   /** Which real-world situation this row is about — the identity dedup keys on. */
   anchorKey?: string;
   /** Last time this exact situation was seen again. */
@@ -307,7 +354,7 @@ export interface ResolutionListItem {
 // --- Search ---
 
 export const RESOLUTION_SORT_FIELDS = [
-  "relevance",
+  "priority",
   "similarityScore",
   "decisionConfidence",
   "createdAt",
@@ -334,9 +381,11 @@ export interface ProductResolutionSearchParams {
   origin?: ProductResolutionOrigin;
   minSimilarityScore?: number;
   minConfidence?: number;
+  /** Work a band of the queue. No default — nothing disappears silently. */
+  minPriority?: number;
   /** Free-text over the involved products' display names and the anchor key. */
   query?: string;
-  /** `relevance` (default) = pending first, then closest calls. */
+  /** `priority` (default) = most worth reviewing first. */
   sortBy?: ProductResolutionSortField;
   sortDir?: "ASC" | "DESC";
   page?: number;

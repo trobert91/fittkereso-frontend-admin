@@ -19,8 +19,8 @@ import {
   getResolutionById,
   ResolutionListItem,
 } from "@/api-actions/product/product-resolutions";
-import { ScoreRing } from "@/components/score-ring";
 import { ColoredBadge } from "@/components/colored-badge";
+import { ResolutionPriorityRing } from "./resolution-priority-ring";
 import { ResolutionActions } from "./resolution-actions";
 import { ResolutionCandidateStrip } from "./resolution-candidate-strip";
 import { ResolutionEvidence } from "./resolution-evidence";
@@ -155,14 +155,16 @@ function Header({ item }: { item: ResolutionListItem }) {
 
   return (
     <Group gap="sm" wrap="wrap">
-      <ScoreRing
-        rate={resolution.similarityScore}
-        size={40}
-        thickness={5}
-        tooltip={`similarity: ${resolution.similarityScore}`}
+      <ResolutionPriorityRing
+        priority={resolution.priority}
+        breakdown={resolution.priorityBreakdown}
+        size={48}
       />
       <Badge color={statusColor} variant="light" size="sm" tt="none">
         {STATUS_LABELS[resolution.status]}
+      </Badge>
+      <Badge color="gray" variant="light" size="sm" tt="none">
+        similarity: {resolution.similarityScore}
       </Badge>
       <Badge
         color={resolution.accepted ? "green" : "gray"}

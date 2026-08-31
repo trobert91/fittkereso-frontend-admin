@@ -26,9 +26,10 @@ const PAGE_SIZES = ["10", "20", "50", "100"];
 /**
  * The review queue.
  *
- * Ordering, and the default "open statuses only" filter, are the backend's —
- * `relevance` means pending first, then closest calls, which is the order a
- * wrong automated decision is most likely to be found in.
+ * Ordering, and the default "open statuses only" filter, are the backend's.
+ * Rows lead on `priority` — how much it matters that a human looks — so page 1
+ * is uncertain decisions on well-populated products, not whatever happened to
+ * score highest on similarity.
  */
 export const ProductResolutionList = forwardRef<ProductResolutionListRef>(
   function ProductResolutionList(_props, ref) {

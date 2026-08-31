@@ -11,7 +11,7 @@ import {
 } from "@/api-actions/product/product-resolutions";
 import { ProductDetailsModal } from "@/components/product/details-modal";
 import { ResolutionListingCard, ResolutionProductCard } from "./resolution-product-card";
-import { productLookup } from "./resolution-labels";
+import { filterReasonLabel, productLookup } from "./resolution-labels";
 
 const STRIP_LIMIT = 2;
 
@@ -54,6 +54,9 @@ export function ResolutionCandidateStrip({
 
   const visible = ordered.slice(0, STRIP_LIMIT);
   const hiddenCount = Math.max(ordered.length - visible.length, 0);
+  const hiddenFiltered = ordered
+    .slice(STRIP_LIMIT)
+    .filter((candidate) => candidate.filtered).length;
 
   const input =
     resolution.inputSnapshot?.kind === "product_resolution"
@@ -109,7 +112,9 @@ export function ResolutionCandidateStrip({
 
         {hiddenCount > 0 && (
           <Tooltip
-            label={`${hiddenCount} further candidate${hiddenCount === 1 ? "" : "s"} scored below these — expand the card to see them all`}
+            // "scored below" would be a false description of a filtered
+            // candidate, which was dropped before it was ever scored.
+            label={`${hiddenCount} further candidate${hiddenCount === 1 ? "" : "s"} ${hiddenFiltered > 0 ? "did not make the cut" : "scored below these"} — expand the card to see them all`}
             withArrow
           >
             <Badge
@@ -149,6 +154,7 @@ function CandidateCard({
   const failedGates = candidate.gates?.failedGates ?? [];
   const passed = candidate.gates?.passed ?? false;
   const specs = candidate.specMatchDetails;
+  const filtered = candidate.filtered;
 
   return (
     <ResolutionProductCard
@@ -158,7 +164,11 @@ function CandidateCard({
       }
       score={candidate.matchScore}
       scoreLabel={`match score: ${Math.round(candidate.matchScore ?? 0)} · recalled via ${candidate.source.split("_").join(" ")}`}
-      dimmed={!chosen && !passed}
+      // Filtered candidates stay at full opacity despite having lost. Dimming
+      // is for "considered and outscored"; a candidate excluded on a single
+      // contradiction is the one worth a second look when the filter is the
+      // thing that got it wrong.
+      dimmed={!chosen && !passed && !filtered}
       selected={chosen}
       onClick={onOpen}
       badges={
@@ -168,7 +178,13 @@ function CandidateCard({
               chosen
             </Badge>
           )}
-          {passed ? (
+          {filtered ? (
+            <Tooltip label={filtered.detail} withArrow multiline maw={320}>
+              <Badge color="orange" variant="light" size="xs" tt="none">
+                filtered · {filterReasonLabel(filtered.reason)}
+              </Badge>
+            </Tooltip>
+          ) : passed ? (
             <Badge color="green" variant="light" size="xs" tt="none">
               gates passed
             </Badge>
