@@ -2,7 +2,6 @@ import React from "react";
 import { Stack } from "@mantine/core";
 import { ProductSpecAccordion } from "./ProductSpecAccordion";
 import { ProductModel } from "@/models/product-model";
-import { ProductSpecForm } from "./ProductSpecForm";
 import { SpecDefinitionJsonSchema } from "@/models/product-specs";
 import { mapValues } from "lodash";
 
@@ -38,18 +37,10 @@ export const ProductSpecEditor: React.FC<{ product: ProductModel }> = ({
       <div>No specification schema defined for this product category.</div>
     );
   }
-  if (!product.productCategory.uiSchema) {
-    return <div>No UI schema defined for this product category.</div>;
-  }
 
   return (
     <Stack gap="lg">
       <ProductSpecAccordion product={product} schema={schema} />
-
-      <ProductSpecForm
-        jsonSchema={schema}
-        uiSchema={product.productCategory.uiSchema}
-      />
     </Stack>
   );
 };

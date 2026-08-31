@@ -12,7 +12,7 @@ import {
   Text,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { postTriggerDuplicateDetection } from "@/api-actions/product/product-duplicates";
+import { postTriggerDuplicateDetection } from "@/api-actions/product/product-resolutions";
 import { postCategorySearch } from "@/api-actions/category/category-search";
 import { ProductCategory } from "@/models/product-category";
 import { PiShield } from "react-icons/pi";

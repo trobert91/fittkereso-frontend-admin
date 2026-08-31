@@ -1,28 +1,28 @@
 import {
-  postSearchDuplicatePairs,
-  ProductDuplicatePairSearchParams,
-  ProductDuplicatePairSearchResult,
-} from "@/api-actions/product/product-duplicates";
+  postSearchResolutions,
+  ProductResolutionSearchParams,
+  ProductResolutionSearchResult,
+} from "@/api-actions/product/product-resolutions";
 import { useState } from "react";
 import { notifications } from "@mantine/notifications";
 
-export const useDuplicateSearch = () => {
+export const useResolutionSearch = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchResult, setSearchResult] =
-    useState<ProductDuplicatePairSearchResult | null>(null);
+    useState<ProductResolutionSearchResult | null>(null);
 
-  const searchDuplicates = async (
-    params: ProductDuplicatePairSearchParams,
+  const searchResolutions = async (
+    params: ProductResolutionSearchParams,
   ) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await postSearchDuplicatePairs(params);
+      const response = await postSearchResolutions(params);
 
       if (!response) {
-        throw new Error("Failed to search duplicate pairs");
+        throw new Error("Failed to search resolutions");
       }
 
       setSearchResult(response);
@@ -34,7 +34,7 @@ export const useDuplicateSearch = () => {
       notifications.show({
         color: "red",
         title: errorMessage,
-        message: "Duplicate pair search failed",
+        message: "Resolution search failed",
       });
       setError(errorMessage);
     } finally {
@@ -43,7 +43,7 @@ export const useDuplicateSearch = () => {
   };
 
   return {
-    searchDuplicates,
+    searchResolutions,
     loading,
     error,
     searchResult,

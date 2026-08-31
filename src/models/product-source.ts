@@ -16,6 +16,14 @@ export interface ScrapedProductSpec {
   values?: string[];
 }
 
+// A single scraped image URL with its position in the source listing's
+// gallery/pipeline output order — order 0 is the listing's primary image.
+// See ProductSourceImage on the backend.
+export interface ProductSourceImage {
+  url: string;
+  order: number;
+}
+
 export interface ProductSourceRecord {
   id: string;
   url?: string;
@@ -38,6 +46,12 @@ export interface ProductSourceRecord {
     // `specs` above — also exactly what was sent to the LLM as input.
     extractedSpecs?: ProductSpecs;
     rawSpecs?: ScrapedProductSpec[];
+    // Free-text marketing/description copy from the listing, when the
+    // source's config extracts one. Lower-confidence prose, not a
+    // structured field — only fed to the model-spec LLM call, never the
+    // offer-identity one.
+    description?: string;
+    images?: ProductSourceImage[];
   };
   specValid?: boolean;
   specErrors?: Record<string, any>;

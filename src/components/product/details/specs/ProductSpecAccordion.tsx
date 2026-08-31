@@ -1,10 +1,10 @@
 import { SpecDefinitionJsonSchema } from "@/models/product-specs";
 import {
+  Accordion,
   Alert,
   Anchor,
   Button,
   Card,
-  SimpleGrid,
   Stack,
   Text,
   useMantineColorScheme,
@@ -104,101 +104,107 @@ export const ProductSpecAccordion: React.FC<{
 
   return (
     <Stack gap="lg">
-      {(manualSpecs || specs || Object.keys(groupedSources).length > 0) && (
-        <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
-          {manualSpecs && (
-            <Card withBorder radius="md" padding="md">
-              <Stack gap="sm">
-                <Text fw={700} size="sm">
-                  Manual Specs
-                </Text>
+      {manualSpecs && (
+        <Card withBorder radius="md" padding="md">
+          <Stack gap="sm">
+            <Text fw={700} size="sm">
+              Manual Specs
+            </Text>
 
-                <JsonEditor
-                  value={
-                    manualSpecs ? JSON.stringify(manualSpecs, null, 2) : ""
-                  }
-                  compact={false}
-                  onChange={handleJsonChange}
-                  schema={schema}
-                />
+            <JsonEditor
+              value={manualSpecs ? JSON.stringify(manualSpecs, null, 2) : ""}
+              compact={false}
+              onChange={handleJsonChange}
+              schema={schema}
+            />
 
-                <Button
-                  fullWidth
-                  loading={saveInProgress}
-                  size="md"
-                  onClick={submitManualSpecs}
-                >
-                  Save
-                </Button>
-              </Stack>
-            </Card>
-          )}
+            <Button
+              fullWidth
+              loading={saveInProgress}
+              size="md"
+              onClick={submitManualSpecs}
+            >
+              Save
+            </Button>
+          </Stack>
+        </Card>
+      )}
 
-          {specs && (
-            <Card withBorder radius="md" padding="md">
-              <Stack gap="sm">
-                <Text fw={700} size="sm">
-                  Final Specs
-                </Text>
-
-                {!specValid && (
-                  <Alert variant="light" color="red" icon={<IoMdAlert />}>
-                    {JSON.stringify(specErrors, null, 2)}
-                  </Alert>
-                )}
-
-                <JsonView
-                  value={specs}
-                  collapsed={false}
-                  style={themeStyle}
-                  objectSortKeys={true}
-                />
-              </Stack>
-            </Card>
-          )}
-
-          {Object.entries(groupedSources).map(([sourceName, entries]) => {
-            const latest = maxBy(entries, (e) => e.lastUpdated)!;
-            return (
-              <Card key={sourceName} withBorder radius="md" padding="md">
-                <Stack gap="sm">
-                  <Text fw={700} size="sm">
-                    {sourceName}
+      {(specs || Object.keys(groupedSources).length > 0) && (
+        <Card withBorder radius="md" padding="md">
+          <Accordion multiple variant="separated" radius="sm">
+            {specs && (
+              <Accordion.Item value="final-specs">
+                <Accordion.Control>
+                  <Text fw={500} size="sm">
+                    Final Specs
                   </Text>
+                </Accordion.Control>
+                <Accordion.Panel>
+                  <Stack gap="sm">
+                    {!specValid && (
+                      <Alert variant="light" color="red" icon={<IoMdAlert />}>
+                        {JSON.stringify(specErrors, null, 2)}
+                      </Alert>
+                    )}
 
-                  {entries
-                    .filter((e) => e.url)
-                    .map((e) => (
-                      <Anchor
-                        key={e.id}
-                        href={e.url!}
-                        target="_blank"
-                        size="sm"
-                        display="block"
-                      >
-                        {e.url}
-                      </Anchor>
-                    ))}
-
-                  {!latest.specValid && (
-                    <Alert variant="light" color="red" icon={<IoMdAlert />}>
-                      {JSON.stringify(latest.specErrors, null, 2)}
-                    </Alert>
-                  )}
-
-                  {latest.scrapedProduct?.specs && (
                     <JsonView
-                      value={latest.scrapedProduct.specs}
+                      value={specs}
                       collapsed={false}
                       style={themeStyle}
                       objectSortKeys={true}
                     />
-                  )}
-                </Stack>
-              </Card>
-            );
-          })}
-        </SimpleGrid>
+                  </Stack>
+                </Accordion.Panel>
+              </Accordion.Item>
+            )}
+
+            {Object.entries(groupedSources).map(([sourceName, entries]) => {
+              const latest = maxBy(entries, (e) => e.lastUpdated)!;
+              return (
+                <Accordion.Item key={sourceName} value={sourceName}>
+                  <Accordion.Control>
+                    <Text fw={500} size="sm">
+                      {sourceName}
+                    </Text>
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <Stack gap="sm">
+                      {entries
+                        .filter((e) => e.url)
+                        .map((e) => (
+                          <Anchor
+                            key={e.id}
+                            href={e.url!}
+                            target="_blank"
+                            size="sm"
+                            display="block"
+                          >
+                            {e.url}
+                          </Anchor>
+                        ))}
+
+                      {!latest.specValid && (
+                        <Alert variant="light" color="red" icon={<IoMdAlert />}>
+                          {JSON.stringify(latest.specErrors, null, 2)}
+                        </Alert>
+                      )}
+
+                      {latest.scrapedProduct?.specs && (
+                        <JsonView
+                          value={latest.scrapedProduct.specs}
+                          collapsed={false}
+                          style={themeStyle}
+                          objectSortKeys={true}
+                        />
+                      )}
+                    </Stack>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              );
+            })}
+          </Accordion>
+        </Card>
       )}
     </Stack>
   );

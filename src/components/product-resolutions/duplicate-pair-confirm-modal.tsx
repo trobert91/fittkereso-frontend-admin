@@ -21,12 +21,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { isArray, sortBy } from "lodash";
 import {
-  getDuplicatePairById,
-  postApproveDuplicatePair,
-  postRejectDuplicatePair,
+  getResolutionById,
+  postApproveResolution,
+  postRejectResolution,
   SpecMatchDetails,
   SpecMatchResult,
-} from "@/api-actions/product/product-duplicates";
+} from "@/api-actions/product/product-resolutions";
 import { ProductModel } from "@/models/product-model";
 import { routes } from "@/utils/routes";
 import { LuExternalLink } from "react-icons/lu";
@@ -167,6 +167,10 @@ function ProductColumn({
   );
 }
 
+/** Confirm/reject flow specifically for `duplicate_detection` rows — approve
+ *  triggers a real merge, so this shows a full side-by-side product
+ *  comparison before committing. `product_resolution` rows use
+ *  `ResolutionDetailModal` instead, whose approve/reject are confirmation-only. */
 export function DuplicatePairConfirmModal({
   action,
   onClose,
@@ -189,15 +193,15 @@ export function DuplicatePairConfirmModal({
     const fetchDetails = async () => {
       setDetailsLoading(true);
       try {
-        const pair = await getDuplicatePairById(action.id);
+        const resolution = await getResolutionById(action.id);
 
         const matchMap: SpecMatchMap = {};
-        for (const detail of pair.specMatchDetails?.details ?? []) {
+        for (const detail of resolution.specMatchDetails?.details ?? []) {
           matchMap[detail.key] = detail.match;
         }
         setSpecMatchMap(matchMap);
-        setProductA(pair.productA);
-        setProductB(pair.productB);
+        setProductA(resolution.productA ?? null);
+        setProductB(resolution.productB ?? null);
       } catch (err) {
         console.error("Failed to fetch duplicate pair details:", err);
         notifications.show({
@@ -219,14 +223,14 @@ export function DuplicatePairConfirmModal({
     setConfirmLoading(true);
     try {
       if (action.type === "approve") {
-        await postApproveDuplicatePair(action.id);
+        await postApproveResolution(action.id);
         notifications.show({
           color: "green",
           title: "Pair approved",
           message: "Products have been merged",
         });
       } else {
-        await postRejectDuplicatePair(action.id);
+        await postRejectResolution(action.id);
         notifications.show({
           color: "blue",
           title: "Pair rejected",

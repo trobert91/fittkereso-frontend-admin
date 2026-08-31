@@ -24,12 +24,13 @@ import {
   Tooltip,
 } from "@mantine/core";
 import {
-  ProductDuplicateRecord,
-  ProductDuplicateDecision,
-  ProductDuplicateOrigin,
-  deleteProductDuplicatePair,
-} from "@/api-actions/product/product-duplicates";
-import { useDuplicateSearch } from "@/hooks/useDuplicateSearch";
+  ProductResolutionRecord,
+  ProductResolutionDecision,
+  ProductResolutionFlow,
+  ProductResolutionOrigin,
+  deleteResolution,
+} from "@/api-actions/product/product-resolutions";
+import { useResolutionSearch } from "@/hooks/useResolutionSearch";
 import { ProductCategory } from "@/models/product-category";
 import { postCategorySearch } from "@/api-actions/category/category-search";
 import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
@@ -37,74 +38,88 @@ import {
   DuplicatePairConfirmModal,
   DuplicatePairConfirmAction,
 } from "./duplicate-pair-confirm-modal";
+import { ResolutionDetailModal } from "./resolution-detail-modal";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
 import { LuExternalLink } from "react-icons/lu";
-import { IoCheckmark, IoClose, IoTrash } from "react-icons/io5";
+import { IoCheckmark, IoClose, IoEye, IoTrash } from "react-icons/io5";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 
-export interface ProductDuplicationTableRef {
+export interface ProductResolutionTableRef {
   refresh: () => void;
 }
 
-const DECISION_OPTIONS: { value: ProductDuplicateDecision; label: string }[] = [
+const FLOW_OPTIONS: { value: ProductResolutionFlow; label: string }[] = [
+  { value: "product_resolution", label: "Product resolution" },
+  { value: "duplicate_detection", label: "Duplicate detection" },
+];
+
+const FLOW_LABELS: Record<ProductResolutionFlow, string> = {
+  product_resolution: "Resolution",
+  duplicate_detection: "Duplicate",
+};
+
+const DECISION_OPTIONS: { value: ProductResolutionDecision; label: string }[] = [
   { value: "pending_review", label: "Pending review" },
-  { value: "auto_merged", label: "Auto merged" },
+  { value: "auto_accepted", label: "Auto accepted" },
   { value: "approved", label: "Approved" },
   { value: "rejected", label: "Rejected" },
 ];
 
-const DECISION_COLORS: Record<ProductDuplicateDecision, string> = {
+const DECISION_COLORS: Record<ProductResolutionDecision, string> = {
   pending_review: "orange",
-  auto_merged: "green",
+  auto_accepted: "green",
   approved: "blue",
   rejected: "red",
 };
 
-const ORIGIN_OPTIONS: { value: ProductDuplicateOrigin; label: string }[] = [
+const ORIGIN_OPTIONS: { value: ProductResolutionOrigin; label: string }[] = [
   { value: "scrape_time", label: "Scrape-time (ambiguous match)" },
   { value: "nightly_detection", label: "Nightly detection" },
 ];
 
-const ORIGIN_LABELS: Record<ProductDuplicateOrigin, string> = {
+const ORIGIN_LABELS: Record<ProductResolutionOrigin, string> = {
   scrape_time: "Scrape-time",
   nightly_detection: "Nightly detection",
 };
 
-export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
-  function ProductDuplicationTable(_props, ref) {
-  const [data, setData] = useState<ProductDuplicateRecord[]>([]);
+export const ProductResolutionTable = forwardRef<ProductResolutionTableRef>(
+  function ProductResolutionTable(_props, ref) {
+  const [data, setData] = useState<ProductResolutionRecord[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(50);
   const [totalPages, setTotalPages] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [flowFilter, setFlowFilter] = useState<string | null>(null);
   const [decisionFilter, setDecisionFilter] = useState<string | null>(
     "pending_review",
   );
   const [originFilter, setOriginFilter] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] =
     useState<DuplicatePairConfirmAction | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
-  const { searchDuplicates, loading, searchResult } = useDuplicateSearch();
+  const { searchResolutions, loading, searchResult } = useResolutionSearch();
 
   const doSearch = () => {
-    searchDuplicates({
+    searchResolutions({
       page,
       pageSize,
       categoryId: categoryFilter || undefined,
-      decision: (decisionFilter as ProductDuplicateDecision) || undefined,
-      origin: (originFilter as ProductDuplicateOrigin) || undefined,
+      flow: (flowFilter as ProductResolutionFlow) || undefined,
+      decision: (decisionFilter as ProductResolutionDecision) || undefined,
+      origin: (originFilter as ProductResolutionOrigin) || undefined,
     });
   };
 
   useImperativeHandle(ref, () => ({ refresh: doSearch }));
 
   const columnHelper = useMemo(
-    () => createColumnHelper<ProductDuplicateRecord>(),
+    () => createColumnHelper<ProductResolutionRecord>(),
     [],
   );
 
@@ -130,71 +145,143 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
   useEffect(() => {
     doSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, categoryFilter, decisionFilter, originFilter]);
+  }, [page, pageSize, categoryFilter, flowFilter, decisionFilter, originFilter]);
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor("productA", {
-        header: "Product A",
+      columnHelper.display({
+        id: "flow",
+        header: "Type",
         cell: (props) => {
-          const product = props.getValue();
+          const row = props.row.original;
+          return (
+            <Badge
+              color={row.flow === "duplicate_detection" ? "grape" : "cyan"}
+              variant="light"
+              size="sm"
+            >
+              {FLOW_LABELS[row.flow]}
+            </Badge>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: "left",
+        header: "Product A / Input",
+        cell: (props) => {
+          const row = props.row.original;
+          if (row.flow === "duplicate_detection") {
+            const product = row.productA;
+            if (!product) return null;
+            return (
+              <Stack gap={2}>
+                <Group gap="xs">
+                  <Anchor
+                    component={Link}
+                    href={routes.products.details(product.id)}
+                    size="sm"
+                    fw={500}
+                  >
+                    {product.displayName}
+                  </Anchor>
+                  <ActionIcon
+                    component={Link}
+                    href={routes.products.details(product.id)}
+                    variant="subtle"
+                    size="xs"
+                  >
+                    <LuExternalLink size={12} />
+                  </ActionIcon>
+                </Group>
+                <Text size="xs" c="dimmed">
+                  {product.brand?.name}
+                </Text>
+                <ProductSpecsBadges specs={product.orderedSpecs} />
+              </Stack>
+            );
+          }
+
+          const input =
+            row.inputSnapshot?.kind === "product_resolution"
+              ? row.inputSnapshot.input
+              : undefined;
           return (
             <Stack gap={2}>
-              <Group gap="xs">
-                <Anchor
-                  component={Link}
-                  href={routes.products.details(product.id)}
-                  size="sm"
-                  fw={500}
-                >
-                  {product.displayName}
-                </Anchor>
-                <ActionIcon
-                  component={Link}
-                  href={routes.products.details(product.id)}
-                  variant="subtle"
-                  size="xs"
-                >
-                  <LuExternalLink size={12} />
-                </ActionIcon>
-              </Group>
-              <Text size="xs" c="dimmed">
-                {product.brand?.name}
+              <Text size="sm" fw={500}>
+                {input?.brand} {input?.model ?? input?.displayName ?? "—"}
               </Text>
-              <ProductSpecsBadges specs={product.orderedSpecs} />
+              {input?.category?.name && (
+                <Text size="xs" c="dimmed">
+                  {input.category.name}
+                </Text>
+              )}
             </Stack>
           );
         },
       }),
-      columnHelper.accessor("productB", {
-        header: "Product B",
+      columnHelper.display({
+        id: "right",
+        header: "Product B / Resolved",
         cell: (props) => {
-          const product = props.getValue();
+          const row = props.row.original;
+          if (row.flow === "duplicate_detection") {
+            const product = row.productB;
+            if (!product) return null;
+            return (
+              <Stack gap={2}>
+                <Group gap="xs">
+                  <Anchor
+                    component={Link}
+                    href={routes.products.details(product.id)}
+                    size="sm"
+                    fw={500}
+                  >
+                    {product.displayName}
+                  </Anchor>
+                  <ActionIcon
+                    component={Link}
+                    href={routes.products.details(product.id)}
+                    variant="subtle"
+                    size="xs"
+                  >
+                    <LuExternalLink size={12} />
+                  </ActionIcon>
+                </Group>
+                <Text size="xs" c="dimmed">
+                  {product.brand?.name}
+                </Text>
+                <ProductSpecsBadges specs={product.orderedSpecs} />
+              </Stack>
+            );
+          }
+
+          if (!row.resolvedProduct) {
+            return (
+              <Badge color="gray" variant="outline" size="sm">
+                Unresolved
+              </Badge>
+            );
+          }
+          const product = row.resolvedProduct;
           return (
-            <Stack gap={2}>
-              <Group gap="xs">
-                <Anchor
-                  component={Link}
-                  href={routes.products.details(product.id)}
-                  size="sm"
-                  fw={500}
-                >
-                  {product.displayName}
-                </Anchor>
-                <ActionIcon
-                  component={Link}
-                  href={routes.products.details(product.id)}
-                  variant="subtle"
-                  size="xs"
-                >
-                  <LuExternalLink size={12} />
-                </ActionIcon>
-              </Group>
-              <Text size="xs" c="dimmed">
-                {product.brand?.name}
-              </Text>
-              <ProductSpecsBadges specs={product.orderedSpecs} />
-            </Stack>
+            <Group gap="xs">
+              <Anchor
+                component={Link}
+                href={routes.products.details(product.id)}
+                size="sm"
+                fw={500}
+              >
+                {product.displayName}
+              </Anchor>
+              <ActionIcon
+                component={Link}
+                href={routes.products.details(product.id)}
+                variant="subtle"
+                size="xs"
+              >
+                <LuExternalLink size={12} />
+              </ActionIcon>
+            </Group>
           );
         },
       }),
@@ -224,7 +311,7 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
                   variant="light"
                   size="sm"
                 >
-                  {row.decision.replace("_", " ")}
+                  {row.decision.replace(/_/g, " ")}
                 </Badge>
                 {row.origin && (
                   <Badge
@@ -233,6 +320,11 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
                     size="sm"
                   >
                     {ORIGIN_LABELS[row.origin]}
+                  </Badge>
+                )}
+                {row.decisionSnapshot && (
+                  <Badge variant="outline" size="sm">
+                    {row.decisionSnapshot.kind.replace(/_/g, " ")}
                   </Badge>
                 )}
               </Group>
@@ -249,14 +341,19 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
           );
         },
       }),
-      columnHelper.accessor("productA", {
+      columnHelper.display({
         id: "category",
         header: "Category",
-        cell: (props) => (
-          <Text size="sm">
-            {props.getValue().productCategory?.name}
-          </Text>
-        ),
+        cell: (props) => {
+          const row = props.row.original;
+          const categoryName =
+            row.productA?.productCategory?.name ??
+            row.resolvedProduct?.productCategory?.name ??
+            (row.inputSnapshot?.kind === "product_resolution"
+              ? row.inputSnapshot.category?.name
+              : undefined);
+          return <Text size="sm">{categoryName}</Text>;
+        },
       }),
       columnHelper.display({
         id: "actions",
@@ -266,64 +363,78 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
 
           const handleDelete = () => {
             modals.openConfirmModal({
-              title: "Delete duplicate record",
+              title: "Delete resolution record",
               children: (
                 <Text size="sm">
-                  Delete this duplicate pair record? The products themselves will not be affected.
+                  Delete this record? The products themselves will not be affected.
                 </Text>
               ),
               labels: { confirm: "Delete", cancel: "Cancel" },
               confirmProps: { color: "red" },
               onConfirm: async () => {
                 try {
-                  await deleteProductDuplicatePair(row.id);
+                  await deleteResolution(row.id);
                   doSearch();
                 } catch (err: any) {
                   notifications.show({
                     color: "red",
                     title: "Delete failed",
-                    message: err?.message || "Failed to delete duplicate pair",
+                    message: err?.message || "Failed to delete record",
                   });
                 }
               },
             });
           };
 
+          const canApprove = row.decision === "pending_review";
+          const canReject =
+            row.decision === "pending_review" ||
+            row.decision === "auto_accepted";
+
           return (
             <Group gap="xs" wrap="nowrap">
-              {row.decision === "pending_review" && (
+              {row.flow === "duplicate_detection" ? (
                 <>
-                  <Tooltip label="Approve & merge">
-                    <ActionIcon
-                      color="green"
-                      variant="light"
-                      size="sm"
-                      onClick={() =>
-                        setConfirmAction({
-                          id: row.id,
-                          type: "approve",
-                        })
-                      }
-                    >
-                      <IoCheckmark size={14} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label="Reject">
-                    <ActionIcon
-                      color="red"
-                      variant="light"
-                      size="sm"
-                      onClick={() =>
-                        setConfirmAction({
-                          id: row.id,
-                          type: "reject",
-                        })
-                      }
-                    >
-                      <IoClose size={14} />
-                    </ActionIcon>
-                  </Tooltip>
+                  {canApprove && (
+                    <Tooltip label="Approve & merge">
+                      <ActionIcon
+                        color="green"
+                        variant="light"
+                        size="sm"
+                        onClick={() =>
+                          setConfirmAction({ id: row.id, type: "approve" })
+                        }
+                      >
+                        <IoCheckmark size={14} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
+                  {canReject && (
+                    <Tooltip label="Reject">
+                      <ActionIcon
+                        color="red"
+                        variant="light"
+                        size="sm"
+                        onClick={() =>
+                          setConfirmAction({ id: row.id, type: "reject" })
+                        }
+                      >
+                        <IoClose size={14} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
                 </>
+              ) : (
+                <Tooltip label="View details">
+                  <ActionIcon
+                    color="blue"
+                    variant="light"
+                    size="sm"
+                    onClick={() => setDetailId(row.id)}
+                  >
+                    <IoEye size={14} />
+                  </ActionIcon>
+                </Tooltip>
               )}
               <Tooltip label="Delete record">
                 <ActionIcon
@@ -359,6 +470,18 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
     <Stack gap="md">
       <Card withBorder p="md">
         <Group gap="md" align="flex-end">
+          <Select
+            label="Type"
+            placeholder="Both flows"
+            data={FLOW_OPTIONS}
+            value={flowFilter}
+            onChange={(value) => {
+              setFlowFilter(value);
+              setPage(1);
+            }}
+            clearable
+            w={200}
+          />
           <Select
             label="Category"
             placeholder="All categories"
@@ -408,7 +531,7 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
 
       {!loading && data.length === 0 && (
         <Text c="dimmed" ta="center" py="xl">
-          No duplicate pairs found.
+          No resolution records found.
         </Text>
       )}
 
@@ -459,6 +582,11 @@ export const ProductDuplicationTable = forwardRef<ProductDuplicationTableRef>(
       <DuplicatePairConfirmModal
         action={confirmAction}
         onClose={() => setConfirmAction(null)}
+        onComplete={doSearch}
+      />
+      <ResolutionDetailModal
+        resolutionId={detailId}
+        onClose={() => setDetailId(null)}
         onComplete={doSearch}
       />
     </Stack>

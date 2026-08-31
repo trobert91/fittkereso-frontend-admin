@@ -37,6 +37,15 @@ const initialState: ProductState = {
   error: null,
 };
 
+// Manual (admin-entered) specs live on the ProductSourceRecord with no
+// linked source — see product-spec-updater.service.ts on the backend.
+// Defaults to {} (not null) so the Manual Specs editor always renders, even
+// for a product with no manual-entry source record yet — it's how an admin
+// creates the first manual spec for a product, not just edits an existing one.
+function deriveManualSpecs(product: ProductModel | null): ProductSpecs {
+  return product?.sources?.find((s) => !s.source)?.scrapedProduct?.specs ?? {};
+}
+
 // --- Async thunk ---
 export const updateProduct = createAsyncThunk<
   ProductModel, // Returned product
@@ -130,9 +139,11 @@ export const productSlice = createSlice({
   reducers: {
     setProduct: (state, action: PayloadAction<ProductModel | null>) => {
       state.product = action.payload;
+      state.manualSpecs = deriveManualSpecs(action.payload);
     },
     clearProduct: (state) => {
       state.product = null;
+      state.manualSpecs = null;
       state.error = null;
     },
     setManualSpecs: (state, action: PayloadAction<ProductSpecs | null>) => {
@@ -233,12 +244,9 @@ export const productSlice = createSlice({
         state.saveInProgress = false;
 
         const product = action.payload;
-        const manualSpecs =
-          product.sources?.find((s) => !s.source)?.scrapedProduct?.specs ??
-          null;
 
         state.product = product;
-        state.manualSpecs = manualSpecs;
+        state.manualSpecs = deriveManualSpecs(product);
 
         state.error = null;
       })

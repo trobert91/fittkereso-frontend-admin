@@ -39,8 +39,8 @@ export const routes = {
     list: "/product-sources/list",
     details: (id: string) => `/product-sources/${id}`,
   },
-  productDuplications: {
-    list: "/product-duplications/list",
+  productResolutions: {
+    list: "/product-resolutions/list",
   },
   brands: {
     list: "/brands/list",
