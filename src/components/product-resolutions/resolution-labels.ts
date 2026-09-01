@@ -273,6 +273,8 @@ export const AI_VERDICT_LABELS: Record<ResolutionAiVerdict, string> = {
  * the system correctly refusing to apply an answer to a question that changed.
  */
 export const NOT_EXECUTED_REASONS: Record<AiReviewNotExecutedReason, string> = {
+  dry_run:
+    "Dry run is on, so the verdict was recorded but nothing was acted on.",
   not_confident:
     "Not confident enough to act on its own — it is left for you to decide.",
   execution_disabled: "AI execution is switched off, so this is advice only.",

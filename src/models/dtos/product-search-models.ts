@@ -7,6 +7,9 @@ export interface ProductSearchParams {
   minPrice?: number;
   maxPrice?: number;
   searchTerm?: string;
+  /** Exact product id. Kept separate from `searchTerm` so pasting a uuid finds
+   *  that one product rather than whatever the trigram ranker scores near it. */
+  id?: string;
 
   page?: number;
   pageSize?: number;

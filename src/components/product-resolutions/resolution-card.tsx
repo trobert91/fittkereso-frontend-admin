@@ -36,7 +36,7 @@ import { ProductModel } from "@/models/product-model";
 import { formatDate } from "@/utils/date";
 import { routes } from "@/utils/routes";
 import { ResolutionActions } from "./resolution-actions";
-import { ResolutionCandidateStrip } from "./resolution-candidate-strip";
+import { ResolutionCandidatePanel } from "./resolution-candidate-panel";
 import { EvidenceSection, ResolutionEvidence } from "./resolution-evidence";
 import { ResolutionInputPanel } from "./resolution-input-panel";
 import { ResolutionHistoryModal } from "./resolution-history-modal";
@@ -281,6 +281,19 @@ export function ResolutionCard({
           <VerdictLine item={item} />
         </Card.Section>
 
+        {/* Leads the content: a wrong input is the most common cause of a wrong
+            match, and it frames every candidate below it — so it sits above them
+            rather than after, and never behind the expander. */}
+        <Card.Section withBorder inheritPadding py="md">
+          <EvidenceSection title="What the system was given">
+            <ResolutionInputPanel resolution={resolution} />
+          </EvidenceSection>
+        </Card.Section>
+
+        {/* The candidates, in whichever shape the expander is in: a grid of
+            tiles when closed, a row per candidate when open. One section rather
+            than a strip plus a separate "Candidates considered" block, so
+            expanding deepens the comparison instead of restating it. */}
         <Card.Section withBorder inheritPadding py="md">
           {resolution.flow === "duplicate_detection" ? (
             <ResolutionPairStrip
@@ -288,19 +301,12 @@ export function ResolutionCard({
               showMergeDirection={!state.lastPerformed}
             />
           ) : (
-            <ResolutionCandidateStrip
+            <ResolutionCandidatePanel
               resolution={resolution}
               listing={item.listing}
+              expanded={expanded}
             />
           )}
-        </Card.Section>
-
-        {/* Closed state, not evidence: a wrong input is the most common cause
-            of a wrong match, and it should not cost an expand to notice. */}
-        <Card.Section withBorder inheritPadding py="md">
-          <EvidenceSection title="What the system was given">
-            <ResolutionInputPanel resolution={resolution} />
-          </EvidenceSection>
         </Card.Section>
 
         {/* Above the fold, not behind the expander: an unapplied recommendation

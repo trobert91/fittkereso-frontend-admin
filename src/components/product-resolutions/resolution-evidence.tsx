@@ -1,44 +1,34 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import {
   Alert,
   Anchor,
   Badge,
-  Card,
   Divider,
   Group,
-  Progress,
   Stack,
   Text,
-  Tooltip,
 } from "@mantine/core";
 import Link from "next/link";
-import { isEmpty, orderBy } from "lodash";
+import { isEmpty } from "lodash";
 import { IoWarning } from "react-icons/io5";
-import { LuExternalLink, LuFilterX } from "react-icons/lu";
-import {
-  MatchResultComponents,
-  ProductResolutionCandidateRecord,
-  ProductResolutionRecord,
-  ResolutionListItem,
-} from "@/api-actions/product/product-resolutions";
-import { ProductDetailsModal } from "@/components/product/details-modal";
+import { ResolutionListItem } from "@/api-actions/product/product-resolutions";
 import { formatDate } from "@/utils/date";
 import { routes } from "@/utils/routes";
-import { GateBadges } from "./gate-badges";
 import { SpecMatchTable } from "./spec-match-table";
 import { ListingPrice, formatPrice } from "./resolution-product-card";
-import { filterReasonLabel, productLookup } from "./resolution-labels";
 
 /**
- * Everything behind the decision, in one block shared by the card's inline
- * expansion and the review modal — so what a reviewer reads before deciding is
- * literally the same view either way.
+ * What is left behind the expander once the candidates moved out.
  *
- * "What the system was given" is deliberately *not* here: it moved out to
- * `ResolutionInputPanel`, which both callers render in their always-visible
- * area. This block is only the part that earns an expander.
+ * "Candidates considered" used to live here as a second, deeper rendering of the
+ * same list the closed card showed as tiles. It is now one component —
+ * `ResolutionCandidatePanel` — that switches shape on `expanded`, so opening the
+ * row deepens the comparison in place instead of restating it further down.
+ * "What the system was given" likewise sits in the always-visible area.
+ *
+ * This block is the remainder: the pair's spec comparison, and where the listing
+ * actually lives now.
  */
 export function ResolutionEvidence({ item }: { item: ResolutionListItem }) {
   const { resolution } = item;
@@ -49,15 +39,10 @@ export function ResolutionEvidence({ item }: { item: ResolutionListItem }) {
   return (
     // `pt="lg"` rather than a symmetric `py`: the caller's section border sits
     // directly above the first heading, and matching the inter-section rhythm
-    // there is what keeps "Candidates considered" from reading as glued to it.
+    // there is what keeps the first heading from reading as glued to it.
     <Stack gap="lg" pt="lg" pb="md">
-      <EvidenceSection title="Candidates considered">
-        <CandidateList resolution={resolution} />
-      </EvidenceSection>
-
       {resolution.flow === "duplicate_detection" && (
         <>
-          <Divider />
           <EvidenceSection title="Spec comparison">
             <SpecMatchTable
               details={resolution.specMatchDetails}
@@ -65,10 +50,10 @@ export function ResolutionEvidence({ item }: { item: ResolutionListItem }) {
               labelB={resolution.productB?.displayName ?? "B"}
             />
           </EvidenceSection>
+          <Divider />
         </>
       )}
 
-      <Divider />
       <EvidenceSection title="The listing">
         <ListingPanel item={item} />
       </EvidenceSection>
@@ -91,215 +76,6 @@ export function EvidenceSection({
         {title}
       </Text>
       {children}
-    </Stack>
-  );
-}
-
-function CandidateList({
-  resolution,
-}: {
-  resolution: ProductResolutionRecord;
-}) {
-  const [detailProductId, setDetailProductId] = useState<string | null>(null);
-  const products = useMemo(() => productLookup(resolution), [resolution]);
-  const chosenId = resolution.resolvedProduct?.id;
-
-  const ordered = useMemo(
-    () => orderBy(resolution.candidates ?? [], [(c) => c.matchScore ?? 0], ["desc"]),
-    [resolution.candidates],
-  );
-
-  if (isEmpty(ordered)) {
-    return (
-      <Text size="sm" c="dimmed">
-        No candidates were recalled for this decision.
-      </Text>
-    );
-  }
-
-  return (
-    <>
-      <Stack gap="sm">
-        {ordered.map((candidate) => (
-          <CandidateDetail
-            key={candidate.candidateId}
-            candidate={candidate}
-            name={
-              products[candidate.candidateId]?.displayName ??
-              candidate.displayName ??
-              candidate.model ??
-              candidate.candidateId
-            }
-            chosen={candidate.candidateId === chosenId}
-            onOpen={() => setDetailProductId(candidate.candidateId)}
-          />
-        ))}
-      </Stack>
-
-      <ProductDetailsModal
-        productId={detailProductId}
-        opened={detailProductId !== null}
-        onClose={() => setDetailProductId(null)}
-      />
-    </>
-  );
-}
-
-function CandidateDetail({
-  candidate,
-  name,
-  chosen,
-  onOpen,
-}: {
-  candidate: ProductResolutionCandidateRecord;
-  name: string;
-  chosen: boolean;
-  onOpen: () => void;
-}) {
-  return (
-    <Card
-      withBorder
-      p="sm"
-      radius="sm"
-      // Same green treatment as the candidate strip, so the chosen candidate is
-      // recognisable in both places without re-reading the badges.
-      style={
-        chosen
-          ? {
-              borderColor: "var(--mantine-color-green-6)",
-              borderWidth: 2,
-              background: "var(--mantine-color-green-light)",
-            }
-          : undefined
-      }
-    >
-      <Stack gap={8}>
-        <Group justify="space-between" wrap="nowrap">
-          <Group gap="xs" wrap="nowrap">
-            {chosen && (
-              <Badge color="green" variant="filled" size="sm" tt="none">
-                chosen
-              </Badge>
-            )}
-            <Anchor size="sm" fw={600} onClick={onOpen} component="button">
-              {name}
-            </Anchor>
-            <Anchor
-              component={Link}
-              href={routes.products.details(candidate.candidateId)}
-              target="_blank"
-            >
-              <LuExternalLink size={12} />
-            </Anchor>
-          </Group>
-
-          <Group gap="xs" wrap="nowrap">
-            {candidate.brand && (
-              <Text size="xs" c="dimmed">
-                {candidate.brand}
-              </Text>
-            )}
-            <Tooltip
-              label="How this candidate was recalled into the comparison."
-              withArrow
-            >
-              <Badge variant="outline" size="sm" tt="none">
-                {candidate.source.split("_").join(" ")}
-              </Badge>
-            </Tooltip>
-            {candidate.matchScore !== undefined && (
-              <Badge color="grape" variant="light" size="sm" tt="none">
-                score {Math.round(candidate.matchScore)}
-              </Badge>
-            )}
-          </Group>
-        </Group>
-
-        <GateBadges
-          passed={candidate.gates?.passed ?? false}
-          failedGates={candidate.gates?.failedGates ?? []}
-          filtered={candidate.filtered}
-        />
-
-        {/* For a filtered candidate this string is the whole explanation —
-            there is no score breakdown or spec table below it, because it was
-            dropped before either was computed. Rendered inline rather than as
-            tooltip-only text: it is the one thing a reviewer opened this row
-            to read. */}
-        {candidate.filtered && (
-          <Alert
-            color="orange"
-            variant="light"
-            p="xs"
-            icon={<LuFilterX size={14} />}
-          >
-            <Text size="xs">
-              Excluded by the {filterReasonLabel(candidate.filtered.reason)}{" "}
-              filter:{" "}
-              <Text span size="xs" fw={600} ff="monospace">
-                {candidate.filtered.detail}
-              </Text>
-            </Text>
-          </Alert>
-        )}
-
-        {candidate.matchComponents && (
-          <MatchComponentBars components={candidate.matchComponents} />
-        )}
-
-        {candidate.specMatchDetails && (
-          <>
-            <Divider />
-            <SpecMatchTable
-              details={candidate.specMatchDetails}
-              labelA="listing"
-              labelB={name}
-            />
-          </>
-        )}
-      </Stack>
-    </Card>
-  );
-}
-
-/** The score's constituent parts. A high total built entirely on string
- *  similarity with no spec agreement is a different kind of match than one
- *  backed by an alias hit, and the breakdown is what shows that. */
-function MatchComponentBars({
-  components,
-}: {
-  components: MatchResultComponents;
-}) {
-  const bars: { label: string; value: number }[] = [
-    { label: "name similarity", value: components.stringSimilarity },
-    { label: "token overlap", value: components.tokenOverlap },
-    { label: "alphanumeric", value: components.alphaMatch },
-    { label: "specs", value: components.specSimilarity },
-  ];
-
-  return (
-    <Stack gap={4}>
-      {bars.map((bar) => (
-        <Group key={bar.label} gap="xs" wrap="nowrap">
-          <Text size="xs" c="dimmed" style={{ minWidth: 120 }}>
-            {bar.label}
-          </Text>
-          <Progress
-            value={Math.max(0, Math.min(100, bar.value * 100))}
-            size="sm"
-            radius="sm"
-            style={{ flex: 1, maxWidth: 220 }}
-          />
-          <Text size="xs" c="dimmed" style={{ minWidth: 32 }}>
-            {Math.round(bar.value * 100)}
-          </Text>
-        </Group>
-      ))}
-      {components.aliasMatch && (
-        <Badge color="green" variant="light" size="xs" tt="none" w="fit-content">
-          alias match
-        </Badge>
-      )}
     </Stack>
   );
 }

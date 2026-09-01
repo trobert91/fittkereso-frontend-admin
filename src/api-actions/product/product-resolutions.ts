@@ -29,20 +29,11 @@ export type ProductResolutionStatus =
   /** Replaced by a newer row for the same anchor. */
   | "superseded";
 
-/** Statuses that still need attention — the queue's default filter. */
+/** Statuses that still need attention. The review queue opens on these, sending
+ *  them explicitly — the API applies no status filter when none is given. */
 export const OPEN_RESOLUTION_STATUSES: ProductResolutionStatus[] = [
   "pending",
   "failed",
-];
-
-/** Every status, for the filter's "All" option. Sending these explicitly is
- *  what distinguishes "show me everything" from sending nothing, which the
- *  backend reads as the open-statuses default. */
-export const ALL_RESOLUTION_STATUSES: ProductResolutionStatus[] = [
-  "pending",
-  "failed",
-  "done",
-  "superseded",
 ];
 
 // --- Decision log ---
@@ -462,8 +453,8 @@ export type ProductResolutionSortField =
 export interface ProductResolutionSearchParams {
   /** Omit to show decisions from both flows in one page. */
   flow?: ProductResolutionFlow;
-  /** When neither `status` nor `statuses` is set the backend returns only rows
-   *  that still need attention — the queue shows work, not history. */
+  /** When neither `status` nor `statuses` is set, no status filter is applied
+   *  and every row is returned — history included. */
   status?: ProductResolutionStatus;
   statuses?: ProductResolutionStatus[];
   accepted?: boolean;
@@ -623,6 +614,8 @@ export async function deleteResolution(id: string): Promise<void> {
 
 /** Why a recommendation was not carried out. Absent when it was. */
 export type AiReviewNotExecutedReason =
+  /** Server is in dry-run: judged and recorded, but nothing was acted on. */
+  | "dry_run"
   /** Only `high` acts. Low and medium stay as advice. */
   | "not_confident"
   /** `executeActions` is off — every verdict is advisory. */
@@ -660,12 +653,14 @@ export interface AiReviewBatchSummary {
   costUsd: number;
   /** Stopped on the row cap or the cost cap — more work is waiting. */
   capped: boolean;
+  dryRun: boolean;
   durationMs: number;
 }
 
 export interface RunAiReviewBody {
   maxPerRun?: number;
   minPriority?: number;
+  dryRun?: boolean;
   /** Can only ever *tighten* the server's setting — passing `true` when the
    *  server says `false` does not enable merges. */
   executeDestructive?: boolean;

@@ -41,6 +41,9 @@ export function AiReviewRunModal({ onComplete }: { onComplete: () => void }) {
   const [running, setRunning] = useState(false);
   const [maxPerRun, setMaxPerRun] = useState<number>(DEFAULT_ROWS);
   const [minPriority, setMinPriority] = useState<number | undefined>(undefined);
+  // Defaults off, matching the server: dry run is now the deliberate choice for
+  // a trial run rather than the state you have to remember to leave.
+  const [dryRun, setDryRun] = useState(false);
   const [allowDestructive, setAllowDestructive] = useState(false);
   const [summary, setSummary] = useState<AiReviewBatchSummary | null>(null);
 
@@ -55,18 +58,21 @@ export function AiReviewRunModal({ onComplete }: { onComplete: () => void }) {
       const result = await postRunAiReview({
         maxPerRun,
         minPriority,
+        dryRun,
         executeDestructive: allowDestructive,
       });
       setSummary(result);
 
       notifications.show({
-        color: "green",
-        title: "AI review finished",
+        color: result.dryRun ? "blue" : "green",
+        title: result.dryRun
+          ? "AI review finished (dry run)"
+          : "AI review finished",
         message: `${result.rowsReviewed} reviewed · ${result.executed} acted on · ${result.advisory} left for you`,
       });
 
-      // Every reviewed row now carries a stored verdict, so the list is stale
-      // whether or not anything was acted on.
+      // Every reviewed row carries a stored verdict, dry run included, so the
+      // list is stale whether or not anything was acted on.
       if (result.rowsReviewed > 0) onComplete();
     } catch (err) {
       notifications.show({
@@ -130,15 +136,23 @@ export function AiReviewRunModal({ onComplete }: { onComplete: () => void }) {
             </Group>
 
             <Switch
+              label="Dry run"
+              description="Record the verdicts on the rows but act on nothing — no merges, splits or confirmations."
+              checked={dryRun}
+              onChange={(event) => setDryRun(event.currentTarget.checked)}
+            />
+
+            <Switch
               label="Allow merges and splits"
               description="Only applies to high-confidence verdicts, and only if the server permits it — this switch can restrict that setting, never widen it."
               checked={allowDestructive}
+              disabled={dryRun}
               onChange={(event) =>
                 setAllowDestructive(event.currentTarget.checked)
               }
             />
 
-            {allowDestructive && (
+            {!dryRun && allowDestructive && (
               <Alert
                 color="orange"
                 variant="light"
@@ -211,6 +225,11 @@ function RunSummary({ summary }: { summary: AiReviewBatchSummary }) {
         <Text size="sm" fw={600}>
           Result
         </Text>
+        {summary.dryRun && (
+          <Badge color="blue" variant="light" size="sm" tt="none">
+            dry run — recorded, nothing acted on
+          </Badge>
+        )}
         {summary.capped && (
           <Badge color="orange" variant="light" size="sm" tt="none">
             stopped early — more waiting

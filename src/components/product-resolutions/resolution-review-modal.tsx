@@ -22,7 +22,7 @@ import {
 import { ColoredBadge } from "@/components/colored-badge";
 import { ResolutionPriorityRing } from "./resolution-priority-ring";
 import { ResolutionActions } from "./resolution-actions";
-import { ResolutionCandidateStrip } from "./resolution-candidate-strip";
+import { ResolutionCandidatePanel } from "./resolution-candidate-panel";
 import { EvidenceSection, ResolutionEvidence } from "./resolution-evidence";
 import { ResolutionInputPanel } from "./resolution-input-panel";
 import { ResolutionPairStrip } from "./resolution-pair-strip";
@@ -105,26 +105,29 @@ export function ResolutionReviewModal({
             <Header item={item} />
 
             <Card withBorder radius="sm" p={0}>
+              {/* Leads, mirroring the card: the inputs frame every candidate
+                  below them. */}
               <Card.Section inheritPadding py="md">
+                <EvidenceSection title="What the system was given">
+                  <ResolutionInputPanel resolution={item.resolution} />
+                </EvidenceSection>
+              </Card.Section>
+
+              {/* Always the expanded shape here — the modal is the deep read, so
+                  there is no half-open state for it to be in. */}
+              <Card.Section withBorder inheritPadding py="md">
                 {item.resolution.flow === "duplicate_detection" ? (
                   <ResolutionPairStrip
                     resolution={item.resolution}
                     showMergeDirection={!item.state.lastPerformed}
                   />
                 ) : (
-                  <ResolutionCandidateStrip
+                  <ResolutionCandidatePanel
                     resolution={item.resolution}
                     listing={item.listing}
+                    expanded
                   />
                 )}
-              </Card.Section>
-
-              {/* Above the expander's worth of evidence, mirroring the card:
-                  the inputs frame everything below them. */}
-              <Card.Section withBorder inheritPadding py="md">
-                <EvidenceSection title="What the system was given">
-                  <ResolutionInputPanel resolution={item.resolution} />
-                </EvidenceSection>
               </Card.Section>
 
               <Card.Section withBorder inheritPadding>

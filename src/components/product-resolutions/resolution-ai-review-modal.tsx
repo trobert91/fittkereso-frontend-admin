@@ -93,8 +93,8 @@ export function ResolutionAiReviewModal({
       const review = await postAiReviewResolution(resolution.id);
       setResult(review);
 
-      // Refresh the card even when nothing was executed — an advisory verdict is
-      // still stored on the row, and the panel above the fold is driven by it.
+      // Refresh the card on every run, dry run included — the verdict is stored
+      // either way, and the advisory panel above the fold is driven by it.
       const refreshed = await getResolutionById(resolution.id);
       onUpdated(refreshed);
     } catch (err) {

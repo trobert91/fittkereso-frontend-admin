@@ -46,6 +46,11 @@ import debounce from "lodash/debounce";
 import { postBrandSearch } from "@/api-actions/brand/brand-search";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
+/** Mirrors the backend's own guard: a non-uuid cannot match a uuid column, so
+ *  it is worth saying so in the field rather than issuing the search. */
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export interface ProductTableProps {
   onSelectProduct?: (product: ProductModel) => void;
   showProductDetailsLink?: boolean;
@@ -103,6 +108,8 @@ export function ProductTable({
   const [searchTerm, setSearchTerm] = useState(resolveInitialSearch);
   const [debouncedSearchTerm, setDebouncedSearchTerm] =
     useState(resolveInitialSearch);
+  const [idFilter, setIdFilter] = useState("");
+  const [debouncedIdFilter, setDebouncedIdFilter] = useState("");
 
   // Sync filter state to URL query params
   const syncFiltersToUrl = useCallback(
@@ -117,6 +124,13 @@ export function ProductTable({
     },
     [syncWithUrl, pathname, router]
   );
+
+  // A malformed id returns nothing, which on its own looks identical to "no
+  // such product" — so say which it is rather than leaving an empty table to be
+  // interpreted. Checked against the trimmed value, since pasting a uuid out of
+  // a log line usually brings whitespace with it.
+  const invalidId =
+    idFilter.trim().length > 0 && !UUID_PATTERN.test(idFilter.trim());
 
   // TanStack sorting state
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
@@ -140,6 +154,24 @@ export function ProductTable({
       setDebouncedSearchTermDebounced.cancel();
     };
   }, [setDebouncedSearchTermDebounced]);
+
+  // Shorter than the search term's second: an id is pasted whole rather than
+  // typed a character at a time, so there is no partial-input storm to absorb
+  // and the extra wait just reads as lag.
+  const setDebouncedIdFilterDebounced = useMemo(
+    () =>
+      debounce((val: string) => {
+        setPage(1);
+        setDebouncedIdFilter(val);
+      }, 300),
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      setDebouncedIdFilterDebounced.cancel();
+    };
+  }, [setDebouncedIdFilterDebounced]);
 
   // Fetch top 50 categories on mount
   useEffect(() => {
@@ -227,6 +259,7 @@ export function ProductTable({
       categoryIds: categoryFilter.length ? categoryFilter : undefined,
       brandIds: brandFilter.length ? brandFilter : undefined,
       searchTerm: debouncedSearchTerm || undefined,
+      id: debouncedIdFilter.trim() || undefined,
       includeImages: false,
     };
 
@@ -239,6 +272,7 @@ export function ProductTable({
     categoryFilter,
     brandFilter,
     debouncedSearchTerm,
+    debouncedIdFilter,
   ]);
 
   //
@@ -483,6 +517,34 @@ export function ProductTable({
                       )
                     }
                     maw={300}
+                  />
+                  <TextInput
+                    label="Product ID"
+                    placeholder="Paste a product UUID"
+                    description={
+                      invalidId ? "Not a valid UUID" : "Exact match"
+                    }
+                    error={invalidId}
+                    value={idFilter}
+                    onChange={(e) => {
+                      const val = e.currentTarget.value;
+                      setIdFilter(val);
+                      setDebouncedIdFilterDebounced(val);
+                    }}
+                    rightSection={
+                      idFilter && (
+                        <CloseButton
+                          size="sm"
+                          onClick={() => {
+                            setIdFilter("");
+                            setDebouncedIdFilterDebounced.cancel();
+                            setDebouncedIdFilter("");
+                            setPage(1);
+                          }}
+                        />
+                      )
+                    }
+                    maw={340}
                   />
                 </Group>
               </Stack>

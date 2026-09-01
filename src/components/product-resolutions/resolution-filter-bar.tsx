@@ -15,7 +15,6 @@ import {
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
-  ALL_RESOLUTION_STATUSES,
   ProductResolutionFlow,
   ProductResolutionOrigin,
   ProductResolutionSearchParams,
@@ -60,9 +59,9 @@ const AI_REVIEWED_OPTIONS = [
   { value: "false", label: "Not yet" },
 ];
 
-/** Meta-option that expands to every status on selection, rather than being a
- *  value of its own — so `params.statuses` only ever holds real statuses and
- *  never leaks a sentinel into the request. */
+/** Meta-option that *clears* the selection rather than being a value of its own,
+ *  since an empty `statuses` is already how "every status" is expressed on the
+ *  wire. Never leaks into the request. */
 const ALL_STATUSES_VALUE = "__all__";
 
 const STATUS_FILTER_OPTIONS = [
@@ -101,13 +100,14 @@ export function ResolutionFilterBar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery]);
 
-  // "All statuses" is a shortcut, not a value: picking it fills in the four
-  // concrete statuses so the chips show exactly what is being requested and
-  // individual ones can then be removed. Clearing the field falls back to the
-  // backend's default, which is the open statuses — not everything.
+  // "All statuses" clears the field rather than filling in the four concrete
+  // ones: an empty `statuses` *is* "every status" on the wire, so sending the
+  // full list would be a longer way of saying the same thing — and would then
+  // read back as four selected chips, which looks like a filter when it is the
+  // absence of one.
   const handleStatusChange = (value: string[]) => {
     if (value.includes(ALL_STATUSES_VALUE)) {
-      onChange({ statuses: ALL_RESOLUTION_STATUSES });
+      onChange({ statuses: undefined });
       return;
     }
 
@@ -154,7 +154,7 @@ export function ResolutionFilterBar({
       <Group gap="md" align="flex-end" wrap="wrap">
         <MultiSelect
           label="Status"
-          placeholder="Open (pending + failed)"
+          placeholder="All statuses"
           data={STATUS_FILTER_OPTIONS}
           value={params.statuses ?? []}
           onChange={handleStatusChange}

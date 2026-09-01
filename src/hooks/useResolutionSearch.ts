@@ -1,4 +1,5 @@
 import {
+  OPEN_RESOLUTION_STATUSES,
   postSearchResolutions,
   ProductResolutionSearchParams,
   ResolutionListItem,
@@ -6,9 +7,16 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { notifications } from "@mantine/notifications";
 
+/**
+ * The queue opens as a to-do list, so it asks for the open statuses — and asks
+ * *explicitly*. The backend applies no status filter when none is sent, which
+ * is what lets "All statuses" mean all of them; the to-do default is this
+ * screen's opinion, not the API's.
+ */
 const DEFAULT_PARAMS: ProductResolutionSearchParams = {
   page: 1,
   pageSize: 20,
+  statuses: OPEN_RESOLUTION_STATUSES,
 };
 
 /**
