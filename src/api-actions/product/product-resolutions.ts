@@ -47,7 +47,11 @@ export const ALL_RESOLUTION_STATUSES: ProductResolutionStatus[] = [
 
 // --- Decision log ---
 
-export type ResolutionActor = "system" | "admin";
+/** Who made a decision. `system` covers both the producing pipeline's seed entry
+ *  and the deterministic auto-accept rule; `ai` is the LLM reviewer. Only
+ *  `admin` stamps `reviewedAt`, which is what withdraws a row from every
+ *  automated path for good. */
+export type ResolutionActor = "system" | "ai" | "admin";
 
 export type ResolutionVerdict =
   // The producing system's own verdicts, written at record time:
@@ -268,6 +272,87 @@ export interface ResolutionPriorityBreakdown {
   blastRadiusMeasured: boolean;
 }
 
+// --- Review triggers and the automated reviewers ---
+
+/**
+ * Why a row might be wrong. Not a severity scale, and never an ordering term —
+ * `priority` alone orders the queue.
+ *
+ * The empty list is the value that matters: `reviewTriggers: []` means "no known
+ * suspicion pattern", which is what deterministic auto-accept trusts. It does
+ * *not* mean "verified correct". `undefined` is different again — the nightly
+ * sweep has not classified the row yet, and an unclassified row is ineligible
+ * for every automated path.
+ */
+export type ResolutionReviewTrigger =
+  /** Asserted sameness while the specs disagree. */
+  | "spec_conflict"
+  /** The winner barely beat the runner-up. */
+  | "narrow_margin"
+  /** Nothing independent of the name backs the match — no comparable specs, no
+   *  alias. */
+  | "name_only_match"
+  /** A candidate scored well enough to accept and a gate stopped it. */
+  | "gate_only_rejection"
+  /** The best candidate fell just short of the accept threshold. */
+  | "near_miss_rejection"
+  /** Recall found nothing for a listing that named a brand and a model, and the
+   *  catalog does hold that brand in that category — so finding nothing is
+   *  surprising. Usually a brand-alias gap or an over-tight filter. */
+  | "no_candidates_but_named"
+  /** Nothing recalled, and the input named no brand or model. Unjudgeable from
+   *  stored data, so the AI skips these too. */
+  | "insufficient_evidence";
+
+/** Every trigger, in the order they are worth scanning — contradictions first,
+ *  then weak evidence, then the recall failures. Drives the filter chips. */
+export const RESOLUTION_REVIEW_TRIGGERS: ResolutionReviewTrigger[] = [
+  "spec_conflict",
+  "narrow_margin",
+  "name_only_match",
+  "gate_only_rejection",
+  "near_miss_rejection",
+  "no_candidates_but_named",
+  "insufficient_evidence",
+];
+
+/** How sure the AI reviewer was. `high` is what authorises it to act; the rest
+ *  stay pending with the recommendation shown as a suggestion. */
+export type ResolutionAiConfidence = "low" | "medium" | "high";
+
+/** Whether the AI agreed with what the producing system concluded. `abstain` is
+ *  a real outcome, treated as `low`. */
+export type ResolutionAiVerdict = "agree" | "disagree" | "abstain";
+
+/** What the AI recommended — the same vocabulary as `availableActions`, so a
+ *  recommendation is directly executable. */
+export type ResolutionAiRecommendedAction =
+  | "accept"
+  | "dismiss"
+  | "split"
+  | "merge_into";
+
+/** Who settled the row. `system`/`ai` on a `done` row is the automation audit
+ *  stream. Cleared on reopen. */
+export type ResolutionDecidedBy = "system" | "ai" | "admin";
+
+export interface ProductResolutionAiReview {
+  verdict: ResolutionAiVerdict;
+  recommendedAction: ResolutionAiRecommendedAction;
+  /** Set when `recommendedAction` is `merge_into`. */
+  targetProductId?: string;
+  reasoning: string;
+  /** Which fields the model says it used. A verdict citing nothing is one to
+   *  distrust. */
+  evidenceCited: string[];
+  model: string;
+  costUsd?: number;
+  /** False for every advisory verdict, and for a high-confidence one blocked by
+   *  the destructive-action kill switch. */
+  executed: boolean;
+  error?: string;
+}
+
 // --- The record ---
 
 export interface ProductResolutionRecord {
@@ -319,6 +404,16 @@ export interface ProductResolutionRecord {
   candidates?: ProductResolutionCandidateRecord[];
   /** product_resolution only. */
   decisionSnapshot?: ProductResolutionDecisionSnapshot;
+  /** Why this row might be wrong. `undefined` = the sweep has not classified it
+   *  yet; `[]` = classified and nothing fired. The two are not the same. */
+  reviewTriggers?: ResolutionReviewTrigger[];
+  /** Set once the AI has judged this row. Cleared whenever the evidence is
+   *  refreshed, along with every other `ai*` field. */
+  aiReviewedAt?: string;
+  aiConfidence?: ResolutionAiConfidence;
+  aiReview?: ProductResolutionAiReview;
+  /** Who settled the row. Only set once `status` is `done`. */
+  decidedBy?: ResolutionDecidedBy;
 }
 
 /**
@@ -383,6 +478,19 @@ export interface ProductResolutionSearchParams {
   minConfidence?: number;
   /** Work a band of the queue. No default — nothing disappears silently. */
   minPriority?: number;
+  /** Any-of: rows matching at least one of these. The triggers are independent
+   *  suspicions rather than facets, so their intersection is rarely useful. */
+  triggers?: ResolutionReviewTrigger[];
+  /** `true` — only rows where nothing fired (`reviewTriggers: []`), which is
+   *  exactly what auto-accept will trust. `false` — only rows where something
+   *  did. Rows the sweep has not classified appear in neither. */
+  untriggered?: boolean;
+  /** Any-of. `["low","medium"]` is the "things the machine couldn't settle"
+   *  queue. */
+  aiConfidence?: ResolutionAiConfidence[];
+  aiReviewed?: boolean;
+  /** Any-of. `["system","ai"]` over `status: done` is the automation audit. */
+  decidedBy?: ResolutionDecidedBy[];
   /** Free-text over the involved products' display names and the anchor key. */
   query?: string;
   /** `priority` (default) = most worth reviewing first. */
@@ -504,6 +612,93 @@ export async function deleteResolution(id: string): Promise<void> {
   } catch (error: AxiosError | any) {
     throw new Error(
       error?.response?.data?.message || "Failed to delete resolution",
+    );
+  }
+}
+
+// --- AI review ---
+// Two entry points onto one pipeline: one row now, or the top of the queue in a
+// batch. Both judge; whether they *act* depends on server config, which is why
+// every response says what happened rather than assuming it did.
+
+/** Why a recommendation was not carried out. Absent when it was. */
+export type AiReviewNotExecutedReason =
+  /** Only `high` acts. Low and medium stay as advice. */
+  | "not_confident"
+  /** `executeActions` is off — every verdict is advisory. */
+  | "execution_disabled"
+  /** A merge or split (or accepting an unexecuted duplicate proposal) while
+   *  `executeDestructive` is off. */
+  | "destructive_disabled"
+  /** The row could not legally take the recommended action. */
+  | "action_unavailable"
+  /** The row changed between intake and the verdict — a re-scrape, or you
+   *  decided it first — so the action was discarded rather than applied to a
+   *  question the model had not been asked. */
+  | "stale"
+  /** The action itself threw; see `review.error`. */
+  | "failed";
+
+export interface AiReviewResult {
+  resolutionId: string;
+  review: ProductResolutionAiReview;
+  confidence: ResolutionAiConfidence;
+  notExecutedReason?: AiReviewNotExecutedReason;
+}
+
+export interface AiReviewBatchSummary {
+  rowsReviewed: number;
+  /** A recommendation was carried out. */
+  executed: number;
+  /** Judged and left for a human — low/medium confidence, a kill switch, or an
+   *  action the row could not take. Includes the abstains. */
+  advisory: number;
+  abstained: number;
+  /** Row moved between intake and verdict; the action was discarded. */
+  skippedStale: number;
+  failed: number;
+  costUsd: number;
+  /** Stopped on the row cap or the cost cap — more work is waiting. */
+  capped: boolean;
+  durationMs: number;
+}
+
+export interface RunAiReviewBody {
+  maxPerRun?: number;
+  minPriority?: number;
+  /** Can only ever *tighten* the server's setting — passing `true` when the
+   *  server says `false` does not enable merges. */
+  executeDestructive?: boolean;
+}
+
+/** Hands one row to the reviewer immediately. */
+export async function postAiReviewResolution(
+  id: string,
+): Promise<AiReviewResult> {
+  try {
+    const response = await axiosInstance.post<AiReviewResult>(
+      `/admin-product/resolutions/${id}/ai-review`,
+      {},
+    );
+    return response.data;
+  } catch (error: AxiosError | any) {
+    throw new Error(error?.response?.data?.message || "AI review failed");
+  }
+}
+
+/** Runs the same batch the nightly scheduler runs, over the top of the queue. */
+export async function postRunAiReview(
+  body: RunAiReviewBody = {},
+): Promise<AiReviewBatchSummary> {
+  try {
+    const response = await axiosInstance.post<AiReviewBatchSummary>(
+      "/admin-product/resolutions/ai-review/run",
+      body,
+    );
+    return response.data;
+  } catch (error: AxiosError | any) {
+    throw new Error(
+      error?.response?.data?.message || "Failed to run AI review",
     );
   }
 }

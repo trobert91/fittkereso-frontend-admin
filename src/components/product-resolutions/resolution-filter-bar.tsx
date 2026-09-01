@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  Box,
   Card,
+  Divider,
   Group,
   MultiSelect,
   NumberInput,
   SegmentedControl,
   Select,
+  Text,
   TextInput,
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
@@ -18,15 +21,23 @@ import {
   ProductResolutionSearchParams,
   ProductResolutionSortField,
   ProductResolutionStatus,
+  ResolutionAiConfidence,
+  ResolutionDecidedBy,
+  ResolutionReviewTrigger,
 } from "@/api-actions/product/product-resolutions";
 import { postCategorySearch } from "@/api-actions/category/category-search";
 import { postProductSourceSearch } from "@/api-actions/product-source/product-source-search";
 import { ProductCategory } from "@/models/product-category";
 import { ProductSource } from "@/models/dtos/product-source-search-models";
 import {
+  AI_CONFIDENCE_OPTIONS,
+  DECIDED_BY_OPTIONS,
   FLOW_OPTIONS,
   ORIGIN_OPTIONS,
   STATUS_OPTIONS,
+  TRIGGER_MODE_OPTIONS,
+  TRIGGER_OPTIONS,
+  TriggerFilterMode,
 } from "./resolution-labels";
 
 const SORT_OPTIONS: { value: ProductResolutionSortField; label: string }[] = [
@@ -41,6 +52,12 @@ const ACCEPTED_OPTIONS = [
   { value: "any", label: "Any" },
   { value: "true", label: "Accepted" },
   { value: "false", label: "Not accepted" },
+];
+
+const AI_REVIEWED_OPTIONS = [
+  { value: "any", label: "Any" },
+  { value: "true", label: "Reviewed" },
+  { value: "false", label: "Not yet" },
 ];
 
 /** Meta-option that expands to every status on selection, rather than being a
@@ -96,6 +113,29 @@ export function ResolutionFilterBar({
 
     onChange({
       statuses: value.length ? (value as ProductResolutionStatus[]) : undefined,
+    });
+  };
+
+  // `untriggered` is a tri-state on the wire (undefined / true / false) but reads
+  // as a three-way choice in the UI, so the control owns the mapping rather than
+  // making the reviewer think in terms of a boolean that is sometimes absent.
+  const triggerMode: TriggerFilterMode =
+    params.untriggered === undefined
+      ? "any"
+      : params.untriggered
+        ? "untriggered"
+        : "triggered";
+
+  const handleTriggerModeChange = (mode: TriggerFilterMode) => {
+    if (mode === "any") {
+      onChange({ untriggered: undefined });
+      return;
+    }
+    // Asking for rows where nothing fired while also naming a trigger is a
+    // contradiction — drop the names rather than issue a query that cannot match.
+    onChange({
+      untriggered: mode === "untriggered",
+      triggers: mode === "untriggered" ? undefined : params.triggers,
     });
   };
 
@@ -254,6 +294,100 @@ export function ResolutionFilterBar({
           value={params.sortDir ?? "DESC"}
           onChange={(value) => onChange({ sortDir: value as "ASC" | "DESC" })}
           size="xs"
+        />
+      </Group>
+
+      <Divider
+        my="md"
+        label="Review classification"
+        labelPosition="left"
+        variant="dashed"
+      />
+
+      <Group gap="md" align="flex-end" wrap="wrap">
+        <Box>
+          <Text size="sm" fw={500} mb={4}>
+            Triggers
+          </Text>
+          <SegmentedControl
+            data={TRIGGER_MODE_OPTIONS}
+            value={triggerMode}
+            onChange={(value) =>
+              handleTriggerModeChange(value as TriggerFilterMode)
+            }
+            size="xs"
+          />
+        </Box>
+
+        <MultiSelect
+          label="Which trigger"
+          // Any-of, because the triggers are independent suspicions rather than
+          // facets — their intersection is usually empty.
+          placeholder={
+            triggerMode === "untriggered" ? "n/a — nothing fired" : "Any trigger"
+          }
+          data={TRIGGER_OPTIONS}
+          value={params.triggers ?? []}
+          onChange={(value) =>
+            onChange({
+              triggers: value.length
+                ? (value as ResolutionReviewTrigger[])
+                : undefined,
+            })
+          }
+          // Naming a trigger while asking for rows where none fired is a
+          // contradiction that would always return nothing. Disable rather than
+          // let the reviewer build an empty query and wonder why.
+          disabled={triggerMode === "untriggered"}
+          clearable
+          w={280}
+        />
+
+        <MultiSelect
+          label="AI confidence"
+          placeholder="Any"
+          data={AI_CONFIDENCE_OPTIONS}
+          value={params.aiConfidence ?? []}
+          onChange={(value) =>
+            onChange({
+              aiConfidence: value.length
+                ? (value as ResolutionAiConfidence[])
+                : undefined,
+            })
+          }
+          clearable
+          w={240}
+        />
+
+        <Select
+          label="AI reviewed"
+          data={AI_REVIEWED_OPTIONS}
+          value={
+            params.aiReviewed === undefined ? "any" : String(params.aiReviewed)
+          }
+          onChange={(value) =>
+            onChange({
+              aiReviewed: value === "any" ? undefined : value === "true",
+            })
+          }
+          w={170}
+        />
+
+        <MultiSelect
+          label="Decided by"
+          description="Pair with status: Done"
+          placeholder="Anyone"
+          data={DECIDED_BY_OPTIONS}
+          value={params.decidedBy ?? []}
+          onChange={(value) =>
+            onChange({
+              decidedBy: value.length
+                ? (value as ResolutionDecidedBy[])
+                : undefined,
+            })
+          }
+          clearable
+          w={240}
         />
       </Group>
     </Card>

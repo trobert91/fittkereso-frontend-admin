@@ -25,30 +25,47 @@ import { FaCheck, FaCopy, FaHistory, FaTimes } from "react-icons/fa";
 import { IoChevronDown, IoChevronUp, IoEye, IoTrash, IoWarning } from "react-icons/io5";
 import { LuExternalLink } from "react-icons/lu";
 import { MdRateReview } from "react-icons/md";
-import { PiDotsThree } from "react-icons/pi";
+import { PiDotsThree, PiRobot } from "react-icons/pi";
 import {
   deleteResolution,
   ProductResolutionRecord,
   ResolutionListItem,
 } from "@/api-actions/product/product-resolutions";
 import { ColoredBadge } from "@/components/colored-badge";
+import { ProductModel } from "@/models/product-model";
 import { formatDate } from "@/utils/date";
 import { routes } from "@/utils/routes";
 import { ResolutionActions } from "./resolution-actions";
 import { ResolutionCandidateStrip } from "./resolution-candidate-strip";
-import { ResolutionEvidence } from "./resolution-evidence";
+import { EvidenceSection, ResolutionEvidence } from "./resolution-evidence";
+import { ResolutionInputPanel } from "./resolution-input-panel";
 import { ResolutionHistoryModal } from "./resolution-history-modal";
 import { ResolutionPairStrip } from "./resolution-pair-strip";
 import { ResolutionPriorityRing } from "./resolution-priority-ring";
 import { ResolutionReviewModal } from "./resolution-review-modal";
+import { ResolutionAiPanel } from "./resolution-ai-panel";
+import { ResolutionAiReviewModal } from "./resolution-ai-review-modal";
+import { ResolutionTriggerChips } from "./resolution-trigger-chips";
 import {
   ACTION_KIND_LABELS,
+  AI_CONFIDENCE_COLORS,
+  AI_CONFIDENCE_LABELS,
+  AI_VERDICT_LABELS,
+  DECIDED_BY_COLORS,
+  DECIDED_BY_LABELS,
+  DECISION_KIND_COLORS,
+  DECISION_KIND_LABELS,
   FLOW_COLORS,
   FLOW_LABELS,
   ORIGIN_LABELS,
   STATUS_COLORS,
   STATUS_LABELS,
+  VERDICT_COLORS,
+  VERDICT_LABELS,
+  decisionReasonLabel,
   failedGateCount,
+  isDecisionReasonCode,
+  productLookup,
   systemDecision,
 } from "./resolution-labels";
 
@@ -78,6 +95,7 @@ export function ResolutionCard({
   const [expanded, setExpanded] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [aiReviewOpen, setAiReviewOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [justActed, setJustActed] = useState(false);
 
@@ -277,6 +295,23 @@ export function ResolutionCard({
           )}
         </Card.Section>
 
+        {/* Closed state, not evidence: a wrong input is the most common cause
+            of a wrong match, and it should not cost an expand to notice. */}
+        <Card.Section withBorder inheritPadding py="md">
+          <EvidenceSection title="What the system was given">
+            <ResolutionInputPanel resolution={resolution} />
+          </EvidenceSection>
+        </Card.Section>
+
+        {/* Above the fold, not behind the expander: an unapplied recommendation
+            is a decision waiting to be made, which is the same thing the rest of
+            the closed card is for. */}
+        {resolution.aiReview && !resolution.aiReview.executed && (
+          <Card.Section withBorder inheritPadding py="md">
+            <ResolutionAiPanel item={item} onUpdated={handleUpdated} />
+          </Card.Section>
+        )}
+
         <Collapse in={expanded}>
           <Card.Section withBorder inheritPadding>
             <ResolutionEvidence item={item} />
@@ -292,6 +327,26 @@ export function ResolutionCard({
             />
 
             <Group gap="xs">
+              <Tooltip
+                label={
+                  resolution.aiReviewedAt
+                    ? "Ask the AI again — its previous verdict is replaced. You confirm first, and read the result before it closes."
+                    : "Ask the AI to judge this row now, instead of waiting for the nightly batch. You confirm first, and read the result before it closes."
+                }
+                withArrow
+                multiline
+                maw={300}
+              >
+                <Button
+                  size="compact-xs"
+                  variant="light"
+                  color="grape"
+                  leftSection={<PiRobot size={12} />}
+                  onClick={() => setAiReviewOpen(true)}
+                >
+                  {resolution.aiReviewedAt ? "Re-review with AI" : "Review with AI"}
+                </Button>
+              </Tooltip>
               <Button
                 size="compact-xs"
                 variant="light"
@@ -333,6 +388,17 @@ export function ResolutionCard({
         resolution={resolution}
         opened={historyOpen}
         onClose={() => setHistoryOpen(false)}
+      />
+
+      {/* The AI verdict is not a decision the reviewer made, so it does not get
+          the "just decided" marker — it either changed the row, in which case
+          the refreshed status says so, or it left advice, in which case the row
+          is still theirs to settle. */}
+      <ResolutionAiReviewModal
+        resolution={resolution}
+        opened={aiReviewOpen}
+        onClose={() => setAiReviewOpen(false)}
+        onUpdated={onUpdated}
       />
     </>
   );
@@ -411,37 +477,77 @@ function SignalBadges({ resolution }: { resolution: ProductResolutionRecord }) {
   );
 }
 
-/** One sentence: what the system concluded, and what a human has done since. */
+/**
+ * What the system concluded, and what a human has done since.
+ *
+ * Badge-led rather than prose: the three things a reviewer scans for — which
+ * way it went, which product it landed on, and which stage decided — are fixed
+ * in position and colour, so a queue of these can be read down the page instead
+ * of sentence by sentence. Only genuinely free-form text (an LLM's written
+ * reasoning) stays as a paragraph; the pipeline's own reason codes become
+ * badges, since `matcher_accept` is a label, not a sentence.
+ */
 function VerdictLine({ item }: { item: ResolutionListItem }) {
   const [expanded, setExpanded] = useState(false);
   const { resolution, state } = item;
 
   const seed = systemDecision(resolution);
   const performed = state.lastPerformed;
+  const snapshot = resolution.decisionSnapshot;
+  const products = useMemo(() => productLookup(resolution), [resolution]);
 
-  const sentence = useMemo(() => {
-    const named = (id?: string) => {
-      if (!id) return "a product";
-      const match = [
-        resolution.productA,
-        resolution.productB,
-        resolution.resolvedProduct,
-        resolution.sourceRecord?.model,
-      ].find((product) => product?.id === id);
-      return match?.displayName ?? "a product";
-    };
-
+  const outcome = useMemo(() => {
     switch (seed?.verdict) {
       case "matched_existing":
-        return `The system matched this listing to ${named(seed.action.productId)}.`;
+        return (
+          <>
+            <Text size="sm" c="dimmed">
+              this listing →
+            </Text>
+            <ProductRef
+              product={
+                products[seed.action.productId ?? ""] ??
+                resolution.resolvedProduct
+              }
+            />
+          </>
+        );
       case "created_new":
-        return "The system found no match and created a new product for this listing.";
+        return (
+          <Text size="sm">
+            nothing matched, so{" "}
+            <ProductRef
+              product={
+                products[seed.action.productId ?? ""] ??
+                resolution.resolvedProduct
+              }
+              fallback="a new product"
+              span
+            />{" "}
+            was created
+          </Text>
+        );
       case "duplicate_proposed":
-        return `The system flagged ${resolution.productA?.displayName ?? "these two products"} and ${resolution.productB?.displayName ?? "another"} as duplicates. Nothing has been merged yet.`;
+        return (
+          <>
+            <ProductRef product={resolution.productA} fallback="one product" />
+            <Text size="sm" c="dimmed">
+              ⇄
+            </Text>
+            <ProductRef product={resolution.productB} fallback="another" />
+            <Badge color="gray" variant="outline" size="sm" tt="none">
+              nothing merged yet
+            </Badge>
+          </>
+        );
       default:
-        return "No system verdict was recorded for this row.";
+        return (
+          <Text size="sm" c="dimmed">
+            no system verdict was recorded for this row
+          </Text>
+        );
     }
-  }, [seed, resolution]);
+  }, [seed, products, resolution]);
 
   // The correction on offer is derived from the last *performed* action, so
   // saying what that was is what makes the available buttons make sense.
@@ -450,12 +556,113 @@ function VerdictLine({ item }: { item: ResolutionListItem }) {
       ? `You ${performed.verdict === "accept" ? "accepted" : "declined"} this on ${formatDate(performed.at, "yyyy-MM-dd")} — ${ACTION_KIND_LABELS[performed.action.kind]}.`
       : undefined;
 
-  const reason = resolution.decisionSnapshot?.reason;
-  const truncatable = !!reason && reason.length > REASON_TRUNCATE_LIMIT;
+  const reason = snapshot?.reason;
+  // A reason code says the same thing a badge says, only in pipeline spelling.
+  // Prose — which only the LLM strategies write — is the case worth reading.
+  const prose = reason && !isDecisionReasonCode(reason) ? reason : undefined;
+  const truncatable = !!prose && prose.length > REASON_TRUNCATE_LIMIT;
 
   return (
     <Stack gap={6}>
-      <Text size="sm">{sentence}</Text>
+      <Group gap="xs" wrap="wrap" align="center">
+        <Badge
+          color="violet"
+          variant="light"
+          size="sm"
+          tt="none"
+          leftSection={<PiRobot size={10} />}
+        >
+          system
+        </Badge>
+
+        {seed && (
+          <Badge
+            color={VERDICT_COLORS[seed.verdict]}
+            variant="filled"
+            size="sm"
+            tt="none"
+          >
+            {VERDICT_LABELS[seed.verdict]}
+          </Badge>
+        )}
+
+        {outcome}
+
+        {snapshot && (
+          <Tooltip
+            label={
+              snapshot.evidenceSummary ??
+              "Which stage produced this verdict — the matcher's own scoring, or the LLM adjudicating what the matcher would not accept."
+            }
+            withArrow
+            multiline
+            maw={340}
+          >
+            <Badge
+              color={DECISION_KIND_COLORS[snapshot.kind]}
+              variant="light"
+              size="sm"
+              tt="none"
+            >
+              {DECISION_KIND_LABELS[snapshot.kind]}
+              {snapshot.confidence > 0
+                ? ` · ${Math.round(snapshot.confidence)}`
+                : ""}
+            </Badge>
+          </Tooltip>
+        )}
+
+        {reason && !prose && (
+          <Tooltip label={reason} withArrow>
+            <Badge color="gray" variant="outline" size="sm" tt="none">
+              {decisionReasonLabel(reason)}
+            </Badge>
+          </Tooltip>
+        )}
+
+        {/* Who settled it, when that was not a human. The automation audit,
+            visible on the row rather than only in a filter. */}
+        {resolution.decidedBy && resolution.decidedBy !== "admin" && (
+          <Badge
+            color={DECIDED_BY_COLORS[resolution.decidedBy]}
+            variant="filled"
+            size="sm"
+            tt="none"
+          >
+            {DECIDED_BY_LABELS[resolution.decidedBy]}
+          </Badge>
+        )}
+
+        {resolution.aiConfidence && (
+          <Tooltip
+            label={
+              resolution.aiReview
+                ? `${AI_VERDICT_LABELS[resolution.aiReview.verdict]} — ${resolution.aiReview.reasoning}`
+                : "The AI reviewer's own confidence in its verdict."
+            }
+            withArrow
+            multiline
+            maw={360}
+          >
+            <Badge
+              color={AI_CONFIDENCE_COLORS[resolution.aiConfidence]}
+              variant="light"
+              size="sm"
+              tt="none"
+              leftSection={<PiRobot size={10} />}
+            >
+              {AI_CONFIDENCE_LABELS[resolution.aiConfidence]}
+            </Badge>
+          </Tooltip>
+        )}
+      </Group>
+
+      {/* Why this row might be wrong. Sits on its own line under the verdict
+          strip: these are the reasons to look, and they should not compete for
+          space with what the system concluded. */}
+      <Group gap="xs" wrap="wrap" align="center">
+        <ResolutionTriggerChips triggers={resolution.reviewTriggers} />
+      </Group>
 
       {since && (
         <Text size="sm" c="dimmed">
@@ -463,11 +670,11 @@ function VerdictLine({ item }: { item: ResolutionListItem }) {
         </Text>
       )}
 
-      {reason && (
+      {prose && (
         <Text size="xs" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
           {truncatable && !expanded
-            ? `${reason.slice(0, REASON_TRUNCATE_LIMIT)}… `
-            : `${reason} `}
+            ? `${prose.slice(0, REASON_TRUNCATE_LIMIT)}… `
+            : `${prose} `}
           {truncatable && (
             <Anchor
               component="button"
@@ -490,6 +697,39 @@ function VerdictLine({ item }: { item: ResolutionListItem }) {
         </Stack>
       )}
     </Stack>
+  );
+}
+
+/** The product a verdict landed on. It is the thing a reviewer scans the row
+ *  for, so it carries weight and links out rather than sitting inside a
+ *  sentence at body weight. */
+function ProductRef({
+  product,
+  fallback = "a product",
+  span,
+}: {
+  product?: ProductModel;
+  fallback?: string;
+  span?: boolean;
+}) {
+  if (!product) {
+    return (
+      <Text span={span} size="sm" fw={600} c="dimmed">
+        {fallback}
+      </Text>
+    );
+  }
+
+  return (
+    <Anchor
+      component={Link}
+      href={routes.products.details(product.id)}
+      target="_blank"
+      size="sm"
+      fw={600}
+    >
+      {product.displayName}
+    </Anchor>
   );
 }
 

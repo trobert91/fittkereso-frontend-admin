@@ -9,6 +9,7 @@ import { PiRobot } from "react-icons/pi";
 import {
   ProductResolutionDecisionEntry,
   ProductResolutionRecord,
+  ResolutionActor,
 } from "@/api-actions/product/product-resolutions";
 import { formatDate } from "@/utils/date";
 import { ACTION_KIND_LABELS, VERDICT_LABELS } from "./resolution-labels";
@@ -51,17 +52,32 @@ export function ResolutionDecisionTimeline({
   );
 }
 
+/** One colour per actor. The AI gets its own rather than sharing either: an
+ *  entry it wrote is neither the pipeline stating what it did nor a person
+ *  deciding, and reading the log is how you tell which of the three settled a
+ *  row. */
+const ACTOR_COLORS: Record<ResolutionActor, string> = {
+  system: "violet",
+  ai: "grape",
+  admin: "blue",
+};
+
 function entryColor(entry: ProductResolutionDecisionEntry): string {
   if (entry.error) return "red";
-  return entry.actor === "system" ? "violet" : "blue";
+  return ACTOR_COLORS[entry.actor] ?? "blue";
 }
 
 function EntryBullet({ entry }: { entry: ProductResolutionDecisionEntry }) {
+  // Anything but `admin` is a machine. Defaulting the other way would render an
+  // AI decision with the human-review icon, which is the one thing the timeline
+  // exists to keep straight.
+  const machine = entry.actor !== "admin";
+
   return (
     <ThemeIcon size={20} radius="xl" color={entryColor(entry)} variant="filled">
       {entry.error ? (
         <IoWarning size={11} />
-      ) : entry.actor === "system" ? (
+      ) : machine ? (
         <PiRobot size={11} />
       ) : (
         <MdRateReview size={11} />

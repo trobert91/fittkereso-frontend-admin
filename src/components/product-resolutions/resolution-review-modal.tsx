@@ -23,7 +23,8 @@ import { ColoredBadge } from "@/components/colored-badge";
 import { ResolutionPriorityRing } from "./resolution-priority-ring";
 import { ResolutionActions } from "./resolution-actions";
 import { ResolutionCandidateStrip } from "./resolution-candidate-strip";
-import { ResolutionEvidence } from "./resolution-evidence";
+import { EvidenceSection, ResolutionEvidence } from "./resolution-evidence";
+import { ResolutionInputPanel } from "./resolution-input-panel";
 import { ResolutionPairStrip } from "./resolution-pair-strip";
 import {
   FLOW_COLORS,
@@ -116,6 +117,14 @@ export function ResolutionReviewModal({
                     listing={item.listing}
                   />
                 )}
+              </Card.Section>
+
+              {/* Above the expander's worth of evidence, mirroring the card:
+                  the inputs frame everything below them. */}
+              <Card.Section withBorder inheritPadding py="md">
+                <EvidenceSection title="What the system was given">
+                  <ResolutionInputPanel resolution={item.resolution} />
+                </EvidenceSection>
               </Card.Section>
 
               <Card.Section withBorder inheritPadding>

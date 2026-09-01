@@ -1,12 +1,14 @@
 "use client";
 
 import { useRef } from "react";
+import { Group } from "@mantine/core";
 import { CommonPage } from "@/components/common-page";
 import { PageHeader } from "@/components/page-header";
 import {
   ProductResolutionList,
   ProductResolutionListRef,
 } from "@/components/product-resolutions/resolution-list";
+import { AiReviewRunModal } from "@/components/product-resolutions/ai-review-run-modal";
 import { TriggerDetectionModal } from "@/components/product-resolutions/trigger-detection-modal";
 import { routes } from "@/utils/routes";
 
@@ -24,9 +26,12 @@ export default function ProductResolutionsPage() {
         title="Product Resolutions"
         breadcrumbs={breadcrumbs}
         actions={
-          <TriggerDetectionModal
-            onComplete={() => listRef.current?.refresh()}
-          />
+          <Group gap="sm">
+            <AiReviewRunModal onComplete={() => listRef.current?.refresh()} />
+            <TriggerDetectionModal
+              onComplete={() => listRef.current?.refresh()}
+            />
+          </Group>
         }
       />
 
