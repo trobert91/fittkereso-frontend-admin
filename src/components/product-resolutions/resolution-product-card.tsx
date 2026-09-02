@@ -4,6 +4,7 @@ import {
   Badge,
   Box,
   Button,
+  CopyButton,
   Group,
   Image,
   Progress,
@@ -16,8 +17,17 @@ import { ResolutionListingSummary } from "@/api-actions/product/product-resoluti
 import { ProductModel } from "@/models/product-model";
 import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
 
-export const CARD_WIDTH = 240;
-export const IMAGE_HEIGHT = 130;
+/**
+ * Wide enough that a full product name and a uuid both fit without wrapping to
+ * three lines.
+ *
+ * The cards sit in a wrapping flex row rather than a fixed grid, so this is what
+ * sets how many land per row — at 340 a typical card gets the listing plus two
+ * candidates across, which is the comparison the closed state is for. Narrower
+ * fitted more per row but made every card a column of truncated text.
+ */
+export const CARD_WIDTH = 340;
+export const IMAGE_HEIGHT = 180;
 
 /**
  * One product as the review queue shows it: picture, name, brand/category, and
@@ -31,6 +41,8 @@ export const IMAGE_HEIGHT = 130;
 export function ResolutionProductCard({
   product,
   fallbackName,
+  imageUrl: fallbackImageUrl,
+  productId,
   score,
   scoreLabel,
   badges,
@@ -44,6 +56,13 @@ export function ResolutionProductCard({
   /** Shown when there is no product object — e.g. a candidate whose only
    *  record is the jsonb snapshot. */
   fallbackName?: string;
+  /** Picture for a card with no product object, looked up by id server-side.
+   *  Ignored when `product` carries an image of its own. */
+  imageUrl?: string;
+  /** The product this card stands for. Passed explicitly because most cards
+   *  here have no `product` object — a candidate persists only its id — and the
+   *  id is what a reviewer copies into a filter or a log query. */
+  productId?: string;
   score?: number;
   scoreLabel?: string;
   badges?: React.ReactNode;
@@ -58,7 +77,9 @@ export function ResolutionProductCard({
   const displayName =
     product?.displayName ?? product?.model ?? fallbackName ?? "unresolved";
   const imageUrl =
-    product?.mainImage?.url ?? product?.images?.find((img) => !!img.url)?.url;
+    product?.mainImage?.url ??
+    product?.images?.find((img) => !!img.url)?.url ??
+    fallbackImageUrl;
   const clickable = !!onClick;
 
   return (
@@ -125,6 +146,33 @@ export function ResolutionProductCard({
               .filter(Boolean)
               .join(" · ")}
           </Text>
+        )}
+
+        {/* `stopPropagation` because the whole card opens the details modal —
+            without it, copying the id would also navigate away from the
+            comparison the reviewer is in the middle of. */}
+        {(productId ?? product?.id) && (
+          <CopyButton value={productId ?? product!.id}>
+            {({ copied, copy }) => (
+              <Tooltip label={copied ? "Copied" : "Copy product ID"} withArrow>
+                <Badge
+                  variant="outline"
+                  size="xs"
+                  color={copied ? "green" : "gray"}
+                  tt="none"
+                  ff="monospace"
+                  w="fit-content"
+                  style={{ cursor: "pointer" }}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    copy();
+                  }}
+                >
+                  {productId ?? product!.id}
+                </Badge>
+              </Tooltip>
+            )}
+          </CopyButton>
         )}
 
         {/* Denormalized from this product's cheapest active offer — the same

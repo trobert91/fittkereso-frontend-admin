@@ -435,6 +435,11 @@ export interface ResolutionListItem {
   resolution: ProductResolutionRecord;
   state: ProductResolutionState;
   listing?: ResolutionListingSummary;
+  /** `productId => imageUrl` for this row's candidates. A stored candidate
+   *  carries only its id, so this is what lets the queue show the products it
+   *  compared. An id absent from the map has no picture — the product was
+   *  deleted, or never had one. */
+  candidateImageUrls?: Record<string, string>;
 }
 
 // --- Search ---

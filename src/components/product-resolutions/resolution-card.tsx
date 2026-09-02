@@ -285,7 +285,7 @@ export function ResolutionCard({
             match, and it frames every candidate below it — so it sits above them
             rather than after, and never behind the expander. */}
         <Card.Section withBorder inheritPadding py="md">
-          <EvidenceSection title="What the system was given">
+          <EvidenceSection title="Inputs">
             <ResolutionInputPanel resolution={resolution} />
           </EvidenceSection>
         </Card.Section>
@@ -304,15 +304,19 @@ export function ResolutionCard({
             <ResolutionCandidatePanel
               resolution={resolution}
               listing={item.listing}
+              candidateImageUrls={item.candidateImageUrls}
               expanded={expanded}
             />
           )}
         </Card.Section>
 
-        {/* Above the fold, not behind the expander: an unapplied recommendation
-            is a decision waiting to be made, which is the same thing the rest of
-            the closed card is for. */}
-        {resolution.aiReview && !resolution.aiReview.executed && (
+        {/* Above the fold, not behind the expander. An unapplied recommendation
+            is a decision waiting to be made, which is what the rest of the
+            closed card is for — and an executed one is the AI having closed the
+            row on its own, which is exactly when its reasoning is worth reading
+            without hunting through the history. The panel itself decides which
+            of the two it is rendering. */}
+        {resolution.aiReview && (
           <Card.Section withBorder inheritPadding py="md">
             <ResolutionAiPanel item={item} onUpdated={handleUpdated} />
           </Card.Section>

@@ -39,12 +39,17 @@ const CORRECTION_BY_ACTION: Record<string, ResolutionCorrection | undefined> = {
 };
 
 /**
- * What the AI made of this row, and a way to act on it in one click.
+ * What the AI made of this row — and, when the recommendation is still open, a
+ * way to act on it in one click.
  *
- * Only rendered for advisory verdicts — an executed one already changed the row,
- * and its reasoning belongs in the decision timeline with everything else that
- * actually happened. What is left here is a recommendation nobody has taken yet,
- * which is precisely the thing worth a button.
+ * Two shapes, on one distinction:
+ *
+ * - **Advisory** — nobody has taken the recommendation yet, so it carries the
+ *   apply button. This is the case worth a button.
+ * - **Executed** — the AI already carried it out, so there is nothing to apply
+ *   and the panel is read-only. It still renders: "the AI closed this row" is
+ *   exactly when a reviewer most wants to see the reasoning, and making them
+ *   open the history modal to find out why hides it behind a click.
  *
  * The button introduces **no new action path**. It opens the same decline modal
  * a human would reach through the Decline menu, pre-filled with the AI's target
@@ -65,10 +70,10 @@ export function ResolutionAiPanel({
   const { resolution, state } = item;
   const review = resolution.aiReview;
 
-  // Nothing to advise on: never reviewed, or the verdict was already carried out
-  // and now lives in the timeline as a decision rather than a suggestion.
-  if (!review || review.executed) return null;
+  // Never reviewed — there is no verdict to show either way.
+  if (!review) return null;
 
+  const executed = review.executed;
   const correction = CORRECTION_BY_ACTION[review.recommendedAction];
   const isAccept = review.recommendedAction === "accept";
 
@@ -118,7 +123,15 @@ export function ResolutionAiPanel({
 
   return (
     <>
-      <Card withBorder padding="sm" radius="md" bg="var(--mantine-color-grape-light)">
+      {/* The tint is a call to action, so only the advisory shape wears it. An
+          executed verdict is a record; colouring it the same would put a
+          "something needs you here" signal on a row already settled. */}
+      <Card
+        withBorder
+        padding="sm"
+        radius="md"
+        bg={executed ? undefined : "var(--mantine-color-grape-light)"}
+      >
         <Stack gap="xs">
           <Group gap="xs" wrap="wrap">
             <Badge
@@ -143,12 +156,21 @@ export function ResolutionAiPanel({
             <Badge color="gray" variant="outline" size="sm" tt="none">
               {AI_VERDICT_LABELS[review.verdict]}
             </Badge>
+            {executed && (
+              <Badge color="green" variant="light" size="sm" tt="none">
+                carried out
+              </Badge>
+            )}
+            {/* Past tense once it happened: "suggests dismissing" beside a row
+                the AI already dismissed reads as a pending decision. */}
             <Text size="xs" c="dimmed">
-              suggests{" "}
+              {executed ? "did" : "suggests"}{" "}
               <Text span fw={600}>
                 {correction
                   ? CORRECTION_LABELS[correction].replace("…", "")
-                  : "accepting it"}
+                  : executed
+                    ? "accepted it"
+                    : "accepting it"}
               </Text>
             </Text>
           </Group>
@@ -178,35 +200,46 @@ export function ResolutionAiPanel({
             </Alert>
           )}
 
-          <Group gap="xs">
-            {available ? (
-              <Tooltip
-                label={
-                  isAccept
-                    ? "Applies the recommendation directly."
-                    : "Opens the usual confirmation, pre-filled with what the AI suggested."
-                }
-                withArrow
-              >
-                <Button
-                  size="compact-xs"
-                  color="grape"
-                  loading={busy}
-                  leftSection={<FaCheck size={10} />}
-                  onClick={isAccept ? applyAccept : applyDecline}
+          {/* Read-only once executed: there is nothing left to apply, and an
+              "unavailable" note would be misleading — the action is not
+              unavailable, it already happened. */}
+          {executed ? (
+            <Text size="xs" c="dimmed">
+              The AI was confident enough to act on this itself. What it did is
+              in the decision history; reopening the row offers the correction
+              that reverses it.
+            </Text>
+          ) : (
+            <Group gap="xs">
+              {available ? (
+                <Tooltip
+                  label={
+                    isAccept
+                      ? "Applies the recommendation directly."
+                      : "Opens the usual confirmation, pre-filled with what the AI suggested."
+                  }
+                  withArrow
                 >
-                  Apply this
-                </Button>
-              </Tooltip>
-            ) : (
-              // The row moved since the verdict, so the suggested action is no
-              // longer legal. Say so rather than offering a button that 400s.
-              <Text size="xs" c="dimmed">
-                This row can no longer take that action — it has changed since
-                the AI looked at it.
-              </Text>
-            )}
-          </Group>
+                  <Button
+                    size="compact-xs"
+                    color="grape"
+                    loading={busy}
+                    leftSection={<FaCheck size={10} />}
+                    onClick={isAccept ? applyAccept : applyDecline}
+                  >
+                    Apply this
+                  </Button>
+                </Tooltip>
+              ) : (
+                // The row moved since the verdict, so the suggested action is no
+                // longer legal. Say so rather than offering a button that 400s.
+                <Text size="xs" c="dimmed">
+                  This row can no longer take that action — it has changed since
+                  the AI looked at it.
+                </Text>
+              )}
+            </Group>
+          )}
         </Stack>
       </Card>
 

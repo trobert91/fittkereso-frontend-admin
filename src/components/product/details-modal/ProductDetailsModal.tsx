@@ -6,6 +6,7 @@ import {
   Box,
   Button,
   Center,
+  CopyButton,
   Group,
   Image,
   Loader,
@@ -13,6 +14,7 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -124,6 +126,29 @@ const ProductDetailsModalContent = ({ product }: { product: ProductModel }) => {
                 {product.releaseYear}
               </Badge>
             )}
+            {/* Click-to-copy, because the reason to surface an id at all is to
+                take it somewhere else — the product-id filter, a log query, a
+                ticket. Monospaced so a uuid can be eyeballed against one. */}
+            <CopyButton value={product.id}>
+              {({ copied, copy }) => (
+                <Tooltip
+                  label={copied ? "Copied" : "Copy product ID"}
+                  withArrow
+                >
+                  <Badge
+                    variant="outline"
+                    size="sm"
+                    color={copied ? "green" : "gray"}
+                    tt="none"
+                    ff="monospace"
+                    style={{ cursor: "pointer" }}
+                    onClick={copy}
+                  >
+                    {product.id}
+                  </Badge>
+                </Tooltip>
+              )}
+            </CopyButton>
           </Group>
           <Title order={3}>{product.displayName}</Title>
           <Text c="dimmed" size="sm">

@@ -108,7 +108,7 @@ export function ResolutionReviewModal({
               {/* Leads, mirroring the card: the inputs frame every candidate
                   below them. */}
               <Card.Section inheritPadding py="md">
-                <EvidenceSection title="What the system was given">
+                <EvidenceSection title="Inputs">
                   <ResolutionInputPanel resolution={item.resolution} />
                 </EvidenceSection>
               </Card.Section>
@@ -125,6 +125,7 @@ export function ResolutionReviewModal({
                   <ResolutionCandidatePanel
                     resolution={item.resolution}
                     listing={item.listing}
+                    candidateImageUrls={item.candidateImageUrls}
                     expanded
                   />
                 )}

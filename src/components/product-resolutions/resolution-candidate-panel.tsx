@@ -6,6 +6,7 @@ import {
   Anchor,
   Badge,
   Box,
+  CopyButton,
   Divider,
   Group,
   Image,
@@ -29,7 +30,6 @@ import { ProductModel } from "@/models/product-model";
 import { routes } from "@/utils/routes";
 import { SpecMatchTable } from "./spec-match-table";
 import {
-  IMAGE_HEIGHT,
   ResolutionListingCard,
   ResolutionProductCard,
 } from "./resolution-product-card";
@@ -40,10 +40,16 @@ import { filterReasonLabel, productLookup } from "./resolution-labels";
  *  plausible than the runner-up" — and the rest are a count. */
 const CLOSED_LIMIT = 2;
 
-/** The open state's image column. Narrower than the closed tile: the row is
- *  wide, and a picture big enough to dominate it would push the evidence that
- *  earns the expansion off the first screen. */
+/**
+ * The open state's image box. Deliberately smaller than the closed tile's on
+ * both axes — and sized independently of it, so widening the tile to fit fewer
+ * per row does not also inflate every expanded row.
+ *
+ * The row is wide, and a picture big enough to dominate it would push the
+ * evidence that earns the expansion off the first screen.
+ */
 const OPEN_IMAGE_WIDTH = 190;
+const OPEN_IMAGE_HEIGHT = 140;
 
 /**
  * The candidates, in the two shapes the card needs.
@@ -61,10 +67,15 @@ const OPEN_IMAGE_WIDTH = 190;
 export function ResolutionCandidatePanel({
   resolution,
   listing,
+  candidateImageUrls,
   expanded,
 }: {
   resolution: ProductResolutionRecord;
   listing?: ResolutionListingSummary;
+  /** `productId => imageUrl`, shipped alongside the row because a stored
+   *  candidate carries only its id — there is no product object to read a
+   *  picture off for anything but the chosen one. */
+  candidateImageUrls?: Record<string, string>;
   expanded: boolean;
 }) {
   const [detailProductId, setDetailProductId] = useState<string | null>(null);
@@ -145,6 +156,7 @@ export function ResolutionCandidatePanel({
                 key={candidate.candidateId}
                 candidate={candidate}
                 product={products[candidate.candidateId]}
+                imageUrl={candidateImageUrls?.[candidate.candidateId]}
                 chosen={candidate.candidateId === chosenId}
                 onOpen={() => setDetailProductId(candidate.candidateId)}
               />
@@ -177,6 +189,7 @@ export function ResolutionCandidatePanel({
                 key={candidate.candidateId}
                 candidate={candidate}
                 product={products[candidate.candidateId]}
+                imageUrl={candidateImageUrls?.[candidate.candidateId]}
                 chosen={candidate.candidateId === chosenId}
                 onOpen={() => setDetailProductId(candidate.candidateId)}
               />
@@ -267,11 +280,13 @@ function CandidateBadges({
 function CandidateTile({
   candidate,
   product,
+  imageUrl,
   chosen,
   onOpen,
 }: {
   candidate: ProductResolutionCandidateRecord;
   product?: ProductModel;
+  imageUrl?: string;
   chosen: boolean;
   onOpen: () => void;
 }) {
@@ -280,6 +295,8 @@ function CandidateTile({
   return (
     <ResolutionProductCard
       product={product}
+      imageUrl={imageUrl}
+      productId={candidate.candidateId}
       fallbackName={
         candidate.displayName ?? candidate.model ?? candidate.candidateId
       }
@@ -309,11 +326,13 @@ function CandidateTile({
 function CandidateRow({
   candidate,
   product,
+  imageUrl: candidateImageUrl,
   chosen,
   onOpen,
 }: {
   candidate: ProductResolutionCandidateRecord;
   product?: ProductModel;
+  imageUrl?: string;
   chosen: boolean;
   onOpen: () => void;
 }) {
@@ -323,8 +342,13 @@ function CandidateRow({
     candidate.model ??
     candidate.candidateId;
 
+  // The loaded product wins when there is one — it is only ever the chosen
+  // candidate, and its relations are already hydrated. Everything else falls
+  // back to the id-keyed map, which is the only picture those candidates have.
   const imageUrl =
-    product?.mainImage?.url ?? product?.images?.find((img) => !!img.url)?.url;
+    product?.mainImage?.url ??
+    product?.images?.find((img) => !!img.url)?.url ??
+    candidateImageUrl;
 
   const hasEvidence =
     !!candidate.matchComponents ||
@@ -352,7 +376,7 @@ function CandidateRow({
             <Box
               style={{
                 width: OPEN_IMAGE_WIDTH,
-                height: IMAGE_HEIGHT,
+                height: OPEN_IMAGE_HEIGHT,
                 flexShrink: 0,
                 display: "flex",
                 alignItems: "center",
@@ -368,7 +392,7 @@ function CandidateRow({
                 <Image
                   src={imageUrl}
                   alt={name}
-                  h={IMAGE_HEIGHT}
+                  h={OPEN_IMAGE_HEIGHT}
                   w={OPEN_IMAGE_WIDTH}
                   fit="contain"
                 />
@@ -406,6 +430,28 @@ function CandidateRow({
                     .join(" · ")}
                 </Text>
               )}
+
+              <CopyButton value={candidate.candidateId}>
+                {({ copied, copy }) => (
+                  <Tooltip
+                    label={copied ? "Copied" : "Copy product ID"}
+                    withArrow
+                  >
+                    <Badge
+                      variant="outline"
+                      size="xs"
+                      color={copied ? "green" : "gray"}
+                      tt="none"
+                      ff="monospace"
+                      w="fit-content"
+                      style={{ cursor: "pointer" }}
+                      onClick={copy}
+                    >
+                      {candidate.candidateId}
+                    </Badge>
+                  </Tooltip>
+                )}
+              </CopyButton>
 
               {product?.price != null && (
                 <Text size="sm" fw={700}>

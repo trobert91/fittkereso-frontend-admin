@@ -25,7 +25,7 @@ import { ListingPrice, formatPrice } from "./resolution-product-card";
  * same list the closed card showed as tiles. It is now one component —
  * `ResolutionCandidatePanel` — that switches shape on `expanded`, so opening the
  * row deepens the comparison in place instead of restating it further down.
- * "What the system was given" likewise sits in the always-visible area.
+ * "Inputs" likewise sits in the always-visible area.
  *
  * This block is the remainder: the pair's spec comparison, and where the listing
  * actually lives now.
