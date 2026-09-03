@@ -1,7 +1,7 @@
 import { routes } from "@/utils/routes";
 import { ElementType } from "react";
 import { PiListBullets, PiStarDuotone, PiStorefront } from "react-icons/pi";
-import { TbBuildingFactory2, TbCategory, TbGitMerge } from "react-icons/tb";
+import { TbBuildingFactory2, TbCategory } from "react-icons/tb";
 import { VscTasklist } from "react-icons/vsc";
 
 interface MenuItem {
@@ -46,11 +46,6 @@ export const menu: MenuItem[] = [
             href: routes.productSources.list,
           },
         ],
-      },
-      {
-        name: "Product Resolutions",
-        href: routes.productResolutions.list,
-        icon: TbGitMerge,
       },
       {
         name: "Category List",

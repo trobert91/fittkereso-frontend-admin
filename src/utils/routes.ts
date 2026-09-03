@@ -39,9 +39,6 @@ export const routes = {
     list: "/product-sources/list",
     details: (id: string) => `/product-sources/${id}`,
   },
-  productResolutions: {
-    list: "/product-resolutions/list",
-  },
   brands: {
     list: "/brands/list",
     details: (id: string) => `/brands/${id}`,

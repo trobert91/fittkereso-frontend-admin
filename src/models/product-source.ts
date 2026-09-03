@@ -30,9 +30,8 @@ export interface ProductSourceRecord {
   url?: string;
   externalId?: string;
   // The product this listing currently sits on. Only populated where the
-  // backend joins it (the product-resolution review queue) — a merge can move
-  // a listing after a decision was recorded, so this is the live answer to
-  // "where did this end up", unlike a resolution's stored `resolvedProduct`.
+  // backend joins it — a merge can move a listing between products, so this is
+  // the live answer to "where did this end up".
   model?: ProductModel;
   // The full scraped payload this record was built from — specs and the
   // listing's own brand/model/displayName/releaseYear live here, not as
