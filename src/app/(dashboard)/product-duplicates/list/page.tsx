@@ -1,5 +1,4 @@
-import { CommonPage } from "@/components/common-page";
-import { PageHeader } from "@/components/page-header";
+import { ListPage } from "@/components/list/list-page";
 import { routes } from "@/utils/routes";
 import { ProductDuplicateTable } from "@/components/product-duplicates/product-duplicate-table";
 import { ProductDuplicateScanAction } from "@/components/product-duplicates/product-duplicate-scan-action";
@@ -16,14 +15,12 @@ const breadcrumbs = [
 
 export default function ProductDuplicateListPage() {
   return (
-    <CommonPage>
-      <PageHeader
-        title="Duplicates"
-        breadcrumbs={breadcrumbs}
-        actions={<ProductDuplicateScanAction />}
-      />
-
+    <ListPage
+      title="Duplicates"
+      breadcrumbs={breadcrumbs}
+      actions={<ProductDuplicateScanAction />}
+    >
       <ProductDuplicateTable />
-    </CommonPage>
+    </ListPage>
   );
 }

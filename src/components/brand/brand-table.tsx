@@ -29,11 +29,15 @@ import { useBrandSearch } from "@/hooks/useBrandSearch";
 import { BrandSearchParams } from "@/models/dtos/brand-search-models";
 import { formatDate } from "@/utils/date";
 
+import { useListRegistration } from "@/components/list/list-context";
+import { ListPagination } from "@/components/list/list-pagination";
+
 export function BrandTable() {
   const [data, setData] = useState<Brand[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(40);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState<number | null>(null);
 
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -43,30 +47,39 @@ export function BrandTable() {
   useEffect(() => {
     setData(searchResult?.items || []);
     setTotalPages(searchResult?.totalPages || 1);
+    setTotalItems(searchResult?.totalItems ?? null);
   }, [searchResult]);
+
+  const buildSearchParams = (): BrandSearchParams => {
+    const sortField = sorting[0]?.id as BrandSearchParams["sort"];
+    const sortOrder =
+      sorting[0]?.desc === true ? "DESC" : sorting.length ? "ASC" : undefined;
+
+    return { page, pageSize, sort: sortField, order: sortOrder };
+  };
+
+  /* Re-runs the query as it stands. It cannot go through the effect below, which deliberately
+     skips a search whose parameters already match what is loaded - so asking for the page you
+     are already on would do nothing, which is exactly what refresh asks for. */
+  const refresh = () => {
+    search(buildSearchParams());
+  };
+
+  useListRegistration({ totalItems, loading, onRefresh: refresh });
 
   useEffect(() => {
     if (loading || !pageSize || !page) {
       return;
     }
 
-    const sortField = sorting[0]?.id as BrandSearchParams["sort"];
-    const sortOrder =
-      sorting[0]?.desc === true ? "DESC" : sorting.length ? "ASC" : undefined;
+    const searchParams = buildSearchParams();
 
     if (
       page !== searchResult?.page ||
-      sortField !== searchResult?.sort ||
+      searchParams.sort !== searchResult?.sort ||
       pageSize !== searchResult?.pageSize ||
-      sortOrder !== searchResult?.order
+      searchParams.order !== searchResult?.order
     ) {
-      const searchParams: BrandSearchParams = {
-        page,
-        pageSize,
-        sort: sortField,
-        order: sortOrder,
-      };
-
       search(searchParams);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -166,6 +179,18 @@ export function BrandTable() {
         </Center>
       ) : (
         <>
+          <ListPagination
+            page={page}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPage(1);
+              setPageSize(size);
+            }}
+          />
+
           <Table striped horizontalSpacing="md" verticalSpacing="md">
             <Table.Thead>
               {table.getHeaderGroups().map((hg) => (

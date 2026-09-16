@@ -15,7 +15,6 @@ import {
   Loader,
   Center,
   Pagination,
-  Select,
   Text,
   Badge,
   MultiSelect,
@@ -60,6 +59,9 @@ const getColorForTaskStatus = (status: TaskStatus): string => {
   }
 };
 
+import { useListRegistration } from "@/components/list/list-context";
+import { ListPagination } from "@/components/list/list-pagination";
+
 export function ScrapeTaskTable() {
   const [data, setData] = useState<ScrapeTask[]>([]);
   const [page, setPage] = useState(1);
@@ -87,16 +89,12 @@ export function ScrapeTaskTable() {
     setTotalItems(searchResult?.totalItems ?? null);
   }, [searchResult]);
 
-  useEffect(() => {
-    if (loading || !pageSize || !page) {
-      return;
-    }
-
+  const buildSearchParams = (): ScrapeTaskSearchParams => {
     const sortField = sorting[0]?.id as ScrapeTaskSearchParams["sort"];
     const sortOrder =
       sorting[0]?.desc === true ? "DESC" : sorting.length ? "ASC" : undefined;
 
-    const searchParams: ScrapeTaskSearchParams = {
+    return {
       page,
       pageSize,
       sort: sortField,
@@ -105,8 +103,20 @@ export function ScrapeTaskTable() {
       queues: queuesFilter.length ? queuesFilter : undefined,
       sourceTypes: sourceTypesFilter.length ? sourceTypesFilter : undefined,
     };
+  };
 
-    search(searchParams);
+  const refresh = () => {
+    search(buildSearchParams());
+  };
+
+  useListRegistration({ totalItems, loading, onRefresh: refresh });
+
+  useEffect(() => {
+    if (loading || !pageSize || !page) {
+      return;
+    }
+
+    search(buildSearchParams());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, sorting, pageSize, statusesFilter, queuesFilter, sourceTypesFilter]);
 
@@ -527,33 +537,17 @@ export function ScrapeTaskTable() {
             </Group>
           </Card>
 
-          <Group justify="space-between" mb="sm">
-            <Text size="sm" c="dimmed">
-              {totalItems !== null ? `${totalItems} total scrape tasks` : ""}
-            </Text>
-            <Group gap="sm">
-              <Select
-                size="xs"
-                label="Per page"
-                data={["20", "50", "100"]}
-                value={String(pageSize)}
-                onChange={(val) => {
-                  if (val) {
-                    setPage(1);
-                    setPageSize(Number(val));
-                  }
-                }}
-                w={80}
-              />
-              <Pagination
-                total={totalPages}
-                value={page}
-                onChange={setPage}
-                size="sm"
-                mt="auto"
-              />
-            </Group>
-          </Group>
+          <ListPagination
+            page={page}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPage(1);
+              setPageSize(size);
+            }}
+          />
 
           <Table striped horizontalSpacing="md" verticalSpacing="md">
             <Table.Thead>

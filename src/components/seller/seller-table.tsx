@@ -38,6 +38,9 @@ import { SellerSearchParams } from "@/models/dtos/seller-search-models";
 import { postSellerUpdate } from "@/api-actions/seller/seller-update";
 import { formatDate } from "@/utils/date";
 
+import { useListRegistration } from "@/components/list/list-context";
+import { ListPagination } from "@/components/list/list-pagination";
+
 export function SellerTable() {
   const [data, setData] = useState<Seller[]>([]);
   const [page, setPage] = useState(1);
@@ -64,16 +67,12 @@ export function SellerTable() {
     setTotalItems(searchResult?.totalItems ?? null);
   }, [searchResult]);
 
-  useEffect(() => {
-    if (loading || !pageSize || !page) {
-      return;
-    }
-
+  const buildSearchParams = (): SellerSearchParams => {
     const sortField = sorting[0]?.id as SellerSearchParams["sort"];
     const sortOrder =
       sorting[0]?.desc === true ? "DESC" : sorting.length ? "ASC" : undefined;
 
-    const searchParams: SellerSearchParams = {
+    return {
       page,
       pageSize,
       sort: sortField,
@@ -85,8 +84,20 @@ export function SellerTable() {
       active: activeFilter ? activeFilter === "true" : undefined,
       verified: verifiedFilter ? verifiedFilter === "true" : undefined,
     };
+  };
 
-    search(searchParams);
+  const refresh = () => {
+    search(buildSearchParams());
+  };
+
+  useListRegistration({ totalItems, loading, onRefresh: refresh });
+
+  useEffect(() => {
+    if (loading || !pageSize || !page) {
+      return;
+    }
+
+    search(buildSearchParams());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     page,
@@ -351,33 +362,17 @@ export function SellerTable() {
         </Center>
       ) : (
         <>
-          <Group justify="space-between" mb="sm">
-            <Text size="sm" c="dimmed">
-              {totalItems !== null ? `${totalItems} total sellers` : ""}
-            </Text>
-            <Group gap="sm">
-              <Select
-                size="xs"
-                label="Per page"
-                data={["20", "40", "100"]}
-                value={String(pageSize)}
-                onChange={(val) => {
-                  if (val) {
-                    setPage(1);
-                    setPageSize(Number(val));
-                  }
-                }}
-                w={80}
-              />
-              <Pagination
-                total={totalPages}
-                value={page}
-                onChange={setPage}
-                size="sm"
-                mt="auto"
-              />
-            </Group>
-          </Group>
+          <ListPagination
+            page={page}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPage(1);
+              setPageSize(size);
+            }}
+          />
 
           <Table striped horizontalSpacing="md" verticalSpacing="md">
             <Table.Thead>

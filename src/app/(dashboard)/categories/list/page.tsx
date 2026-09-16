@@ -1,5 +1,4 @@
-import { CommonPage } from "@/components/common-page";
-import { PageHeader } from "@/components/page-header";
+import { ListPage } from "@/components/list/list-page";
 import { routes } from "@/utils/routes";
 import { CategoryTable } from "@/components/category/category-table";
 
@@ -15,10 +14,8 @@ const breadcrumbs = [
 
 export default function CategoryList() {
   return (
-    <CommonPage>
-      <PageHeader title="Kategóriák" breadcrumbs={breadcrumbs} />
-
+    <ListPage title="Kategóriák" breadcrumbs={breadcrumbs}>
       <CategoryTable />
-    </CommonPage>
+    </ListPage>
   );
 }

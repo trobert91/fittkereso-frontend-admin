@@ -1,5 +1,4 @@
-import { CommonPage } from "@/components/common-page";
-import { PageHeader } from "@/components/page-header";
+import { ListPage } from "@/components/list/list-page";
 import { ProductTable } from "@/components/product/product-table";
 import { routes } from "@/utils/routes";
 
@@ -15,10 +14,8 @@ const breadcrumbs = [
 
 export default function ProductList() {
   return (
-    <CommonPage>
-      <PageHeader title="Termékek" breadcrumbs={breadcrumbs} />
-
+    <ListPage title="Termékek" breadcrumbs={breadcrumbs}>
       <ProductTable syncWithUrl />
-    </CommonPage>
+    </ListPage>
   );
 }

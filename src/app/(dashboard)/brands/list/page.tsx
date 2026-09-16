@@ -1,5 +1,4 @@
-import { CommonPage } from "@/components/common-page";
-import { PageHeader } from "@/components/page-header";
+import { ListPage } from "@/components/list/list-page";
 import { routes } from "@/utils/routes";
 import { BrandTable } from "@/components/brand/brand-table";
 import { CreateBrandAction } from "@/components/brand/create-brand-action";
@@ -16,14 +15,12 @@ const breadcrumbs = [
 
 export default function BrandList() {
   return (
-    <CommonPage>
-      <PageHeader
-        title="Brands"
-        breadcrumbs={breadcrumbs}
-        actions={<CreateBrandAction />}
-      />
-
+    <ListPage
+      title="Brands"
+      breadcrumbs={breadcrumbs}
+      actions={<CreateBrandAction />}
+    >
       <BrandTable />
-    </CommonPage>
+    </ListPage>
   );
 }

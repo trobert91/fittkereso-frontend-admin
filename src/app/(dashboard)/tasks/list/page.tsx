@@ -1,5 +1,4 @@
-import { CommonPage } from "@/components/common-page";
-import { PageHeader } from "@/components/page-header";
+import { ListPage } from "@/components/list/list-page";
 import { routes } from "@/utils/routes";
 import { TaskTable } from "@/components/tasks/task-table";
 
@@ -15,10 +14,8 @@ const breadcrumbs = [
 
 export default function TaskListPage() {
   return (
-    <CommonPage>
-      <PageHeader title="Tasks" breadcrumbs={breadcrumbs} />
-
+    <ListPage title="Tasks" breadcrumbs={breadcrumbs}>
       <TaskTable />
-    </CommonPage>
+    </ListPage>
   );
 }

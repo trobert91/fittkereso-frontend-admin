@@ -45,6 +45,8 @@ import { Brand } from "@/models/brand";
 import debounce from "lodash/debounce";
 import { postBrandSearch } from "@/api-actions/brand/brand-search";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useListRegistration } from "@/components/list/list-context";
+import { ListPagination } from "@/components/list/list-pagination";
 
 /** Mirrors the backend's own guard: a non-uuid cannot match a uuid column, so
  *  it is worth saying so in the field rather than issuing the search. */
@@ -99,6 +101,7 @@ export function ProductTable({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(40);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState<number | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string[]>(resolveInitialCategories);
   const [brandFilter, setBrandFilter] = useState<string[]>(resolveInitialBrands);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -240,18 +243,15 @@ export function ProductTable({
   useEffect(() => {
     setData(searchResult?.items || []);
     setTotalPages(searchResult?.totalPages || 1);
+    setTotalItems(searchResult?.totalItems ?? null);
   }, [searchResult]);
-  // Search whenever any filter/sort/page param changes
-  useEffect(() => {
-    if (!pageSize || !page) {
-      return;
-    }
 
+  const buildSearchParams = (): ProductSearchParams => {
     const sortField = sorting[0]?.id as ProductSearchParams["sort"];
     const sortOrder =
       sorting[0]?.desc === true ? "DESC" : sorting.length ? "ASC" : undefined;
 
-    const searchParams: ProductSearchParams = {
+    return {
       page,
       pageSize,
       sort: sortField,
@@ -262,8 +262,21 @@ export function ProductTable({
       id: debouncedIdFilter.trim() || undefined,
       includeImages: false,
     };
+  };
 
-    searchProducts(searchParams);
+  const refresh = () => {
+    searchProducts(buildSearchParams());
+  };
+
+  useListRegistration({ totalItems, loading, onRefresh: refresh });
+
+  // Search whenever any filter/sort/page param changes
+  useEffect(() => {
+    if (!pageSize || !page) {
+      return;
+    }
+
+    searchProducts(buildSearchParams());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     page,
@@ -550,6 +563,19 @@ export function ProductTable({
               </Stack>
             </Group>
           </Card>
+
+          <ListPagination
+            page={page}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPage(1);
+              setPageSize(size);
+            }}
+          />
+
           <Table striped horizontalSpacing="md" verticalSpacing="md">
             <Table.Thead>
               {table.getHeaderGroups().map((hg) => (

@@ -1,5 +1,4 @@
-import { CommonPage } from "@/components/common-page";
-import { PageHeader } from "@/components/page-header";
+import { ListPage } from "@/components/list/list-page";
 import { routes } from "@/utils/routes";
 import { SellerTable } from "@/components/seller/seller-table";
 import { CreateSellerAction } from "@/components/seller/create-seller-action";
@@ -16,14 +15,12 @@ const breadcrumbs = [
 
 export default function SellerList() {
   return (
-    <CommonPage>
-      <PageHeader
-        title="Sellers"
-        breadcrumbs={breadcrumbs}
-        actions={<CreateSellerAction />}
-      />
-
+    <ListPage
+      title="Sellers"
+      breadcrumbs={breadcrumbs}
+      actions={<CreateSellerAction />}
+    >
       <SellerTable />
-    </CommonPage>
+    </ListPage>
   );
 }

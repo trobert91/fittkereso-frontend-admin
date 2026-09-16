@@ -91,8 +91,12 @@ function ProductCell({ product }: { product: ProductModel }) {
   );
 }
 
+import { useListRegistration } from "@/components/list/list-context";
+import { ListPagination } from "@/components/list/list-pagination";
+
 export function ProductDuplicateTable() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [status, setStatus] = useState<ProductDuplicatePairStatus>("open");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [minScore, setMinScore] = useState<string | null>(null);
@@ -108,12 +112,19 @@ export function ProductDuplicateTable() {
   const doSearch = () => {
     search({
       page,
-      pageSize: PAGE_SIZE,
+      pageSize,
       status,
       categoryIds: categoryId ? [categoryId] : undefined,
       minScore: minScore ? Number(minScore) : undefined,
     });
   };
+
+  // This table already had its search extracted, so refresh is just that function again.
+  useListRegistration({
+    totalItems: searchResult?.totalItems ?? null,
+    loading,
+    onRefresh: doSearch,
+  });
 
   useEffect(() => {
     postCategorySearch({ page: 1, pageSize: 100 })
@@ -125,7 +136,7 @@ export function ProductDuplicateTable() {
   useEffect(() => {
     doSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, status, categoryId, minScore]);
+  }, [page, pageSize, status, categoryId, minScore]);
 
   const handleDismiss = (pair: ProductDuplicatePair) => {
     modals.openConfirmModal({
@@ -309,6 +320,18 @@ export function ProductDuplicateTable() {
 
       {data.length > 0 && (
         <>
+          <ListPagination
+            page={page}
+            pageSize={pageSize}
+            totalPages={searchResult?.totalPages || 1}
+            totalItems={searchResult?.totalItems ?? null}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPage(1);
+              setPageSize(size);
+            }}
+          />
+
           <Table striped highlightOnHover withTableBorder>
             <Table.Thead>
               {table.getHeaderGroups().map((headerGroup) => (

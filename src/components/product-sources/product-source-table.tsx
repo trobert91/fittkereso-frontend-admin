@@ -23,7 +23,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { isEmpty, isNil } from "lodash";
+import { isEmpty } from "lodash";
 import {
   ProductSource,
   ProductSourceSearchParams,
@@ -33,6 +33,9 @@ import { useProductSourceSearch } from "@/hooks/useProductSourceSearch";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
 import { formatDate } from "@/utils/date";
+
+import { useListRegistration } from "@/components/list/list-context";
+import { ListPagination } from "@/components/list/list-pagination";
 
 export function ProductSourceTable() {
   const [data, setData] = useState<ProductSource[]>([]);
@@ -59,16 +62,12 @@ export function ProductSourceTable() {
     setTotalItems(searchResult?.totalItems ?? null);
   }, [searchResult]);
 
-  useEffect(() => {
-    if (loading || !page || !pageSize) {
-      return;
-    }
-
+  const buildSearchParams = (): ProductSourceSearchParams => {
     const sortField = sorting[0]?.id as ProductSourceSearchParams["sort"];
     const sortOrder =
       sorting[0]?.desc === true ? "DESC" : sorting.length ? "ASC" : undefined;
 
-    const searchParams: ProductSourceSearchParams = {
+    return {
       page,
       pageSize,
       searchTerm: isEmpty(searchTerm) ? undefined : searchTerm,
@@ -82,8 +81,20 @@ export function ProductSourceTable() {
       sort: sortField,
       order: sortOrder,
     };
+  };
 
-    search(searchParams);
+  const refresh = () => {
+    search(buildSearchParams());
+  };
+
+  useListRegistration({ totalItems, loading, onRefresh: refresh });
+
+  useEffect(() => {
+    if (loading || !page || !pageSize) {
+      return;
+    }
+
+    search(buildSearchParams());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     page,
@@ -364,35 +375,17 @@ export function ProductSourceTable() {
             </Group>
           </Card>
 
-          <Group justify="space-between" mb="sm">
-            <Text size="sm" c="dimmed">
-              {!isNil(totalItems) ? `${totalItems} total product sources` : ""}
-            </Text>
-
-            <Group gap="sm">
-              <Select
-                size="xs"
-                label="Per page"
-                data={["20", "50", "100"]}
-                value={String(pageSize)}
-                onChange={(value) => {
-                  if (value) {
-                    setPage(1);
-                    setPageSize(Number(value));
-                  }
-                }}
-                w={80}
-              />
-
-              <Pagination
-                total={totalPages}
-                value={page}
-                onChange={setPage}
-                size="sm"
-                mt="auto"
-              />
-            </Group>
-          </Group>
+          <ListPagination
+            page={page}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPage(1);
+              setPageSize(size);
+            }}
+          />
 
           <Table striped horizontalSpacing="md" verticalSpacing="md">
             <Table.Thead>
