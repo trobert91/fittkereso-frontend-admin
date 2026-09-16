@@ -9,7 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import {
-  ActionIcon,
+
   Anchor,
   Badge,
   Button,
@@ -25,7 +25,6 @@ import {
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import Link from "next/link";
-import { LuExternalLink } from "react-icons/lu";
 import { postCategorySearch } from "@/api-actions/category/category-search";
 import { postDismissProductDuplicate } from "@/api-actions/product-duplicate/product-duplicate-actions";
 import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
@@ -63,25 +62,14 @@ const DETECTED_BY_LABELS: Record<ProductDuplicateDetectedBy, string> = {
 function ProductCell({ product }: { product: ProductModel }) {
   return (
     <Stack gap={2}>
-      <Group gap="xs" wrap="nowrap">
-        <Anchor
-          component={Link}
-          href={routes.products.details(product.id)}
-          size="sm"
-          fw={500}
-        >
-          {product.displayName}
-        </Anchor>
-        <ActionIcon
-          component={Link}
-          href={routes.products.details(product.id)}
-          target="_blank"
-          variant="subtle"
-          size="xs"
-        >
-          <LuExternalLink size={12} />
-        </ActionIcon>
-      </Group>
+      <Anchor
+        component={Link}
+        href={routes.products.details(product.id)}
+        size="sm"
+        fw={500}
+      >
+        {product.displayName}
+      </Anchor>
       <Text size="xs" c="dimmed">
         {product.brand?.name} · {product.productCategory?.name}
       </Text>

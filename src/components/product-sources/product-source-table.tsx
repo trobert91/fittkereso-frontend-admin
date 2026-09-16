@@ -19,6 +19,7 @@ import {
   MultiSelect,
   Select,
   Table,
+  Anchor,
   Text,
   TextInput,
 } from "@mantine/core";
@@ -121,9 +122,13 @@ export function ProductSourceTable() {
           const source = props.row.original;
 
           return (
-            <Link href={routes.productSources.details(source.id)}>
+            <Anchor
+              component={Link}
+              href={routes.productSources.details(source.id)}
+              size="sm"
+            >
               {props.getValue()}
-            </Link>
+            </Anchor>
           );
         },
       }),

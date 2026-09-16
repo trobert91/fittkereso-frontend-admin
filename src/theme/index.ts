@@ -242,7 +242,7 @@ export const theme = createTheme({
     },
     /* Tables, carrying over control-plane's daisyUI `table table-sm`.
        Their metrics translated: padding-block .5rem and padding-inline .75rem, a faint row
-       divider, a hover highlight, an enclosing border - and no zebra, since control-plane
+       divider and an enclosing border - and no zebra, since control-plane
        never applies .table-zebra. The old `striped verticalSpacing="md"` was double this
        padding plus stripes, which is why the rows read as so tall.
 
@@ -259,7 +259,9 @@ export const theme = createTheme({
       defaultProps: {
         verticalSpacing: "0.5rem",
         horizontalSpacing: "0.75rem",
-        highlightOnHover: true,
+        /* No row hover tint. control-plane does have one, but its tables are text-only;
+           on a dense admin row carrying badges and links it reads as noise. */
+        highlightOnHover: false,
         withTableBorder: true,
         striped: false,
         borderColor: "var(--mantine-color-default-border)",

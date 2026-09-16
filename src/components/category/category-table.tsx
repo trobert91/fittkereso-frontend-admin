@@ -12,17 +12,17 @@ import {
 } from "@tanstack/react-table";
 import {
   Table,
+  Anchor,
   Loader,
   Center,
   Text,
   Badge,
-  ActionIcon,
+
 } from "@mantine/core";
 import { isArray, isEmpty } from "lodash";
 import Image from "next/image";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
-import { LuExternalLink } from "react-icons/lu";
 import { ProductCategory } from "@/models/product-category";
 import { useCategorySearch } from "@/hooks/useCategorySearch";
 import { CategorySearchParams } from "@/models/dtos/category-search-models";
@@ -116,19 +116,13 @@ export function CategoryTable() {
               const id = row.id;
 
               return (
-                <Text size="sm">
-                  {name}{" "}
-                  <Link href={routes.categories.details(id)}>
-                    <ActionIcon
-                      variant="transparent"
-                      aria-label="Go to details"
-                    >
-                      <LuExternalLink
-                        style={{ width: "15px", height: "70%" }}
-                      />
-                    </ActionIcon>
-                  </Link>
-                </Text>
+                <Anchor
+                  component={Link}
+                  href={routes.categories.details(id)}
+                  size="sm"
+                >
+                  {name}
+                </Anchor>
               );
             },
           }),

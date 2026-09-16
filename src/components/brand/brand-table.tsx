@@ -12,17 +12,17 @@ import {
 } from "@tanstack/react-table";
 import {
   Table,
+  Anchor,
   Loader,
   Center,
   Text,
   Badge,
-  ActionIcon,
+
   Group,
 } from "@mantine/core";
 import { isEmpty } from "lodash";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
-import { LuExternalLink } from "react-icons/lu";
 import { Brand } from "@/models/brand";
 import { useBrandSearch } from "@/hooks/useBrandSearch";
 import { BrandSearchParams } from "@/models/dtos/brand-search-models";
@@ -104,19 +104,13 @@ export function BrandTable() {
           const row = props.row.original;
 
           return (
-            <Text size="sm">
-              {name}{" "}
-              <Link href={routes.brands.details(row.id)}>
-                <ActionIcon
-                  variant="transparent"
-                  aria-label="Go to details"
-                >
-                  <LuExternalLink
-                    style={{ width: "15px", height: "70%" }}
-                  />
-                </ActionIcon>
-              </Link>
-            </Text>
+            <Anchor
+              component={Link}
+              href={routes.brands.details(row.id)}
+              size="sm"
+            >
+              {name}
+            </Anchor>
           );
         },
       }),

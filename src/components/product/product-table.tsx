@@ -12,12 +12,13 @@ import {
 } from "@tanstack/react-table";
 import {
   Table,
+  Anchor,
   Loader,
   Center,
   Text,
   Box,
   Badge,
-  ActionIcon,
+
   Group,
   Stack,
   MultiSelect,
@@ -33,7 +34,6 @@ import { compact, isEmpty } from "lodash";
 import Image from "next/image";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
-import { LuExternalLink } from "react-icons/lu";
 import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
 import { ProductCategory } from "@/models/product-category";
 import { formatDate } from "@/utils/date";
@@ -342,18 +342,16 @@ export function ProductTable({
 
               return (
                 <Text size="sm">
-                  {displayName}{" "}
-                  {showProductDetailsLink && (
-                    <Link href={routes.products.details(id)}>
-                      <ActionIcon
-                        variant="transparent"
-                        aria-label="Go to details"
-                      >
-                        <LuExternalLink
-                          style={{ width: "15px", height: "70%" }}
-                        />
-                      </ActionIcon>
-                    </Link>
+                  {showProductDetailsLink ? (
+                    <Anchor
+                      component={Link}
+                      href={routes.products.details(id)}
+                      size="sm"
+                    >
+                      {displayName}
+                    </Anchor>
+                  ) : (
+                    displayName
                   )}
                   {onSelectProduct && (
                     <Button

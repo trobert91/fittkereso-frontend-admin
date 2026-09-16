@@ -19,7 +19,6 @@ import {
 import { notifications } from "@mantine/notifications";
 import { sortBy } from "lodash";
 import Link from "next/link";
-import { LuExternalLink } from "react-icons/lu";
 import { getProductById } from "@/api-actions/product/get-product";
 import {
   postDismissProductDuplicate,
@@ -61,18 +60,15 @@ function ProductColumn({
       </Card>
 
       <Stack gap={4}>
-        <Group gap="xs" wrap="nowrap">
-          <Text size="sm" fw={600}>
-            {product.displayName}
-          </Text>
-          <Anchor
-            component={Link}
-            href={routes.products.details(product.id)}
-            target="_blank"
-          >
-            <LuExternalLink size={12} />
-          </Anchor>
-        </Group>
+        <Anchor
+          component={Link}
+          href={routes.products.details(product.id)}
+          target="_blank"
+          size="sm"
+          fw={600}
+        >
+          {product.displayName}
+        </Anchor>
         <Text size="sm" c="blue">
           {product.brand?.name ?? "—"}
         </Text>

@@ -12,6 +12,7 @@ import {
 } from "@tanstack/react-table";
 import {
   Table,
+  Anchor,
   Loader,
   Center,
   Select,
@@ -28,7 +29,6 @@ import { useDebouncedValue } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { isEmpty } from "lodash";
 import Link from "next/link";
-import { LuExternalLink } from "react-icons/lu";
 import { PiPower } from "react-icons/pi";
 import { routes } from "@/utils/routes";
 import { Seller } from "@/models/seller";
@@ -154,14 +154,13 @@ export function SellerTable() {
           const row = props.row.original;
 
           return (
-            <Text size="sm">
-              {name}{" "}
-              <Link href={routes.sellers.details(row.id)}>
-                <ActionIcon variant="transparent" aria-label="Go to details">
-                  <LuExternalLink style={{ width: "15px", height: "70%" }} />
-                </ActionIcon>
-              </Link>
-            </Text>
+            <Anchor
+              component={Link}
+              href={routes.sellers.details(row.id)}
+              size="sm"
+            >
+              {name}
+            </Anchor>
           );
         },
       }),
