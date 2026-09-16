@@ -45,6 +45,10 @@ export const menu: MenuItem[] = [
             name: "Product Sources",
             href: routes.productSources.list,
           },
+          {
+            name: "Duplicates",
+            href: routes.productDuplicates.list,
+          },
         ],
       },
       {

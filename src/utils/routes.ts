@@ -57,4 +57,7 @@ export const routes = {
   scrapeTasks: {
     list: "/scrape-tasks/list",
   },
+  productDuplicates: {
+    list: "/product-duplicates/list",
+  },
 };

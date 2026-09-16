@@ -1,0 +1,362 @@
+"use client";
+"use no memo";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
+  ActionIcon,
+  Anchor,
+  Badge,
+  Button,
+  Card,
+  Center,
+  Group,
+  Loader,
+  Pagination,
+  Select,
+  Stack,
+  Table,
+  Text,
+} from "@mantine/core";
+import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
+import Link from "next/link";
+import { LuExternalLink } from "react-icons/lu";
+import { postCategorySearch } from "@/api-actions/category/category-search";
+import { postDismissProductDuplicate } from "@/api-actions/product-duplicate/product-duplicate-actions";
+import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
+import { useProductDuplicateSearch } from "@/hooks/useProductDuplicateSearch";
+import {
+  ProductDuplicateDetectedBy,
+  ProductDuplicatePair,
+  ProductDuplicatePairStatus,
+} from "@/models/dtos/product-duplicate-search-models";
+import { ProductCategory } from "@/models/product-category";
+import { ProductModel } from "@/models/product-model";
+import { routes } from "@/utils/routes";
+import { DuplicatePairCompareModal } from "./duplicate-pair-compare-modal";
+import { FailedGateBadges } from "./failed-gate-badges";
+
+const PAGE_SIZE = 50;
+
+const STATUS_OPTIONS: { value: ProductDuplicatePairStatus; label: string }[] = [
+  { value: "open", label: "Open" },
+  { value: "dismissed", label: "Dismissed" },
+];
+
+const MIN_SCORE_OPTIONS = [
+  { value: "70", label: "70+" },
+  { value: "80", label: "80+" },
+  { value: "90", label: "90+" },
+];
+
+const DETECTED_BY_LABELS: Record<ProductDuplicateDetectedBy, string> = {
+  scrape: "Scrape",
+  scan: "Scan",
+  merge: "Merge",
+};
+
+function ProductCell({ product }: { product: ProductModel }) {
+  return (
+    <Stack gap={2}>
+      <Group gap="xs" wrap="nowrap">
+        <Anchor
+          component={Link}
+          href={routes.products.details(product.id)}
+          size="sm"
+          fw={500}
+        >
+          {product.displayName}
+        </Anchor>
+        <ActionIcon
+          component={Link}
+          href={routes.products.details(product.id)}
+          target="_blank"
+          variant="subtle"
+          size="xs"
+        >
+          <LuExternalLink size={12} />
+        </ActionIcon>
+      </Group>
+      <Text size="xs" c="dimmed">
+        {product.brand?.name} · {product.productCategory?.name}
+      </Text>
+      <ProductSpecsBadges specs={product.orderedSpecs} />
+    </Stack>
+  );
+}
+
+export function ProductDuplicateTable() {
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState<ProductDuplicatePairStatus>("open");
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [minScore, setMinScore] = useState<string | null>(null);
+  const [comparePair, setComparePair] = useState<ProductDuplicatePair | null>(
+    null,
+  );
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  const { search, loading, searchResult } = useProductDuplicateSearch();
+  const data = searchResult?.items ?? [];
+
+  const doSearch = () => {
+    search({
+      page,
+      pageSize: PAGE_SIZE,
+      status,
+      categoryIds: categoryId ? [categoryId] : undefined,
+      minScore: minScore ? Number(minScore) : undefined,
+    });
+  };
+
+  useEffect(() => {
+    postCategorySearch({ page: 1, pageSize: 100 })
+      .then((result) => setCategories(result.items || []))
+      .catch((err) => console.error("Failed to fetch categories:", err))
+      .finally(() => setCategoriesLoading(false));
+  }, []);
+
+  useEffect(() => {
+    doSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, status, categoryId, minScore]);
+
+  const handleDismiss = (pair: ProductDuplicatePair) => {
+    modals.openConfirmModal({
+      title: "Not duplicates",
+      children: (
+        <Text size="sm">
+          Mark {pair.productA.displayName} and {pair.productB.displayName} as
+          different products? The pair will not be suggested again.
+        </Text>
+      ),
+      labels: { confirm: "Dismiss", cancel: "Cancel" },
+      onConfirm: async () => {
+        try {
+          await postDismissProductDuplicate(pair.id);
+          doSearch();
+        } catch (err) {
+          notifications.show({
+            color: "red",
+            title: "Dismiss failed",
+            message: err instanceof Error ? err.message : "An error occurred",
+          });
+        }
+      },
+    });
+  };
+
+  const columnHelper = useMemo(
+    () => createColumnHelper<ProductDuplicatePair>(),
+    [],
+  );
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor("productA", {
+        header: "Product A",
+        cell: (props) => <ProductCell product={props.getValue()} />,
+      }),
+      columnHelper.accessor("productB", {
+        header: "Product B",
+        cell: (props) => <ProductCell product={props.getValue()} />,
+      }),
+      columnHelper.accessor("similarityScore", {
+        header: "Score",
+        cell: (props) => {
+          const score = props.getValue();
+          return (
+            <Badge
+              color={score >= 80 ? "green" : "yellow"}
+              variant="light"
+              size="lg"
+            >
+              {score}
+            </Badge>
+          );
+        },
+      }),
+      columnHelper.accessor("failedGates", {
+        header: "Contradictions",
+        cell: (props) => <FailedGateBadges gates={props.getValue()} />,
+      }),
+      columnHelper.display({
+        id: "found",
+        header: "Found",
+        cell: (props) => {
+          const pair = props.row.original;
+          return (
+            <Stack gap={2}>
+              <Badge variant="outline" color="gray" size="sm">
+                {DETECTED_BY_LABELS[pair.detectedBy]}
+              </Badge>
+              <Text size="xs" c="dimmed">
+                on {pair.matchedOn}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {new Date(pair.createdAt).toLocaleDateString()}
+              </Text>
+            </Stack>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "",
+        cell: (props) => {
+          const pair = props.row.original;
+          return (
+            <Group gap="xs" wrap="nowrap">
+              <Button
+                size="xs"
+                variant="light"
+                onClick={() => setComparePair(pair)}
+              >
+                Compare
+              </Button>
+              {!pair.dismissedAt && (
+                <Button
+                  size="xs"
+                  variant="subtle"
+                  color="gray"
+                  onClick={() => handleDismiss(pair)}
+                >
+                  Dismiss
+                </Button>
+              )}
+            </Group>
+          );
+        },
+      }),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnHelper, page, status, categoryId, minScore],
+  );
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+  });
+
+  const categoryOptions = categories.map((category) => ({
+    value: category.id,
+    label: category.name,
+  }));
+
+  return (
+    <Stack gap="md">
+      <Card withBorder p="md">
+        <Group gap="md" align="flex-end">
+          <Select
+            label="Status"
+            data={STATUS_OPTIONS}
+            value={status}
+            onChange={(value) => {
+              setStatus((value as ProductDuplicatePairStatus) ?? "open");
+              setPage(1);
+            }}
+            allowDeselect={false}
+            w={160}
+          />
+          <Select
+            label="Category"
+            placeholder="All categories"
+            data={categoryOptions}
+            value={categoryId}
+            onChange={(value) => {
+              setCategoryId(value);
+              setPage(1);
+            }}
+            searchable
+            clearable
+            disabled={categoriesLoading}
+            w={260}
+          />
+          <Select
+            label="Minimum score"
+            placeholder="Any"
+            data={MIN_SCORE_OPTIONS}
+            value={minScore}
+            onChange={(value) => {
+              setMinScore(value);
+              setPage(1);
+            }}
+            clearable
+            w={160}
+          />
+        </Group>
+      </Card>
+
+      {loading && (
+        <Center py="xl">
+          <Loader />
+        </Center>
+      )}
+
+      {!loading && data.length === 0 && (
+        <Text c="dimmed" ta="center" py="xl">
+          No duplicate pairs found.
+        </Text>
+      )}
+
+      {data.length > 0 && (
+        <>
+          <Table striped highlightOnHover withTableBorder>
+            <Table.Thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <Table.Tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <Table.Th key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </Table.Th>
+                  ))}
+                </Table.Tr>
+              ))}
+            </Table.Thead>
+            <Table.Tbody>
+              {table.getRowModel().rows.map((row) => (
+                <Table.Tr key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <Table.Td key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </Table.Td>
+                  ))}
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+
+          <Center>
+            <Pagination
+              total={searchResult?.totalPages || 1}
+              value={page}
+              onChange={setPage}
+            />
+          </Center>
+        </>
+      )}
+
+      <DuplicatePairCompareModal
+        pair={comparePair}
+        onClose={() => setComparePair(null)}
+        onComplete={doSearch}
+      />
+    </Stack>
+  );
+}
