@@ -1,8 +1,245 @@
 import { createTheme } from "@mantine/core";
 
+/**
+ * Admin theme: flat surfaces, coloured semantics.
+ *
+ * Structure is borrowed from the control-plane design system - 1px borders instead of
+ * shadows, the same radius scale, oklch throughout - but where that system is deliberately
+ * monochrome ("Ink"), this one carries real hue. An admin that is mostly tables needs colour
+ * to do work: a badge has to read as its status from across the row, not just differ in
+ * lightness from its neighbour.
+ *
+ * Every scale below OVERRIDES a Mantine built-in of the same name. That is the point: the
+ * ~119 places already written as color="red" / c="dimmed" / color="orange" pick this palette
+ * up with no edit to any component. Adding a new name instead would have left those on stock
+ * Mantine and split the app in two.
+ *
+ * oklch is used because its lightness axis is perceptual - shade 6 of every scale below reads
+ * as equally "strong", which flat hex ramps never manage. Supported everywhere we target.
+ */
+
+/**
+ * Shades run 0 (lightest) to 9 (darkest); 6 is what Mantine fills with in light mode and what
+ * `color="red"` resolves to. Chroma peaks around 5-6 and tapers at both ends, because near-white
+ * and near-black cannot hold saturation without turning muddy.
+ */
 export const theme = createTheme({
+  /* Violet is the brand, and is deliberately NOT one of the status hues. A primary button has
+     to be unmistakably an action; if primary were blue or green it would read as an info or
+     success chip the moment it sat inside a table row. Swapping the brand means editing this
+     one scale and primaryColor below - nothing else references violet directly. */
+  colors: {
+    violet: [
+      "oklch(97% 0.016 292)",
+      "oklch(94% 0.035 292)",
+      "oklch(89% 0.065 292)",
+      "oklch(83% 0.100 292)",
+      "oklch(75% 0.135 292)",
+      "oklch(67% 0.170 292)",
+      "oklch(59% 0.190 292)",
+      "oklch(51% 0.172 292)",
+      "oklch(43% 0.145 292)",
+      "oklch(35% 0.115 292)",
+    ],
+
+    /* Zero chroma - this is the Ink base the control-plane system is built on, kept intact.
+       Mantine derives dimmed text and every default border from gray, so this scale sets the
+       app's entire neutral temperature. Shade 6 is `c="dimmed"` (~4.6:1 on white). */
+    gray: [
+      "oklch(98% 0 0)",
+      "oklch(96% 0 0)",
+      "oklch(92% 0 0)",
+      "oklch(86% 0 0)",
+      "oklch(76% 0 0)",
+      "oklch(66% 0 0)",
+      "oklch(56% 0 0)",
+      "oklch(46% 0 0)",
+      "oklch(34% 0 0)",
+      "oklch(24% 0 0)",
+    ],
+
+    /* Destructive and error. Shade 6 is control-plane's --color-error exactly, so a failure
+       badge here and a failure badge there are the same red. */
+    red: [
+      "oklch(97% 0.020 25)",
+      "oklch(94% 0.042 25)",
+      "oklch(89% 0.078 25)",
+      "oklch(83% 0.118 25)",
+      "oklch(75% 0.158 25)",
+      "oklch(66% 0.190 25)",
+      "oklch(58% 0.200 25)",
+      "oklch(50% 0.182 25)",
+      "oklch(42% 0.152 25)",
+      "oklch(35% 0.122 25)",
+    ],
+
+    /* Success. Shade 6 matches control-plane's --color-success. */
+    green: [
+      "oklch(97% 0.021 150)",
+      "oklch(94% 0.042 150)",
+      "oklch(89% 0.072 150)",
+      "oklch(83% 0.100 150)",
+      "oklch(75% 0.123 150)",
+      "oklch(67% 0.133 150)",
+      "oklch(60% 0.130 150)",
+      "oklch(52% 0.115 150)",
+      "oklch(44% 0.096 150)",
+      "oklch(36% 0.078 150)",
+    ],
+
+    /* Informational / neutral-positive. Used for links and "in progress". */
+    blue: [
+      "oklch(97% 0.015 245)",
+      "oklch(94% 0.033 245)",
+      "oklch(89% 0.062 245)",
+      "oklch(83% 0.092 245)",
+      "oklch(75% 0.122 245)",
+      "oklch(67% 0.145 245)",
+      "oklch(59% 0.158 245)",
+      "oklch(51% 0.142 245)",
+      "oklch(43% 0.118 245)",
+      "oklch(35% 0.094 245)",
+    ],
+
+    /* Secondary information - scores, counts, anything that wants colour without claiming a
+       status. Sits far enough from both green and blue to not be mistaken for either. */
+    teal: [
+      "oklch(97% 0.018 190)",
+      "oklch(94% 0.038 190)",
+      "oklch(89% 0.065 190)",
+      "oklch(83% 0.090 190)",
+      "oklch(75% 0.108 190)",
+      "oklch(67% 0.115 190)",
+      "oklch(59% 0.112 190)",
+      "oklch(51% 0.097 190)",
+      "oklch(43% 0.081 190)",
+      "oklch(35% 0.066 190)",
+    ],
+
+    /* Warning, and the "partial / degraded" tier generally. Hue drifts from 70 to 56 as it
+       darkens: warm hues left on a fixed angle turn brown at low lightness, so the ramp
+       rotates slightly toward red to stay recognisably orange. */
+    orange: [
+      "oklch(97% 0.025 70)",
+      "oklch(94% 0.052 70)",
+      "oklch(90% 0.090 70)",
+      "oklch(85% 0.120 68)",
+      "oklch(80% 0.142 66)",
+      "oklch(75% 0.152 64)",
+      "oklch(69% 0.155 62)",
+      "oklch(60% 0.142 60)",
+      "oklch(51% 0.120 58)",
+      "oklch(42% 0.100 56)",
+    ],
+
+    /* "Nothing is broken, but nothing happened either" - the already-running scan, the skipped
+       job. Yellow is the one scale that cannot follow the shared lightness ramp: it stops
+       reading as yellow below ~70% and becomes olive, so the whole scale sits higher and only
+       the last two shades go genuinely dark. */
+    yellow: [
+      "oklch(98% 0.028 100)",
+      "oklch(95% 0.058 98)",
+      "oklch(92% 0.100 96)",
+      "oklch(89% 0.130 94)",
+      "oklch(86% 0.145 92)",
+      "oklch(82% 0.150 90)",
+      "oklch(77% 0.148 88)",
+      "oklch(68% 0.135 85)",
+      "oklch(57% 0.115 82)",
+      "oklch(46% 0.095 80)",
+    ],
+
+    /* Dark-mode surfaces. Mantine reads this scale positionally, so the indices are fixed
+       contracts, not free choices: 7 is the body, 6 is a raised surface, 4 is the default
+       border, 0-2 are text. Those land on control-plane's dark values (base-100 18%,
+       base-200 15%, base-300 24%) so both apps' dark modes sit at the same depth.
+       The trace of violet chroma - 0.01 at most, below the threshold you would name as a
+       colour - keeps dark mode from going the dead neutral grey that flat designs fall into. */
+    dark: [
+      "oklch(93% 0.004 292)",
+      "oklch(85% 0.005 292)",
+      "oklch(72% 0.006 292)",
+      "oklch(56% 0.007 292)",
+      "oklch(40% 0.008 292)",
+      "oklch(31% 0.009 292)",
+      "oklch(24% 0.010 292)",
+      "oklch(19% 0.010 292)",
+      "oklch(15% 0.010 292)",
+      "oklch(12% 0.009 292)",
+    ],
+  },
+
+  primaryColor: "violet",
+  /* Light mode fills with 6 as usual. Dark mode moves UP the scale to 4, not down: on a 19%
+     background a shade-8 violet is nearly invisible. Mantine's own default of 8 assumes its
+     stock palettes, which are built the other way around. */
+  primaryShade: { light: 6, dark: 4 },
+
+  /* Picks black or white text per filled background automatically. Worth turning on precisely
+     because this palette is colourful - yellow 5 and violet 6 need opposite text colours, and
+     hand-managing that across 36 badges is how contrast bugs get shipped. */
+  autoContrast: true,
+  luminanceThreshold: 0.3,
+
+  /* control-plane's --radius-field (0.5rem) and --radius-box (0.75rem), as md and lg. */
+  radius: {
+    xs: "0.25rem",
+    sm: "0.375rem",
+    md: "0.5rem",
+    lg: "0.75rem",
+    xl: "1rem",
+  },
+  defaultRadius: "md",
+
+  /* Flat, with one honest exception. Cards and panels get no shadow at all - separation is a
+     1px border, which is the whole point of the flat look. But md/lg/xl are what Mantine hands
+     to Menu, Popover, Modal and Tooltip, and an overlay with no shadow and no scrim does not
+     read as floating above the table underneath it - it reads as part of it. So those keep
+     just enough lift to sit forward, and nothing else does. */
+  shadows: {
+    xs: "none",
+    sm: "none",
+    md: "0 4px 12px rgba(0, 0, 0, 0.08)",
+    lg: "0 8px 24px rgba(0, 0, 0, 0.10)",
+    xl: "0 16px 40px rgba(0, 0, 0, 0.12)",
+  },
+
+  /* Geist, wired through next/font in app/layout.tsx. The previous value here named Inter,
+     which was never actually loaded anywhere in the app - every screen has been rendering in
+     the system sans this whole time. */
+  fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+  fontFamilyMonospace: "var(--font-geist-mono), ui-monospace, monospace",
+  headings: {
+    fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+    fontWeight: "600",
+  },
+
   cursorType: "pointer",
-  fontFamily: "Inter, sans-serif",
+
+  /* Component defaults are the piece the control-plane system has no equivalent for: there,
+     a card is the literal string "rounded-box border border-base-300 bg-base-100" retyped at
+     every call site and policed by a test that greps source. Here it is a default, set once. */
+  components: {
+    Card: {
+      defaultProps: { withBorder: true, shadow: "none", radius: "lg" },
+    },
+    Paper: {
+      defaultProps: { withBorder: true, shadow: "none", radius: "lg" },
+    },
+    Badge: {
+      /* Soft fills by default, matching control-plane's badge-soft house style - a table with
+         36 saturated badges in it is unreadable. `tt: "none"` turns off Mantine's uppercasing,
+         which mangles the spec values and model numbers these badges mostly contain. */
+      defaultProps: { variant: "light", radius: "sm", tt: "none" },
+    },
+    Modal: {
+      defaultProps: { radius: "lg", centered: true },
+    },
+    Tooltip: {
+      defaultProps: { radius: "sm" },
+    },
+  },
+
   breakpoints: {
     xs: "30em",
     sm: "40em",
