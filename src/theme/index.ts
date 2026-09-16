@@ -162,10 +162,18 @@ export const theme = createTheme({
   },
 
   primaryColor: "blue",
-  /* Light mode fills with 6 as usual. Dark mode moves UP the scale to 4, not down: on a 19%
-     background a shade-8 blue is nearly invisible. Mantine's own default of 8 assumes its
-     stock palettes, which are built the other way around. */
-  primaryShade: { light: 6, dark: 4 },
+  /* One shade for both schemes.
+     Mantine's own default darkens to 8 in dark mode, which on a 19% ground is nearly
+     invisible - but correcting that by moving UP to 4 overshot badly: shade 4 is oklch(75%),
+     a pale pastel that reads as a disabled control rather than an action, and light enough to
+     cross the luminance threshold below and take black text.
+     Shade 6 is oklch(57%): far enough above a 19% background to be unmistakable, saturated
+     enough to carry white text, and the same colour the light scheme fills with - which is
+     what a chromatic brand normally wants, rather than being two different blues depending on
+     the time of day.
+     7 (49%) is the next stop if a deeper button is wanted. Going lighter than 6 is what
+     crosses 0.65 and flips the label back to black. */
+  primaryShade: 6,
 
   /* Picks black or white text per filled background automatically. Worth turning on precisely
      because this palette is colourful - yellow 5 and blue 6 need opposite text colours, and

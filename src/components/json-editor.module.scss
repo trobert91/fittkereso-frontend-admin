@@ -23,8 +23,10 @@
   caret-color: var(--mantine-color-text);
 }
 
-/* Dark mode moves UP each scale: a shade-8 colour is unreadable on a 19% ground, the same
-   reason primaryShade flips to 4 in the theme. */
+/* Dark mode moves UP each scale: a shade-8 colour is unreadable on a 19% ground.
+   Note this is NOT what primaryShade does - that holds at 6 in both schemes. The two differ
+   on purpose: a button is a solid fill that only has to clear the background behind it, while
+   these are thin glyphs of monospaced text that have to stay legible at 13px. */
 :global([data-mantine-color-scheme='dark']) .editor {
   --json-key: var(--mantine-color-blue-3);
   --json-string: var(--mantine-color-green-3);
