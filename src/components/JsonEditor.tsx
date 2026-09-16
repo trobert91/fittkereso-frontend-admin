@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useMemo } from "react";
 import Editor from "react-simple-code-editor";
 import Prism from "prismjs";
 import "prismjs/components/prism-json";
-import "prismjs/themes/prism-okaidia.css";
+import classes from "./json-editor.module.scss";
 
 import { Paper, Text, Button, SimpleGrid, Alert } from "@mantine/core";
 import debounce from "lodash/debounce";
@@ -120,6 +120,7 @@ export const JsonEditor = ({
         )}
 
         <div
+          className={classes.editor}
           style={{
             display: "flex",
             position: "relative",

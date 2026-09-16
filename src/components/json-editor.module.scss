@@ -1,0 +1,66 @@
+/**
+ * JSON syntax colours, taken from the app's own palette.
+ *
+ * This replaces prismjs/themes/prism-okaidia.css. That theme's `.token.*` rules are declared
+ * at the top level rather than under `code[class*="language-"]`, so they applied here even
+ * though react-simple-code-editor never adds a language class - while okaidia's dark
+ * `pre[class*="language-"]` background, which those colours were designed to sit on, did not.
+ * The result was a dark theme's palette on a light page, with punctuation at #f8f8f2: braces,
+ * brackets and commas rendered near-white and effectively invisible.
+ *
+ * Written as custom properties re-declared under Mantine's scheme attribute rather than with
+ * light-dark(), so the two schemes are stated plainly in one place and the token rules below
+ * never have to care which one is in force.
+ */
+.editor {
+  --json-key: var(--mantine-color-blue-8);
+  --json-string: var(--mantine-color-green-8);
+  --json-number: var(--mantine-color-orange-8);
+  --json-keyword: var(--mantine-color-teal-8);
+  --json-muted: var(--mantine-color-dimmed);
+
+  color: var(--mantine-color-text);
+  caret-color: var(--mantine-color-text);
+}
+
+/* Dark mode moves UP each scale: a shade-8 colour is unreadable on a 19% ground, the same
+   reason primaryShade flips to 4 in the theme. */
+:global([data-mantine-color-scheme='dark']) .editor {
+  --json-key: var(--mantine-color-blue-3);
+  --json-string: var(--mantine-color-green-3);
+  --json-number: var(--mantine-color-orange-3);
+  --json-keyword: var(--mantine-color-teal-3);
+}
+
+/* Prism emits these class names inside the highlighted markup, so they cannot be hashed by
+   CSS modules - :global is required, scoped under .editor so nothing leaks to the page. */
+.editor :global(.token.property) {
+  color: var(--json-key);
+}
+
+.editor :global(.token.string) {
+  color: var(--json-string);
+}
+
+.editor :global(.token.number) {
+  color: var(--json-number);
+}
+
+/* `null` carries the alias `keyword`, so both land here alongside the booleans. */
+.editor :global(.token.boolean),
+.editor :global(.token.null),
+.editor :global(.token.keyword) {
+  color: var(--json-keyword);
+}
+
+/* Braces, brackets, commas and the key/value colon. Deliberately quiet: in a spec blob the
+   structure is scaffolding, and the values are what somebody is actually reading. */
+.editor :global(.token.punctuation),
+.editor :global(.token.operator) {
+  color: var(--json-muted);
+}
+
+.editor :global(.token.comment) {
+  color: var(--json-muted);
+  font-style: italic;
+}

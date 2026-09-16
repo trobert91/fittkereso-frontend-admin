@@ -9,14 +9,18 @@
    with 224px rows. Rows never change width - the rail clips them - which is why expanding
    reflows nothing. */
 .shell {
+  /* Declared here, on the common ancestor, rather than on .rail. A custom property only
+     inherits DOWN from the element that declares it, and .content is a SIBLING of the rail -
+     so with these on .rail, the content's `padding-inline-start: var(--rail-w)` resolved to
+     nothing and the floating rail overlaid the page with no gutter to sit in. */
+  --rail-w: 4rem;
+  --rail-w-open: 16rem;
+
   display: flex;
   min-height: 100dvh;
 }
 
 .rail {
-  --rail-w: 4rem;
-  --rail-w-open: 16rem;
-
   display: none;
   flex-direction: column;
   gap: 0.125rem;
