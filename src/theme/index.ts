@@ -24,22 +24,26 @@ import { createTheme } from "@mantine/core";
  * and near-black cannot hold saturation without turning muddy.
  */
 export const theme = createTheme({
-  /* Violet is the brand, and is deliberately NOT one of the status hues. A primary button has
-     to be unmistakably an action; if primary were blue or green it would read as an info or
-     success chip the moment it sat inside a table row. Swapping the brand means editing this
-     one scale and primaryColor below - nothing else references violet directly. */
   colors: {
-    violet: [
-      "oklch(97% 0.016 292)",
-      "oklch(94% 0.035 292)",
-      "oklch(89% 0.065 292)",
-      "oklch(83% 0.100 292)",
-      "oklch(75% 0.135 292)",
-      "oklch(67% 0.170 292)",
-      "oklch(59% 0.190 292)",
-      "oklch(51% 0.172 292)",
-      "oklch(43% 0.145 292)",
-      "oklch(35% 0.115 292)",
+    /* Brand, primary, and the informational chip - all one scale, deliberately.
+       The usual objection is that a brand sharing a hue with a status makes a primary button
+       read as a status chip. That does not apply here: all nine existing blue call sites are
+       soft `variant="light"` badges, spec chips or rating-bar segments, and not one of them is
+       a filled action. A filled blue button and a soft blue badge stay distinct by weight.
+       Hue sits at 250 rather than the 241 control-plane uses for --color-info: a touch of
+       indigo, so it reads as a chosen brand blue instead of default link blue.
+       Swapping the brand means editing this one scale - nothing else references it. */
+    blue: [
+      "oklch(97% 0.016 250)",
+      "oklch(94% 0.036 250)",
+      "oklch(89% 0.068 250)",
+      "oklch(83% 0.105 250)",
+      "oklch(75% 0.145 250)",
+      "oklch(66% 0.180 250)",
+      "oklch(57% 0.195 250)",
+      "oklch(49% 0.180 250)",
+      "oklch(41% 0.150 250)",
+      "oklch(34% 0.120 250)",
     ],
 
     /* Zero chroma - this is the Ink base the control-plane system is built on, kept intact.
@@ -87,22 +91,9 @@ export const theme = createTheme({
       "oklch(36% 0.078 150)",
     ],
 
-    /* Informational / neutral-positive. Used for links and "in progress". */
-    blue: [
-      "oklch(97% 0.015 245)",
-      "oklch(94% 0.033 245)",
-      "oklch(89% 0.062 245)",
-      "oklch(83% 0.092 245)",
-      "oklch(75% 0.122 245)",
-      "oklch(67% 0.145 245)",
-      "oklch(59% 0.158 245)",
-      "oklch(51% 0.142 245)",
-      "oklch(43% 0.118 245)",
-      "oklch(35% 0.094 245)",
-    ],
-
     /* Secondary information - scores, counts, anything that wants colour without claiming a
-       status. Sits far enough from both green and blue to not be mistaken for either. */
+       status. Now that blue is the brand, this is the scale to reach for when something needs
+       to be coloured but must NOT look like an action. */
     teal: [
       "oklch(97% 0.018 190)",
       "oklch(94% 0.038 190)",
@@ -153,30 +144,31 @@ export const theme = createTheme({
        contracts, not free choices: 7 is the body, 6 is a raised surface, 4 is the default
        border, 0-2 are text. Those land on control-plane's dark values (base-100 18%,
        base-200 15%, base-300 24%) so both apps' dark modes sit at the same depth.
-       The trace of violet chroma - 0.01 at most, below the threshold you would name as a
-       colour - keeps dark mode from going the dead neutral grey that flat designs fall into. */
+       The trace of brand chroma - 0.01 at most, below the threshold you would name as a
+       colour - keeps dark mode from going the dead neutral grey that flat designs fall into.
+       It tracks the brand hue, so changing blue above means changing 250 here too. */
     dark: [
-      "oklch(93% 0.004 292)",
-      "oklch(85% 0.005 292)",
-      "oklch(72% 0.006 292)",
-      "oklch(56% 0.007 292)",
-      "oklch(40% 0.008 292)",
-      "oklch(31% 0.009 292)",
-      "oklch(24% 0.010 292)",
-      "oklch(19% 0.010 292)",
-      "oklch(15% 0.010 292)",
-      "oklch(12% 0.009 292)",
+      "oklch(93% 0.004 250)",
+      "oklch(85% 0.005 250)",
+      "oklch(72% 0.006 250)",
+      "oklch(56% 0.007 250)",
+      "oklch(40% 0.008 250)",
+      "oklch(31% 0.009 250)",
+      "oklch(24% 0.010 250)",
+      "oklch(19% 0.010 250)",
+      "oklch(15% 0.010 250)",
+      "oklch(12% 0.009 250)",
     ],
   },
 
-  primaryColor: "violet",
+  primaryColor: "blue",
   /* Light mode fills with 6 as usual. Dark mode moves UP the scale to 4, not down: on a 19%
-     background a shade-8 violet is nearly invisible. Mantine's own default of 8 assumes its
+     background a shade-8 blue is nearly invisible. Mantine's own default of 8 assumes its
      stock palettes, which are built the other way around. */
   primaryShade: { light: 6, dark: 4 },
 
   /* Picks black or white text per filled background automatically. Worth turning on precisely
-     because this palette is colourful - yellow 5 and violet 6 need opposite text colours, and
+     because this palette is colourful - yellow 5 and blue 6 need opposite text colours, and
      hand-managing that across 36 badges is how contrast bugs get shipped. */
   autoContrast: true,
   luminanceThreshold: 0.3,
