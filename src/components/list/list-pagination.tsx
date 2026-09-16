@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Group, Pagination, Select, Text } from "@mantine/core";
 
 export const PAGE_SIZES = ["20", "50", "100"];
@@ -29,6 +30,20 @@ export function ListPagination({
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 }) {
+  /* The standard sizes plus whatever this table actually uses.
+     Four of the eight lists default to 40, which is not one of the standard sizes - and a
+     Mantine Select whose value is absent from its data renders EMPTY rather than falling back,
+     so those lists would show a blank "Per page" box until somebody happened to change it.
+     Folding the current size in means the control can never disagree with the table it belongs
+     to, whatever default a future list picks. */
+  const pageSizeOptions = useMemo(
+    () =>
+      Array.from(new Set([...PAGE_SIZES, String(pageSize)])).sort(
+        (a, b) => Number(a) - Number(b)
+      ),
+    [pageSize]
+  );
+
   const from = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = totalItems === null ? null : Math.min(totalItems, page * pageSize);
 
@@ -46,7 +61,7 @@ export function ListPagination({
         <Select
           size="xs"
           label="Per page"
-          data={PAGE_SIZES}
+          data={pageSizeOptions}
           value={String(pageSize)}
           onChange={(value) => {
             if (value) {
