@@ -34,7 +34,7 @@ export interface ScrapeTask {
   lastRunAt?: string;
   lockedAt?: string;
   error?: unknown;
-  resolutionContext?: unknown;
+  identityDecision?: unknown;
   executionTimeInSec?: number;
   createdAt: string;
   updatedAt: string;

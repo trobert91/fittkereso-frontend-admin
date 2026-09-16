@@ -435,11 +435,11 @@ export function ScrapeTaskTable() {
                 </Code>
               </>
             )}
-            {selectedTask.resolutionContext != null && (
+            {selectedTask.identityDecision != null && (
               <>
                 <Group justify="space-between" align="center" mt="sm">
                   <Text size="sm" fw={500}>
-                    Resolution Context:
+                    Identity Decision:
                   </Text>
                   <Tooltip label={clipboard.copied ? "Copied!" : "Copy"} withArrow>
                     <ActionIcon
@@ -448,7 +448,7 @@ export function ScrapeTaskTable() {
                       color={clipboard.copied ? "green" : "gray"}
                       onClick={() =>
                         clipboard.copy(
-                          JSON.stringify(selectedTask.resolutionContext, null, 2)
+                          JSON.stringify(selectedTask.identityDecision, null, 2)
                         )
                       }
                     >
@@ -469,7 +469,7 @@ export function ScrapeTaskTable() {
                     overflowY: "auto",
                   }}
                 >
-                  {JSON.stringify(selectedTask.resolutionContext, null, 2)}
+                  {JSON.stringify(selectedTask.identityDecision, null, 2)}
                 </Code>
               </>
             )}
