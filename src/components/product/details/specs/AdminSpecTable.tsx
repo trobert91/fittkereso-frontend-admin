@@ -24,7 +24,9 @@ export function AdminSpecTable({ specs }: { specs: OrderedSpec[] }) {
             gap: 2,
             padding: "8px 10px",
             borderRadius: 6,
-            backgroundColor: "var(--mantine-color-dark-6)",
+            // Was --mantine-color-dark-6: a dark-palette shade applied in both schemes, so
+            // every spec tile stayed near-black on a light page.
+            backgroundColor: "var(--mantine-color-default-hover)",
           }}
         >
           <Text size="sm" c="dimmed">

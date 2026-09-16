@@ -4,90 +4,97 @@ import { WidgetProps } from "@rjsf/utils";
 import { isEmpty } from "lodash";
 import { useMemo } from "react";
 import Select from "react-select";
-import { Text, useMantineColorScheme } from "@mantine/core";
+import { Text } from "@mantine/core";
+
+/**
+ * react-select, dressed in Mantine's own CSS variables.
+ *
+ * This used to branch in JavaScript on useMantineColorScheme() and pick from a hand-copied
+ * table of Mantine hex values. That was wrong twice over: the hook returns the stored CHOICE
+ * rather than the resolved scheme, so "auto" - the default - was treated as dark and rendered
+ * a dark control on a light page; and the hexes were a snapshot of stock Mantine, so the
+ * control kept the old palette after the theme was rewritten.
+ *
+ * CSS variables fix both at once. They are resolved by the browser against whatever scheme is
+ * actually in force, so there is nothing to branch on and nothing to keep in sync.
+ */
+const SELECT_STYLES = {
+  control: (base: any, state: { isFocused: boolean }) => ({
+    ...base,
+    backgroundColor: "var(--mantine-color-body)",
+    borderColor: state.isFocused
+      ? "var(--mantine-primary-color-filled)"
+      : "var(--mantine-color-default-border)",
+    color: "var(--mantine-color-text)",
+    borderRadius: "var(--mantine-radius-default)",
+    boxShadow: state.isFocused
+      ? "0 0 0 1px var(--mantine-primary-color-filled)"
+      : "none",
+    "&:hover": {
+      borderColor: "var(--mantine-color-placeholder)",
+    },
+  }),
+
+  menu: (base: any) => ({
+    ...base,
+    backgroundColor: "var(--mantine-color-body)",
+    color: "var(--mantine-color-text)",
+    border: "1px solid var(--mantine-color-default-border)",
+    borderRadius: "var(--mantine-radius-default)",
+  }),
+
+  singleValue: (base: any) => ({
+    ...base,
+    color: "var(--mantine-color-text)",
+  }),
+
+  placeholder: (base: any) => ({
+    ...base,
+    color: "var(--mantine-color-placeholder)",
+  }),
+
+  input: (base: any) => ({
+    ...base,
+    color: "var(--mantine-color-text)",
+  }),
+
+  option: (base: any, state: { isSelected: boolean; isFocused: boolean }) => ({
+    ...base,
+    backgroundColor: state.isSelected
+      ? "var(--mantine-primary-color-filled)"
+      : state.isFocused
+      ? "var(--mantine-color-default-hover)"
+      : "transparent",
+    color: state.isSelected
+      ? "var(--mantine-primary-color-contrast)"
+      : "var(--mantine-color-text)",
+    cursor: "pointer",
+  }),
+
+  multiValue: (base: any) => ({
+    ...base,
+    backgroundColor: "var(--mantine-color-default-hover)",
+    borderRadius: "var(--mantine-radius-sm)",
+  }),
+
+  multiValueLabel: (base: any) => ({
+    ...base,
+    color: "var(--mantine-color-text)",
+  }),
+
+  multiValueRemove: (base: any) => ({
+    ...base,
+    color: "var(--mantine-color-dimmed)",
+    ":hover": {
+      backgroundColor: "var(--mantine-color-red-light)",
+      color: "var(--mantine-color-red-light-color)",
+    },
+  }),
+};
 
 export const CustomSelectInput = function (props: WidgetProps) {
   const { schema, uiSchema, label, multiple, placeholder, value, onChange } =
     props;
-  const { colorScheme } = useMantineColorScheme();
-
-  const styles = useMemo(() => {
-    const isDark = ["dark", "auto"].includes(colorScheme);
-    const bg = isDark ? "#1A1B1E" : "#FFFFFF";
-    const border = isDark ? "#373A40" : "#CED4DA";
-    const borderHover = isDark ? "#5C5F66" : "#868E96";
-    const text = isDark ? "#E9ECEF" : "#212529";
-    const placeholderColor = isDark ? "#868E96" : "#ADB5BD";
-    const optionBgHover = isDark ? "#2C2E33" : "#F1F3F5";
-    const optionBgSelected = isDark ? "#364FC7" : "#4C6EF5";
-    const optionTextSelected = "#FFFFFF";
-
-    return {
-      control: (base: any, state: { isFocused: any }) => ({
-        ...base,
-        backgroundColor: bg,
-        borderColor: state.isFocused ? borderHover : border,
-        color: text,
-        boxShadow: state.isFocused ? `0 0 0 1px ${borderHover}` : "none",
-        "&:hover": {
-          borderColor: borderHover,
-        },
-      }),
-
-      menu: (base: any) => ({
-        ...base,
-        backgroundColor: bg,
-        color: text,
-        border: `1px solid ${border}`,
-      }),
-
-      singleValue: (base: any) => ({
-        ...base,
-        color: text,
-      }),
-
-      placeholder: (base: any) => ({
-        ...base,
-        color: placeholderColor,
-      }),
-
-      input: (base: any) => ({
-        ...base,
-        color: text,
-      }),
-
-      option: (base: any, state: { isSelected: any; isFocused: any }) => ({
-        ...base,
-        backgroundColor: state.isSelected
-          ? optionBgSelected
-          : state.isFocused
-          ? optionBgHover
-          : "transparent",
-        color: state.isSelected ? optionTextSelected : text,
-        cursor: "pointer",
-      }),
-
-      multiValue: (base: any) => ({
-        ...base,
-        backgroundColor: isDark ? "#2C2E33" : "#E7F5FF",
-        color: text,
-      }),
-
-      multiValueLabel: (base: any) => ({
-        ...base,
-        color: text,
-      }),
-
-      multiValueRemove: (base: any) => ({
-        ...base,
-        color: text,
-        ":hover": {
-          backgroundColor: optionBgHover,
-          color: text,
-        },
-      }),
-    };
-  }, [colorScheme]);
 
   const description = useMemo(() => {
     return [
@@ -106,12 +113,6 @@ export const CustomSelectInput = function (props: WidgetProps) {
     schema?.meta?.examples,
   ]);
 
-  const rightSection = useMemo(() => {
-    return schema?.meta?.unit ? (
-      <span style={{ marginRight: 8 }}>{schema.meta.unit}</span>
-    ) : null;
-  }, [schema?.meta?.unit]);
-
   const options = useMemo(() => {
     const enumValues = schema.enum ?? (schema.items as any)?.enum ?? [];
     return enumValues.map((opt: any) => ({
@@ -127,7 +128,9 @@ export const CustomSelectInput = function (props: WidgetProps) {
   return (
     <>
       <Text>{label}</Text>
-      <Text size="sm">{description}</Text>
+      <Text size="sm" c="dimmed">
+        {description}
+      </Text>
       <Select
         placeholder={placeholder}
         options={options}
@@ -146,7 +149,7 @@ export const CustomSelectInput = function (props: WidgetProps) {
             onChange(selected ? selected.value : undefined);
           }
         }}
-        styles={styles}
+        styles={SELECT_STYLES}
         isSearchable={true}
         isClearable={true}
       />

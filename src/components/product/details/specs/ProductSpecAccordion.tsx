@@ -7,7 +7,7 @@ import {
   Card,
   Stack,
   Text,
-  useMantineColorScheme,
+  useComputedColorScheme,
 } from "@mantine/core";
 import JsonView from "@uiw/react-json-view";
 import { darkTheme } from "@uiw/react-json-view/dark";
@@ -35,15 +35,19 @@ export const ProductSpecAccordion: React.FC<{
   const { specs, sources = [], specValid, specErrors } = product;
 
   const dispatch = useAppDispatch();
-  const { colorScheme } = useMantineColorScheme();
+  // Computed, not stored: useMantineColorScheme returns the CHOICE, so "auto" - the default -
+  // has to be resolved against the OS before it can pick a theme. Treating "auto" as dark, as
+  // this did, put a dark JSON viewer on a light page for anyone who had never touched the
+  // theme control.
+  const colorScheme = useComputedColorScheme("light", {
+    getInitialValueInEffect: true,
+  });
 
   const manualSpecs = useSelector(selectManualSpecs);
   const saveInProgress = useSelector(selectProductSaveInProgress);
   const error = useSelector(selectProductError);
 
-  const themeStyle = ["dark", "auto"].includes(colorScheme)
-    ? darkTheme
-    : lightTheme;
+  const themeStyle = colorScheme === "dark" ? darkTheme : lightTheme;
 
   const filteredSources = useMemo(() => {
     // Manual (admin-entered) specs have no linked source — see

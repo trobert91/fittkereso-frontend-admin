@@ -14,30 +14,39 @@ interface ScoreRingProps {
   withModal?: boolean;
 }
 
+/**
+ * The rows in the explainer modal.
+ *
+ * `bg` used to be a hardcoded rgba tint - rgba(64, 192, 87, 0.12) and friends - sampled from
+ * stock Mantine's green, yellow, orange and red. Those hexes no longer exist in this app's
+ * palette, and a fixed alpha over an unknown ground is a guess in either scheme. The `-light`
+ * and `-light-color` pair is Mantine's own answer: a tinted surface and a text colour that
+ * are defined per scheme and are guaranteed to work against each other.
+ */
 const RATING_LEVELS = [
   {
     range: "≥ 80",
     label: "Excellent",
-    color: "var(--mantine-color-green-6)",
-    bg: "rgba(64, 192, 87, 0.12)",
+    color: "var(--mantine-color-green-light-color)",
+    bg: "var(--mantine-color-green-light)",
   },
   {
     range: "≥ 60",
     label: "Good",
-    color: "var(--mantine-color-yellow-6)",
-    bg: "rgba(252, 196, 25, 0.12)",
+    color: "var(--mantine-color-yellow-light-color)",
+    bg: "var(--mantine-color-yellow-light)",
   },
   {
     range: "≥ 40",
     label: "Mixed",
-    color: "var(--mantine-color-orange-6)",
-    bg: "rgba(255, 146, 43, 0.12)",
+    color: "var(--mantine-color-orange-light-color)",
+    bg: "var(--mantine-color-orange-light)",
   },
   {
     range: "< 40",
     label: "Poor",
-    color: "var(--mantine-color-red-6)",
-    bg: "rgba(250, 82, 82, 0.12)",
+    color: "var(--mantine-color-red-light-color)",
+    bg: "var(--mantine-color-red-light)",
   },
 ];
 
@@ -81,7 +90,9 @@ export function ScoreRing({
         cy={center}
         r={radius}
         fill="none"
-        stroke="var(--mantine-color-dark-5)"
+        // The unfilled track. Was --mantine-color-dark-5, a near-black from the dark scale
+        // painted in both schemes, so on a light page the ring sat in a black collar.
+        stroke="var(--mantine-color-default-border)"
         strokeWidth={stroke}
       />
       <circle

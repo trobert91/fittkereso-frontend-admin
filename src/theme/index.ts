@@ -171,7 +171,15 @@ export const theme = createTheme({
      because this palette is colourful - yellow 5 and blue 6 need opposite text colours, and
      hand-managing that across 36 badges is how contrast bugs get shipped. */
   autoContrast: true,
-  luminanceThreshold: 0.3,
+  /* 0.65, not Mantine's 0.3, because this palette is oklch.
+     Mantine's luminance() special-cases oklch and returns the L channel verbatim rather than
+     computing relative luminance - so a saturated blue that would score ~0.1 as relative
+     luminance scores 0.57 here, sails past a 0.3 threshold, and gets black button text. The
+     threshold has to be read in perceptual-lightness terms instead.
+     At 0.65 the shade-6 fills land correctly on both sides: white on blue 57%, red 58%,
+     teal 59%, green 60% and gray 56%; black on orange 69% and yellow 77%, which genuinely
+     are too light to carry white. Changing a scale's lightness means re-checking this. */
+  luminanceThreshold: 0.65,
 
   /* control-plane's --radius-field (0.5rem) and --radius-box (0.75rem), as md and lg. */
   radius: {

@@ -135,9 +135,12 @@ export const JsonEditor = ({
               userSelect: "none",
               margin: 0,
               fontSize: 13,
-              background: "rgba(0,0,0,0.1)",
-              color: "#888",
-              borderRight: "1px solid rgba(255,255,255,0.1)",
+              // Theme variables rather than fixed alphas: the old rgba(255,255,255,0.1) border
+              // was invisible against a light page, and the black wash only read as a gutter
+              // in dark mode.
+              background: "var(--mantine-color-default-hover)",
+              color: "var(--mantine-color-dimmed)",
+              borderRight: "1px solid var(--mantine-color-default-border)",
               width: "40px",
               lineHeight: "20px",
             }}
