@@ -9,7 +9,7 @@ import "@mantine/carousel/styles.css";
 import "@mantine/dropzone/styles.css";
 import "@mantine/dates/styles.css";
 
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import {
   ColorSchemeScript,
   mantineHtmlProps,
@@ -35,6 +35,14 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+// The wordmark only. Kept off the body deliberately: it has far too much personality to read
+// a table in, which is exactly why it works as a logo.
+const brand = Bricolage_Grotesque({
+  variable: "--font-brand",
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+});
+
 export const metadata = {
   title: "fittkereso Admin",
   description: "fittkereso admin page",
@@ -48,7 +56,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${brand.variable}`}
       {...mantineHtmlProps}
     >
       <head>

@@ -13,12 +13,7 @@ export default function AuthLayout({
       <Flex direction="column" align="flex-start">
         <Center flex={1} w="100%">
           <Box maw="25rem">
-            <Logo
-              size="3rem"
-              display="block"
-              c="var(--mantine-primary-color-filled)"
-              mb="xl"
-            />
+            <Logo size={34} mb="xl" />
 
             {children}
           </Box>

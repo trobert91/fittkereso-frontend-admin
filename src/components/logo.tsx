@@ -1,41 +1,78 @@
-import { Box, BoxProps, ElementProps } from '@mantine/core';
+import { Box, BoxProps, ElementProps } from "@mantine/core";
 
-interface LogoProps
-  extends Omit<BoxProps, 'children' | 'ref'>,
-    ElementProps<'svg', keyof BoxProps> {
+interface LogoMarkProps
+  extends Omit<BoxProps, "children" | "ref">,
+    ElementProps<"svg", keyof BoxProps> {
   size?: string | number;
 }
 
-export function Logo({ size, style, ...props }: LogoProps) {
+/**
+ * The mark: a barbell, drawn as four plates around a bar.
+ *
+ * It replaces a stock placeholder glyph that said nothing about the product. This one at
+ * least names the domain - a catalogue of fitness equipment - and survives being shrunk to
+ * the rail's 48px gutter, where anything finer would turn to mush.
+ */
+export function LogoMark({ size = 24, style, ...props }: LogoMarkProps) {
   return (
     <Box
       component="svg"
       xmlns="http://www.w3.org/2000/svg"
-      fill="none"
       viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ width: size, height: size, ...style }}
+      fill="currentColor"
+      aria-hidden="true"
+      style={{ width: size, height: size, flexShrink: 0, ...style }}
       {...props}
     >
-      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-      <path
-        opacity=".5"
-        d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
-      />
-      <path d="M7 17l0 .01" />
-      <path d="M14 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-      <path d="M7 7l0 .01" />
-      <path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-      <path d="M17 7l0 .01" opacity=".5" />
-      <path d="M14 14l3 0" opacity=".5" />
-      <path d="M20 14l0 .01" opacity=".5" />
-      <path d="M14 14l0 3" opacity=".5" />
-      <path d="M14 20l3 0" opacity=".5" />
-      <path d="M17 17l3 0" opacity=".5" />
-      <path d="M20 17l0 3" opacity=".5" />
+      {/* Outer plates, then inner plates, then the bar between them. */}
+      <rect x="2" y="9" width="2.6" height="6" rx="1.1" opacity=".55" />
+      <rect x="19.4" y="9" width="2.6" height="6" rx="1.1" opacity=".55" />
+      <rect x="5.6" y="6.4" width="3.2" height="11.2" rx="1.4" />
+      <rect x="15.2" y="6.4" width="3.2" height="11.2" rx="1.4" />
+      <rect x="8.4" y="10.8" width="7.2" height="2.4" rx="1.2" />
+    </Box>
+  );
+}
+
+interface LogoProps extends Omit<BoxProps, "children" | "ref"> {
+  size?: number;
+  /** Set false where the mark already sits in its own gutter, as in the rail. */
+  mark?: boolean;
+}
+
+/**
+ * The wordmark.
+ *
+ * Bricolage Grotesque, wired through next/font in the root layout - a variable grotesque with
+ * enough character to read as a brand rather than as UI, which the body face deliberately
+ * does not. It carries latin-ext, so "Fittkereső" renders correctly if the accent is ever
+ * restored to the spelling.
+ */
+export function Logo({ size = 24, mark = true, ...props }: LogoProps) {
+  return (
+    <Box
+      {...props}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.5rem",
+        ...props.style,
+      }}
+    >
+      {mark && <LogoMark size={size} />}
+      <Box
+        component="span"
+        style={{
+          fontFamily: "var(--font-brand), system-ui, sans-serif",
+          fontWeight: 800,
+          fontSize: `${size * 0.72}px`,
+          letterSpacing: "-0.03em",
+          lineHeight: 1,
+          whiteSpace: "nowrap",
+        }}
+      >
+        Fittkereso
+      </Box>
     </Box>
   );
 }

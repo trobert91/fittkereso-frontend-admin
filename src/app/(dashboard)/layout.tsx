@@ -1,4 +1,4 @@
-import { DashboardLayout } from "@/components/dashboard/dashboard";
+import { AppShell } from "@/components/shell/app-shell";
 
 export const metadata = {
   title: "fittkereso Admin",
@@ -10,5 +10,5 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return <AppShell>{children}</AppShell>;
 }

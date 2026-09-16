@@ -1,0 +1,216 @@
+/* Sass evaluates this file before PostCSS ever sees it, so the breakpoint variables have to
+   come from the shared Sass file. postcss-simple-vars defines the same eight names, but far
+   too late to help a @media query that Sass has already failed to evaluate - which is why the
+   old dashboard.module.scss kept redeclaring them locally instead. */
+@import '@styles/breakpoints';
+
+/* Rail geometry, mirroring control-plane exactly so the two apps feel the same in the hand:
+   64px collapsed with a 48px icon gutter (8px of rail padding either side), 256px expanded
+   with 224px rows. Rows never change width - the rail clips them - which is why expanding
+   reflows nothing. */
+.shell {
+  display: flex;
+  min-height: 100dvh;
+}
+
+.rail {
+  --rail-w: 4rem;
+  --rail-w-open: 16rem;
+
+  display: none;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: var(--rail-w);
+  padding-block: var(--mantine-spacing-sm);
+  padding-inline: 0.5rem;
+  overflow: hidden;
+  z-index: 200;
+  background: var(--mantine-color-body);
+  border-inline-end: 1px solid var(--mantine-color-default-border);
+
+  @media (min-width: $mantine-breakpoint-lg) {
+    display: flex;
+  }
+
+  /* Off until the stored setting has arrived, so a pinned menu does not slide open on load. */
+  &[data-ready='true'] {
+    transition: width 200ms ease;
+  }
+
+  /* Floating: out of flow, so widening happens OVER the content. */
+  &[data-floating='true'] {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+
+    &:hover,
+    &:focus-within {
+      width: var(--rail-w-open);
+    }
+  }
+
+  /* Pinned: a real column in the flex row, pushing the content across. */
+  &[data-floating='false'] {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    width: var(--rail-w-open);
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+/* The gutter the floating rail sits over. Constant, so hovering never moves the page. */
+.content[data-floating='true'] {
+  @media (min-width: $mantine-breakpoint-lg) {
+    padding-inline-start: var(--rail-w);
+  }
+}
+
+.main {
+  flex: 1;
+  padding: var(--mantine-spacing-md);
+
+  @media (min-width: $mantine-breakpoint-md) {
+    padding: var(--mantine-spacing-lg);
+  }
+
+  @media (min-width: $mantine-breakpoint-lg) {
+    padding: var(--mantine-spacing-xl);
+  }
+}
+
+/* Shown below lg, where the rail is hidden entirely and a drawer takes over. */
+.mobileBar {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  border-block-end: 1px solid var(--mantine-color-default-border);
+  background: var(--mantine-color-body);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  @media (min-width: $mantine-breakpoint-lg) {
+    display: none;
+  }
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 14rem;
+  height: 2.75rem;
+}
+
+.gutter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 3rem;
+}
+
+.navLink {
+  border-radius: var(--mantine-radius-md);
+  color: inherit;
+  text-decoration: none;
+  font-size: var(--mantine-font-size-sm);
+
+  &:hover {
+    background: var(--mantine-color-default-hover);
+  }
+
+  &[data-active] {
+    background: var(--mantine-primary-color-light);
+    color: var(--mantine-primary-color-light-color);
+    font-weight: 600;
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin-block-start: var(--mantine-spacing-md);
+}
+
+.sectionTitle {
+  height: 1.25rem;
+  padding-inline-start: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}
+
+.footer {
+  margin-block-start: auto;
+  padding-block-start: var(--mantine-spacing-xs);
+  border-block-start: 1px solid var(--mantine-color-default-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.userEmail {
+  flex: 1;
+  min-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 14rem;
+  min-height: 2.5rem;
+}
+
+.settingControl {
+  flex: 1;
+  min-width: 0;
+  padding-inline-end: 0.5rem;
+}
+
+/* Everything that only exists once there is width to hold it. */
+.reveal {
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity 150ms ease;
+}
+
+.rail[data-floating='false'] .reveal,
+.rail[data-floating='true']:hover .reveal,
+.rail[data-floating='true']:focus-within .reveal,
+.rail[data-floating='false'] .userEmail,
+.rail[data-floating='true']:hover .userEmail,
+.rail[data-floating='true']:focus-within .userEmail {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Inside the mobile drawer there is no collapsed state, so nothing hides. */
+.drawerRail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-height: 100%;
+
+  .reveal,
+  .userEmail {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
