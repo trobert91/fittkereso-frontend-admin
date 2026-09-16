@@ -369,7 +369,7 @@ export function TaskTable() {
             }}
           />
 
-          <Table striped horizontalSpacing="md" verticalSpacing="md">
+          <Table>
             <Table.Thead>
               {table.getHeaderGroups().map((hg) => (
                 <Table.Tr key={hg.id}>

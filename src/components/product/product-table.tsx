@@ -309,7 +309,7 @@ export function ProductTable({
               const id = row.id; // access the product id
 
               return (
-                <Box pos="relative" w={120} style={{ aspectRatio: "3 / 4" }}>
+                <Box pos="relative" w={48} style={{ aspectRatio: "3 / 4" }}>
                   <Link href={routes.products.details(id)}>
                     <Image
                       src={image.url}
@@ -575,7 +575,7 @@ export function ProductTable({
             }}
           />
 
-          <Table striped horizontalSpacing="md" verticalSpacing="md">
+          <Table>
             <Table.Thead>
               {table.getHeaderGroups().map((hg) => (
                 <Table.Tr key={hg.id}>

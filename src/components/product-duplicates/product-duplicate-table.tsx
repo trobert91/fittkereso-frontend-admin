@@ -331,7 +331,7 @@ export function ProductDuplicateTable() {
             }}
           />
 
-          <Table striped highlightOnHover withTableBorder>
+          <Table>
             <Table.Thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <Table.Tr key={headerGroup.id}>

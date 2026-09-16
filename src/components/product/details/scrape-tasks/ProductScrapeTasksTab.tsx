@@ -35,7 +35,7 @@ export function ProductScrapeTasksTab() {
   }
 
   return (
-    <Table striped highlightOnHover withTableBorder>
+    <Table>
       <Table.Thead>
         <Table.Tr>
           <Table.Th>Queue</Table.Th>

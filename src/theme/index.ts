@@ -240,6 +240,31 @@ export const theme = createTheme({
          which mangles the spec values and model numbers these badges mostly contain. */
       defaultProps: { variant: "light", radius: "sm", tt: "none" },
     },
+    /* Tables, carrying over control-plane's daisyUI `table table-sm`.
+       Their metrics translated: padding-block .5rem and padding-inline .75rem, a faint row
+       divider, a hover highlight, an enclosing border - and no zebra, since control-plane
+       never applies .table-zebra. The old `striped verticalSpacing="md"` was double this
+       padding plus stripes, which is why the rows read as so tall.
+
+       What does NOT carry over is the rounded corner. daisyUI can round its table because it
+       sets border-collapse: separate; Mantine puts the row divider on the <tr>, and a tr
+       border-bottom does not render under `separate` - so copying that would silently delete
+       every row line. border-radius is ignored on a collapsed table, so the corners stay
+       square. Rounding them needs a wrapper element per table, not a theme default.
+
+       The <th> treatment lives in global.scss instead of here: most of these tables render a
+       raw <th> rather than <Table.Th>, and the Styles API only reaches Mantine's own
+       components - so a styles.th here would miss the very headers it is meant to style. */
+    Table: {
+      defaultProps: {
+        verticalSpacing: "0.5rem",
+        horizontalSpacing: "0.75rem",
+        highlightOnHover: true,
+        withTableBorder: true,
+        striped: false,
+        borderColor: "var(--mantine-color-default-border)",
+      },
+    },
     Modal: {
       defaultProps: { radius: "lg", centered: true },
     },

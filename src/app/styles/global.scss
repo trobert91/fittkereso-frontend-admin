@@ -1,2 +1,30 @@
 @import 'variables';
 
+
+/* Table cell metrics, carried over from control-plane's daisyUI `table table-sm`.
+   
+   These live here rather than in the theme's Styles API because most list tables render a
+   plain <th> for their TanStack header rather than <Table.Th>, and the Styles API only reaches
+   Mantine's own components - so a styles.th in the theme would miss the very headers it is
+   meant to style, and those cells would carry no padding at all. daisyUI solves the same
+   problem the same way, with a `:where(th,td)` descendant rule.
+
+   The values come from the CSS variables Mantine sets on the table from its verticalSpacing /
+   horizontalSpacing props, so this file never has to know what those are - change them in the
+   theme and these follow. */
+.mantine-Table-table th,
+.mantine-Table-table td {
+  padding: var(--table-vertical-spacing, 0.5rem)
+    var(--table-horizontal-spacing, 0.75rem);
+  vertical-align: middle;
+}
+
+/* daisyUI dims its header row to 60% of base-content and never wraps it. Note the weight only
+   reaches headers rendered as bare text: several tables wrap theirs in <Text fw={500}>, which
+   sets its own weight and wins. */
+.mantine-Table-table thead th {
+  color: var(--mantine-color-dimmed);
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: left;
+}

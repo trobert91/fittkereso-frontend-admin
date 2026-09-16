@@ -386,7 +386,7 @@ export function ProductSourceTable() {
             }}
           />
 
-          <Table striped horizontalSpacing="md" verticalSpacing="md">
+          <Table>
             <Table.Thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <Table.Tr key={headerGroup.id}>
