@@ -22,6 +22,7 @@ export function ListPagination({
   totalItems,
   onPageChange,
   onPageSizeChange,
+  placement = "top",
 }: {
   page: number;
   pageSize: number;
@@ -29,6 +30,8 @@ export function ListPagination({
   totalItems: number | null;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
+  /** Only the margin differs - the row itself is identical above and below the table. */
+  placement?: "top" | "bottom";
 }) {
   /* The standard sizes plus whatever this table actually uses.
      Four of the eight lists default to 40, which is not one of the standard sizes - and a
@@ -48,7 +51,13 @@ export function ListPagination({
   const to = totalItems === null ? null : Math.min(totalItems, page * pageSize);
 
   return (
-    <Group justify="space-between" mb="sm" wrap="wrap" gap="sm">
+    <Group
+      justify="space-between"
+      mt={placement === "bottom" ? "sm" : undefined}
+      mb={placement === "top" ? "sm" : undefined}
+      wrap="wrap"
+      gap="sm"
+    >
       <Text size="sm" c="dimmed">
         {totalItems === null || to === null
           ? ""

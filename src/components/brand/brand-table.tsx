@@ -14,7 +14,6 @@ import {
   Table,
   Loader,
   Center,
-  Pagination,
   Text,
   Badge,
   ActionIcon,
@@ -258,14 +257,18 @@ export function BrandTable() {
             </Table.Tbody>
           </Table>
 
-          <Center mt="md">
-            <Pagination
-              total={totalPages}
-              value={page}
-              onChange={setPage}
-              size="md"
-            />
-          </Center>
+          <ListPagination
+            placement="bottom"
+            page={page}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPage(1);
+              setPageSize(size);
+            }}
+          />
         </>
       )}
     </>

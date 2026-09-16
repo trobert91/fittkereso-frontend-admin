@@ -14,7 +14,6 @@ import {
   Table,
   Loader,
   Center,
-  Pagination,
   Text,
   Badge,
   MultiSelect,
@@ -616,14 +615,18 @@ export function ScrapeTaskTable() {
             </Table.Tbody>
           </Table>
 
-          <Center mt="lg">
-            <Pagination
-              total={totalPages}
-              value={page}
-              onChange={setPage}
-              size="md"
-            />
-          </Center>
+          <ListPagination
+            placement="bottom"
+            page={page}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPage(1);
+              setPageSize(size);
+            }}
+          />
         </>
       )}
     </>

@@ -17,7 +17,6 @@ import {
   Center,
   Group,
   Loader,
-  Pagination,
   Select,
   Stack,
   Table,
@@ -365,13 +364,18 @@ export function ProductDuplicateTable() {
             </Table.Tbody>
           </Table>
 
-          <Center>
-            <Pagination
-              total={searchResult?.totalPages || 1}
-              value={page}
-              onChange={setPage}
-            />
-          </Center>
+          <ListPagination
+            placement="bottom"
+            page={page}
+            pageSize={pageSize}
+            totalPages={searchResult?.totalPages || 1}
+            totalItems={searchResult?.totalItems ?? null}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPage(1);
+              setPageSize(size);
+            }}
+          />
         </>
       )}
 
