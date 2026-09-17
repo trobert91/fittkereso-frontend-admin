@@ -96,8 +96,8 @@ export function ScoreBreakdown({
         >
           Score {pair.similarityScore}
         </Badge>
-        <Text size="xs" fw={600} tt="uppercase" c="dimmed">
-          How it was calculated
+        <Text size="sm" fw={600}>
+          {decisionOf(pair.similarityScore)}
         </Text>
       </Group>
 
@@ -230,7 +230,7 @@ export function ScoreBreakdown({
             </Table.Td>
             <Table.Td>
               <Text size="xs" c="dimmed">
-                {verdictOf(pair.similarityScore)}
+                {thresholdNoteOf(pair.similarityScore)}
               </Text>
             </Table.Td>
             <Table.Td style={{ textAlign: "right" }}>
@@ -252,15 +252,30 @@ export function ScoreBreakdown({
   );
 }
 
-function verdictOf(score: number): string {
+/**
+ * What this score decides at scrape time. Note it says nothing about whether
+ * this pair needs merging — that is the question you are here to answer, and
+ * the score deliberately does not answer it: a pair exists precisely because
+ * scoring would not settle it alone.
+ */
+function decisionOf(score: number): string {
   if (score >= ACCEPT_SCORE) {
-    return `${ACCEPT_SCORE}+ — a scraped listing with this name would attach to the product outright, with no LLM call.`;
+    return "Attaches on its own — a scraped listing lands here with no LLM call";
+  }
+  if (score >= NEAR_MISS_SCORE) {
+    return "Goes to the LLM — too close to create, too far to attach";
+  }
+  return "Creates a new product — nothing here is close enough to ask about";
+}
+
+/** Where the score sits against the two thresholds that produced the decision. */
+function thresholdNoteOf(score: number): string {
+  if (score >= ACCEPT_SCORE) {
+    return `At or above the ${ACCEPT_SCORE} that attaches a listing outright.`;
   }
   if (score >= NEAR_MISS_SCORE) {
     const gap = ACCEPT_SCORE - score;
-    return `${NEAR_MISS_SCORE}–${ACCEPT_SCORE - 1}: ${gap} ${
-      gap === 1 ? "point" : "points"
-    } below attaching on its own. A scraped listing goes to the LLM, and two stored products become this pair.`;
+    return `${gap} ${gap === 1 ? "point" : "points"} below the ${ACCEPT_SCORE} that would attach it outright, and at or above the ${NEAR_MISS_SCORE} that makes it worth asking about.`;
   }
-  return `Below ${NEAR_MISS_SCORE} — too far apart to pair or to reach the LLM.`;
+  return `Below the ${NEAR_MISS_SCORE} needed to reach the LLM or to write a pair.`;
 }
