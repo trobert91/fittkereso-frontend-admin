@@ -415,7 +415,10 @@ export function ProductDuplicateTable() {
             }}
           />
 
-          <Table>
+          {/* Top-aligned: a row is as tall as its 200px product images, and
+              centring left the score and the actions floating in the middle of
+              that height, far from the row they belong to. */}
+          <Table styles={{ td: { verticalAlign: "top" } }}>
             <Table.Thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <Table.Tr key={headerGroup.id}>
