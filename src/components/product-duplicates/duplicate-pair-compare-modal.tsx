@@ -25,7 +25,7 @@ import {
 } from "@/api-actions/product-duplicate/product-duplicate-actions";
 import { ProductDuplicatePair } from "@/models/dtos/product-duplicate-search-models";
 import { ProductModel } from "@/models/product-model";
-import { ProductSummaryModal } from "@/components/product/product-summary-modal";
+import { ProductDetailsModal } from "@/components/product/details-modal";
 import { formatSpecValue } from "./failed-gate-badges";
 import { ScoreBreakdown } from "./score-breakdown";
 
@@ -38,11 +38,11 @@ interface DuplicatePairCompareModalProps {
 function ProductColumn({
   product,
   contradictingSpecs,
-  onOpenSummary,
+  onOpenDetails,
 }: {
   product: ProductModel;
   contradictingSpecs: Set<string>;
-  onOpenSummary: (productId: string) => void;
+  onOpenDetails: (productId: string) => void;
 }) {
   const imageUrl =
     product.mainImage?.url ?? sortBy(product.images ?? [], "order")[0]?.url;
@@ -65,7 +65,7 @@ function ProductColumn({
         <Anchor
           component="button"
           type="button"
-          onClick={() => onOpenSummary(product.id)}
+          onClick={() => onOpenDetails(product.id)}
           size="sm"
           fw={600}
           ta="left"
@@ -132,12 +132,12 @@ export function DuplicatePairCompareModal({
   const [loading, setLoading] = useState(false);
   const [survivorId, setSurvivorId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [summaryProductId, setSummaryProductId] = useState<string | null>(null);
+  const [detailsProductId, setDetailsProductId] = useState<string | null>(null);
 
   useEffect(() => {
     setProducts(null);
     setSurvivorId(null);
-    setSummaryProductId(null);
+    setDetailsProductId(null);
     if (!pair) return;
 
     let cancelled = false;
@@ -215,14 +215,14 @@ export function DuplicatePairCompareModal({
               <ProductColumn
                 product={products[0]}
                 contradictingSpecs={contradictingSpecs}
-                onOpenSummary={setSummaryProductId}
+                onOpenDetails={setDetailsProductId}
               />
             </GridCol>
             <GridCol span={6}>
               <ProductColumn
                 product={products[1]}
                 contradictingSpecs={contradictingSpecs}
-                onOpenSummary={setSummaryProductId}
+                onOpenDetails={setDetailsProductId}
               />
             </GridCol>
           </Grid>
@@ -288,9 +288,12 @@ export function DuplicatePairCompareModal({
       )}
       </Modal>
 
-      <ProductSummaryModal
-        productId={summaryProductId}
-        onClose={() => setSummaryProductId(null)}
+      {/* Above the compare modal it is opened from. */}
+      <ProductDetailsModal
+        productId={detailsProductId}
+        opened={!!detailsProductId}
+        onClose={() => setDetailsProductId(null)}
+        zIndex={400}
       />
     </>
   );

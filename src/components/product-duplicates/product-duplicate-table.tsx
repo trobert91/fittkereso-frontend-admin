@@ -35,7 +35,7 @@ import {
 } from "@/models/dtos/product-duplicate-search-models";
 import { ProductCategory } from "@/models/product-category";
 import { ProductModel } from "@/models/product-model";
-import { ProductSummaryModal } from "@/components/product/product-summary-modal";
+import { ProductDetailsModal } from "@/components/product/details-modal";
 import { DuplicatePairCompareModal } from "./duplicate-pair-compare-modal";
 import { FailedGateBadges } from "./failed-gate-badges";
 
@@ -60,17 +60,17 @@ const DETECTED_BY_LABELS: Record<ProductDuplicateDetectedBy, string> = {
 
 function ProductCell({
   product,
-  onOpenSummary,
+  onOpenDetails,
 }: {
   product: ProductModel;
-  onOpenSummary: (productId: string) => void;
+  onOpenDetails: (productId: string) => void;
 }) {
   return (
     <Stack gap={2}>
       <Anchor
         component="button"
         type="button"
-        onClick={() => onOpenSummary(product.id)}
+        onClick={() => onOpenDetails(product.id)}
         size="sm"
         fw={500}
         ta="left"
@@ -97,7 +97,7 @@ export function ProductDuplicateTable() {
   const [comparePair, setComparePair] = useState<ProductDuplicatePair | null>(
     null,
   );
-  const [summaryProductId, setSummaryProductId] = useState<string | null>(
+  const [detailsProductId, setDetailsProductId] = useState<string | null>(
     null,
   );
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -172,7 +172,7 @@ export function ProductDuplicateTable() {
         cell: (props) => (
           <ProductCell
             product={props.getValue()}
-            onOpenSummary={setSummaryProductId}
+            onOpenDetails={setDetailsProductId}
           />
         ),
       }),
@@ -181,7 +181,7 @@ export function ProductDuplicateTable() {
         cell: (props) => (
           <ProductCell
             product={props.getValue()}
-            onOpenSummary={setSummaryProductId}
+            onOpenDetails={setDetailsProductId}
           />
         ),
       }),
@@ -393,9 +393,10 @@ export function ProductDuplicateTable() {
         onComplete={doSearch}
       />
 
-      <ProductSummaryModal
-        productId={summaryProductId}
-        onClose={() => setSummaryProductId(null)}
+      <ProductDetailsModal
+        productId={detailsProductId}
+        opened={!!detailsProductId}
+        onClose={() => setDetailsProductId(null)}
       />
     </Stack>
   );
