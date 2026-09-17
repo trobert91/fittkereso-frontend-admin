@@ -32,6 +32,7 @@ import {
   postReopenProductDuplicate,
 } from "@/api-actions/product-duplicate/product-duplicate-actions";
 import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
+import { ProductSourceLinks } from "@/components/product/product-source-links";
 import { productImageUrl } from "@/utils/product-image";
 import { useProductDuplicateSearch } from "@/hooks/useProductDuplicateSearch";
 import {
@@ -126,6 +127,7 @@ function ProductCell({
           {product.brand?.name} · {product.productCategory?.name}
         </Text>
         <ProductSpecsBadges specs={product.orderedSpecs} />
+        <ProductSourceLinks sources={product.sources} emptyLabel="No listings." />
       </Stack>
     </Group>
   );
