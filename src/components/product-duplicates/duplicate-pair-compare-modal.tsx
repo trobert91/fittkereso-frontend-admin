@@ -160,7 +160,10 @@ function ProductSpecs({
               ? "var(--mantine-color-red-light)"
               : undefined,
             borderRadius: 4,
-            padding: "2px 6px",
+            // No left padding: it only existed to inset the contradiction
+            // highlight, and it indented every label away from the heading and
+            // the offer table above.
+            padding: "2px 6px 2px 0",
           }}
         >
           <Text size="xs" c="dimmed" style={{ minWidth: 110 }}>
