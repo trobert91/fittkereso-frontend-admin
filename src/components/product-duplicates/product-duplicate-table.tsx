@@ -25,7 +25,10 @@ import {
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { postCategorySearch } from "@/api-actions/category/category-search";
-import { postDismissProductDuplicate } from "@/api-actions/product-duplicate/product-duplicate-actions";
+import {
+  postDismissProductDuplicate,
+  postReopenProductDuplicate,
+} from "@/api-actions/product-duplicate/product-duplicate-actions";
 import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
 import { useProductDuplicateSearch } from "@/hooks/useProductDuplicateSearch";
 import {
@@ -160,6 +163,21 @@ export function ProductDuplicateTable() {
     });
   };
 
+  // No confirm: reopening only puts the pair back in the queue, and the
+  // dismissal it undoes was itself one click.
+  const handleReopen = async (pair: ProductDuplicatePair) => {
+    try {
+      await postReopenProductDuplicate(pair.id);
+      doSearch();
+    } catch (err) {
+      notifications.show({
+        color: "red",
+        title: "Reopen failed",
+        message: err instanceof Error ? err.message : "An error occurred",
+      });
+    }
+  };
+
   const columnHelper = useMemo(
     () => createColumnHelper<ProductDuplicatePair>(),
     [],
@@ -238,16 +256,16 @@ export function ProductDuplicateTable() {
               >
                 Compare
               </Button>
-              {!pair.dismissedAt && (
-                <Button
-                  size="xs"
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => handleDismiss(pair)}
-                >
-                  Dismiss
-                </Button>
-              )}
+              <Button
+                size="xs"
+                variant="subtle"
+                color="gray"
+                onClick={() =>
+                  pair.dismissedAt ? handleReopen(pair) : handleDismiss(pair)
+                }
+              >
+                {pair.dismissedAt ? "Reopen" : "Dismiss"}
+              </Button>
             </Group>
           );
         },

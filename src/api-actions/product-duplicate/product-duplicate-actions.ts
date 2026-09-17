@@ -34,6 +34,17 @@ export async function postDismissProductDuplicate(pairId: string): Promise<void>
   }
 }
 
+/** Puts a dismissed pair back in the queue, for a change of mind. */
+export async function postReopenProductDuplicate(pairId: string): Promise<void> {
+  try {
+    await axiosInstance.post(`/admin-product-duplicate/${pairId}/reopen`);
+  } catch (error: AxiosError | any) {
+    throw new Error(
+      error?.response?.data?.message || "Failed to reopen duplicate pair",
+    );
+  }
+}
+
 /** Merges the pair's other product into the survivor and returns the survivor. */
 export async function postMergeProductDuplicate(
   pairId: string,

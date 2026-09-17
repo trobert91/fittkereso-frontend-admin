@@ -21,6 +21,7 @@ import { getProductById } from "@/api-actions/product/get-product";
 import {
   postDismissProductDuplicate,
   postMergeProductDuplicate,
+  postReopenProductDuplicate,
 } from "@/api-actions/product-duplicate/product-duplicate-actions";
 import { ProductDuplicatePair } from "@/models/dtos/product-duplicate-search-models";
 import { ProductModel } from "@/models/product-model";
@@ -230,11 +231,7 @@ export function DuplicatePairCompareModal({
             </GridCol>
           </Grid>
 
-          {pair.dismissedAt ? (
-            <Text size="sm" c="dimmed">
-              Dismissed as two different products.
-            </Text>
-          ) : survivor && mergedAway ? (
+          {survivor && mergedAway ? (
             <Stack gap="xs">
               <Text size="sm">
                 Keep <b>{survivor.displayName}</b>? <b>{mergedAway.displayName}</b>{" "}
@@ -264,28 +261,54 @@ export function DuplicatePairCompareModal({
               </Group>
             </Stack>
           ) : (
-            <Group justify="space-between">
-              <Button
-                variant="default"
-                loading={submitting}
-                onClick={() =>
-                  runAction(
-                    () => postDismissProductDuplicate(pair.id),
-                    "Marked as different products",
-                  )
-                }
-              >
-                Not duplicates
-              </Button>
-              <Group gap="xs">
-                <Button onClick={() => setSurvivorId(products[0].id)}>
-                  Keep left
-                </Button>
-                <Button onClick={() => setSurvivorId(products[1].id)}>
-                  Keep right
-                </Button>
+            <Stack gap="xs">
+              {/* A dismissal records what someone thought at the time, not a
+                  verdict — so it says so and leaves every action available. */}
+              {pair.dismissedAt && (
+                <Text size="sm" c="dimmed">
+                  Dismissed as two different products on{" "}
+                  {new Date(pair.dismissedAt).toLocaleDateString()}. You can
+                  still merge them, or put the pair back in the queue.
+                </Text>
+              )}
+              <Group justify="space-between">
+                {pair.dismissedAt ? (
+                  <Button
+                    variant="default"
+                    loading={submitting}
+                    onClick={() =>
+                      runAction(
+                        () => postReopenProductDuplicate(pair.id),
+                        "Back in the queue",
+                      )
+                    }
+                  >
+                    Reopen
+                  </Button>
+                ) : (
+                  <Button
+                    variant="default"
+                    loading={submitting}
+                    onClick={() =>
+                      runAction(
+                        () => postDismissProductDuplicate(pair.id),
+                        "Marked as different products",
+                      )
+                    }
+                  >
+                    Not duplicates
+                  </Button>
+                )}
+                <Group gap="xs">
+                  <Button onClick={() => setSurvivorId(products[0].id)}>
+                    Keep left
+                  </Button>
+                  <Button onClick={() => setSurvivorId(products[1].id)}>
+                    Keep right
+                  </Button>
+                </Group>
               </Group>
-            </Group>
+            </Stack>
           )}
         </Stack>
       )}
