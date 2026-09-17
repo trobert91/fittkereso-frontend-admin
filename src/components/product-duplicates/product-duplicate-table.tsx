@@ -64,7 +64,11 @@ const DETECTED_BY_LABELS: Record<ProductDuplicateDetectedBy, string> = {
   merge: "Merge",
 };
 
-const THUMBNAIL_SIZE = 72;
+/**
+ * Big enough to read a frame shape off, which is the whole reason the picture
+ * is in the row: at thumbnail size a Trapéz and an Alacsony frame look alike.
+ */
+const THUMBNAIL_SIZE = 150;
 
 function ProductCell({
   product,
