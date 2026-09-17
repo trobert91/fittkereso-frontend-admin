@@ -248,24 +248,28 @@ export function ProductDuplicateTable() {
           />
         ),
       }),
-      columnHelper.accessor("similarityScore", {
+      // Score and contradictions share a column: the gates are what produced
+      // the number, so reading them apart from it means reading them twice.
+      // The minimum width is what keeps the badge from being squeezed to an
+      // ellipsis now that both product cells carry a 200px image.
+      columnHelper.display({
+        id: "score",
         header: "Score",
         cell: (props) => {
-          const score = props.getValue();
+          const pair = props.row.original;
           return (
-            <Badge
-              color={score >= 80 ? "green" : "yellow"}
-              variant="light"
-              size="lg"
-            >
-              {score}
-            </Badge>
+            <Stack gap={6} align="flex-start" miw={200}>
+              <Badge
+                color={pair.similarityScore >= 80 ? "green" : "yellow"}
+                variant="light"
+                size="lg"
+              >
+                {pair.similarityScore}
+              </Badge>
+              <FailedGateBadges gates={pair.failedGates} />
+            </Stack>
           );
         },
-      }),
-      columnHelper.accessor("failedGates", {
-        header: "Contradictions",
-        cell: (props) => <FailedGateBadges gates={props.getValue()} />,
       }),
       columnHelper.display({
         id: "found",
