@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button, Group, Text } from "@mantine/core";
 import { sortBy } from "lodash";
 import { FiExternalLink } from "react-icons/fi";
@@ -58,7 +59,9 @@ function entriesOf(sources: ProductSourceRecord[]): OfferEntry[] {
     // A listing with no offer still gets a button: it is a shop this product is
     // published in, which is half of what the comparison is asking.
     if (offers.length === 0) {
-      return [{ key: record.id, shop, variant: "", price: null, url: record.url }];
+      return [
+        { key: record.id, shop, variant: "", price: null, url: record.url },
+      ];
     }
 
     return offers.map((offer) => ({
@@ -75,6 +78,9 @@ function entriesOf(sources: ProductSourceRecord[]): OfferEntry[] {
   return sortBy(entries, [(entry) => entry.shop, (entry) => entry.price ?? ""]);
 }
 
+/** Matches the spec badges' threshold, so a row's two collapsing lists agree. */
+const COLLAPSED_COUNT = 4;
+
 export function ProductOfferButtons({
   sources,
   emptyLabel = "No listings.",
@@ -82,6 +88,7 @@ export function ProductOfferButtons({
   sources?: ProductSourceRecord[];
   emptyLabel?: string;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const entries = sources ? entriesOf(sources) : [];
 
   if (entries.length === 0) {
@@ -92,9 +99,13 @@ export function ProductOfferButtons({
     );
   }
 
+  const hasMore = entries.length > COLLAPSED_COUNT;
+  const visible =
+    expanded || !hasMore ? entries : entries.slice(0, COLLAPSED_COUNT);
+
   return (
     <Group gap={6}>
-      {entries.map((entry) => (
+      {visible.map((entry) => (
         <Button
           key={entry.key}
           component={entry.url ? "a" : "button"}
@@ -120,6 +131,17 @@ export function ProductOfferButtons({
           </Text>
         </Button>
       ))}
+
+      {hasMore && (
+        <Button
+          size="compact-xs"
+          variant="subtle"
+          color="blue"
+          onClick={() => setExpanded((open) => !open)}
+        >
+          {expanded ? "Hide" : `+${entries.length - COLLAPSED_COUNT} more`}
+        </Button>
+      )}
     </Group>
   );
 }
