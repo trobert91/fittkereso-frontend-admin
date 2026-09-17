@@ -24,6 +24,7 @@ import {
 } from "@/api-actions/product-duplicate/product-duplicate-actions";
 import { ProductDuplicatePair } from "@/models/dtos/product-duplicate-search-models";
 import { ProductModel } from "@/models/product-model";
+import { CopyIdBadge } from "@/components/copy-id-badge";
 import { ProductDetailsModal } from "@/components/product/details-modal";
 import { productImageUrl } from "@/utils/product-image";
 import { formatSpecValue } from "./failed-gate-badges";
@@ -74,6 +75,9 @@ function ProductColumn({
         <Text size="sm" c="blue">
           {product.brand?.name ?? "—"}
         </Text>
+        <Group gap={4}>
+          <CopyIdBadge id={product.id} label="Copy product ID" />
+        </Group>
         <Text size="xs" c="dimmed">
           Model: {product.model}
         </Text>
