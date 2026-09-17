@@ -1,4 +1,4 @@
-import { Alert, Code, Group, Stack, Table, Text } from "@mantine/core";
+import { Alert, Badge, Code, Group, Stack, Table, Text } from "@mantine/core";
 import {
   ProductDuplicateGate,
   ProductDuplicatePair,
@@ -28,6 +28,11 @@ function ratio(value: number): string {
   return value.toFixed(2);
 }
 
+/** Green once a listing would attach on its own, amber while it still needs a person. */
+function scoreColor(score: number): string {
+  return score >= ACCEPT_SCORE ? "green" : "yellow";
+}
+
 /**
  * Why this pair scores what it does, as the engine actually computes it:
  *
@@ -52,7 +57,19 @@ export function ScoreBreakdown({
   // similarities and no gates — they compared the product that is now gone.
   if (!similarity) {
     return (
-      <Alert variant="light" color="gray" title={`Score ${pair.similarityScore}`}>
+      <Alert
+        variant="light"
+        color="gray"
+        title={
+          <Badge
+            size="lg"
+            variant="light"
+            color={scoreColor(pair.similarityScore)}
+          >
+            Score {pair.similarityScore}
+          </Badge>
+        }
+      >
         <Text size="sm">
           This pair was carried over when one of its products was merged away, so
           it keeps the score it had but not the comparison behind it. The next
@@ -71,9 +88,18 @@ export function ScoreBreakdown({
 
   return (
     <Stack gap={6}>
-      <Text size="xs" fw={600} tt="uppercase" c="dimmed">
-        How this score was calculated
-      </Text>
+      <Group gap="sm" align="center">
+        <Badge
+          size="lg"
+          variant="light"
+          color={scoreColor(pair.similarityScore)}
+        >
+          Score {pair.similarityScore}
+        </Badge>
+        <Text size="xs" fw={600} tt="uppercase" c="dimmed">
+          How it was calculated
+        </Text>
+      </Group>
 
       <Table withTableBorder withColumnBorders verticalSpacing={6} fz="xs">
         <Table.Thead>
