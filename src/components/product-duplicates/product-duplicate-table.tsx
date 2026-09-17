@@ -24,7 +24,6 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import Link from "next/link";
 import { postCategorySearch } from "@/api-actions/category/category-search";
 import { postDismissProductDuplicate } from "@/api-actions/product-duplicate/product-duplicate-actions";
 import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
@@ -36,7 +35,7 @@ import {
 } from "@/models/dtos/product-duplicate-search-models";
 import { ProductCategory } from "@/models/product-category";
 import { ProductModel } from "@/models/product-model";
-import { routes } from "@/utils/routes";
+import { ProductSummaryModal } from "@/components/product/product-summary-modal";
 import { DuplicatePairCompareModal } from "./duplicate-pair-compare-modal";
 import { FailedGateBadges } from "./failed-gate-badges";
 
@@ -59,14 +58,22 @@ const DETECTED_BY_LABELS: Record<ProductDuplicateDetectedBy, string> = {
   merge: "Merge",
 };
 
-function ProductCell({ product }: { product: ProductModel }) {
+function ProductCell({
+  product,
+  onOpenSummary,
+}: {
+  product: ProductModel;
+  onOpenSummary: (productId: string) => void;
+}) {
   return (
     <Stack gap={2}>
       <Anchor
-        component={Link}
-        href={routes.products.details(product.id)}
+        component="button"
+        type="button"
+        onClick={() => onOpenSummary(product.id)}
         size="sm"
         fw={500}
+        ta="left"
       >
         {product.displayName}
       </Anchor>
@@ -88,6 +95,9 @@ export function ProductDuplicateTable() {
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [minScore, setMinScore] = useState<string | null>(null);
   const [comparePair, setComparePair] = useState<ProductDuplicatePair | null>(
+    null,
+  );
+  const [summaryProductId, setSummaryProductId] = useState<string | null>(
     null,
   );
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -159,11 +169,21 @@ export function ProductDuplicateTable() {
     () => [
       columnHelper.accessor("productA", {
         header: "Product A",
-        cell: (props) => <ProductCell product={props.getValue()} />,
+        cell: (props) => (
+          <ProductCell
+            product={props.getValue()}
+            onOpenSummary={setSummaryProductId}
+          />
+        ),
       }),
       columnHelper.accessor("productB", {
         header: "Product B",
-        cell: (props) => <ProductCell product={props.getValue()} />,
+        cell: (props) => (
+          <ProductCell
+            product={props.getValue()}
+            onOpenSummary={setSummaryProductId}
+          />
+        ),
       }),
       columnHelper.accessor("similarityScore", {
         header: "Score",
@@ -371,6 +391,11 @@ export function ProductDuplicateTable() {
         pair={comparePair}
         onClose={() => setComparePair(null)}
         onComplete={doSearch}
+      />
+
+      <ProductSummaryModal
+        productId={summaryProductId}
+        onClose={() => setSummaryProductId(null)}
       />
     </Stack>
   );

@@ -18,7 +18,6 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { sortBy } from "lodash";
-import Link from "next/link";
 import { getProductById } from "@/api-actions/product/get-product";
 import {
   postDismissProductDuplicate,
@@ -26,7 +25,7 @@ import {
 } from "@/api-actions/product-duplicate/product-duplicate-actions";
 import { ProductDuplicatePair } from "@/models/dtos/product-duplicate-search-models";
 import { ProductModel } from "@/models/product-model";
-import { routes } from "@/utils/routes";
+import { ProductSummaryModal } from "@/components/product/product-summary-modal";
 import { formatSpecValue } from "./failed-gate-badges";
 import { ScoreBreakdown } from "./score-breakdown";
 
@@ -39,9 +38,11 @@ interface DuplicatePairCompareModalProps {
 function ProductColumn({
   product,
   contradictingSpecs,
+  onOpenSummary,
 }: {
   product: ProductModel;
   contradictingSpecs: Set<string>;
+  onOpenSummary: (productId: string) => void;
 }) {
   const imageUrl =
     product.mainImage?.url ?? sortBy(product.images ?? [], "order")[0]?.url;
@@ -62,11 +63,12 @@ function ProductColumn({
 
       <Stack gap={4}>
         <Anchor
-          component={Link}
-          href={routes.products.details(product.id)}
-          target="_blank"
+          component="button"
+          type="button"
+          onClick={() => onOpenSummary(product.id)}
           size="sm"
           fw={600}
+          ta="left"
         >
           {product.displayName}
         </Anchor>
@@ -130,10 +132,12 @@ export function DuplicatePairCompareModal({
   const [loading, setLoading] = useState(false);
   const [survivorId, setSurvivorId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [summaryProductId, setSummaryProductId] = useState<string | null>(null);
 
   useEffect(() => {
     setProducts(null);
     setSurvivorId(null);
+    setSummaryProductId(null);
     if (!pair) return;
 
     let cancelled = false;
@@ -188,12 +192,13 @@ export function DuplicatePairCompareModal({
   const mergedAway = products?.find((product) => product.id !== survivorId);
 
   return (
-    <Modal
+    <>
+      <Modal
       opened={!!pair}
       onClose={() => !submitting && onClose()}
       title="Compare possible duplicates"
       centered
-      size="xl"
+      size="90%"
     >
       {loading && (
         <Center py="xl">
@@ -210,12 +215,14 @@ export function DuplicatePairCompareModal({
               <ProductColumn
                 product={products[0]}
                 contradictingSpecs={contradictingSpecs}
+                onOpenSummary={setSummaryProductId}
               />
             </GridCol>
             <GridCol span={6}>
               <ProductColumn
                 product={products[1]}
                 contradictingSpecs={contradictingSpecs}
+                onOpenSummary={setSummaryProductId}
               />
             </GridCol>
           </Grid>
@@ -279,6 +286,12 @@ export function DuplicatePairCompareModal({
           )}
         </Stack>
       )}
-    </Modal>
+      </Modal>
+
+      <ProductSummaryModal
+        productId={summaryProductId}
+        onClose={() => setSummaryProductId(null)}
+      />
+    </>
   );
 }
