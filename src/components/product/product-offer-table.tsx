@@ -106,10 +106,13 @@ export function ProductOfferTable({
 
   return (
     <Stack gap={4} align="flex-start">
-      {/* No header: three columns whose contents say what they are. */}
+      {/* No header: three columns whose contents say what they are. Ruled
+          between cells but not around the table, so it reads as part of the
+          cell it sits in rather than a panel dropped into it. */}
       <Table
-        withRowBorders={false}
-        verticalSpacing={2}
+        withColumnBorders
+        highlightOnHover
+        verticalSpacing={4}
         horizontalSpacing={10}
         fz="xs"
       >
