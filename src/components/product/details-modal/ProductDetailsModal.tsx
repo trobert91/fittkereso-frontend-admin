@@ -11,7 +11,9 @@ import {
   Image,
   Loader,
   Modal,
+  SimpleGrid,
   Stack,
+  Table,
   Text,
   Title,
   Tooltip,
@@ -22,10 +24,10 @@ import { isNil } from "lodash";
 import { ProductModel } from "@/models/product-model";
 import { getProductById } from "@/api-actions/product/get-product";
 import { ScoreRing } from "@/components/score-ring";
-import { AdminSpecTable } from "../details/specs/AdminSpecTable";
 import { ProductOffersList } from "../details/offers/ProductOffersList";
 import { OrderedSpec } from "@/models/product-specs";
 import { routes } from "@/utils/routes";
+import { productImageUrl } from "@/utils/product-image";
 import { ProductAliasesSection } from "./ProductAliasesSection";
 import { ProductSourcesSection } from "./ProductSourcesSection";
 
@@ -105,16 +107,13 @@ export const ProductDetailsModal = ({
 const ProductDetailsModalContent = ({ product }: { product: ProductModel }) => {
   const rating = product.rating;
   const hasRating = !isNil(rating?.rating);
-  const imageUrl =
-    product.mainImage?.url ??
-    product.images?.find((img) => !!img.url)?.url ??
-    null;
+  const imageUrl = productImageUrl(product);
 
   return (
     <Stack gap="lg">
       <Group align="center" wrap="nowrap" gap="lg">
-        {imageUrl && (
-          <Box style={{ flexShrink: 0 }}>
+        <Box style={{ flexShrink: 0 }} w={220} h={220}>
+          {imageUrl ? (
             <Image
               src={imageUrl}
               alt={product.displayName}
@@ -123,8 +122,14 @@ const ProductDetailsModalContent = ({ product }: { product: ProductModel }) => {
               fit="contain"
               radius="md"
             />
-          </Box>
-        )}
+          ) : (
+            <Center h="100%">
+              <Text size="sm" c="dimmed">
+                No image
+              </Text>
+            </Center>
+          )}
+        </Box>
         <Stack gap="xs" style={{ flex: 1 }}>
           <Group gap="xs">
             {product.brand?.name && (
@@ -221,8 +226,22 @@ const Section = ({
   </Stack>
 );
 
-const SPECS_COLLAPSED_LIMIT = 7;
+const SPECS_COLLAPSED_LIMIT = 12;
 
+function formatSpecValue(value: OrderedSpec["value"]): string {
+  if (value === undefined || value === null || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) return value.join(", ");
+  return String(value);
+}
+
+/**
+ * One label/value row per spec. A bike carries thirty-odd of these, so the
+ * tiles this used to draw turned the section into a wall — a plain table reads
+ * down the labels in one pass, which is how you actually compare two products.
+ * Split across two columns because the modal is wide enough to halve the
+ * scrolling.
+ */
 const SpecsBlock = ({ specs }: { specs: OrderedSpec[] }) => {
   const [expanded, setExpanded] = useState(false);
   if (specs.length === 0) {
@@ -232,13 +251,37 @@ const SpecsBlock = ({ specs }: { specs: OrderedSpec[] }) => {
       </Text>
     );
   }
+
   const canCollapse = specs.length > SPECS_COLLAPSED_LIMIT;
-  const visible = expanded || !canCollapse
-    ? specs
-    : specs.slice(0, SPECS_COLLAPSED_LIMIT);
+  const visible =
+    expanded || !canCollapse ? specs : specs.slice(0, SPECS_COLLAPSED_LIMIT);
+  const half = Math.ceil(visible.length / 2);
+  const columns = [visible.slice(0, half), visible.slice(half)];
+
   return (
     <Stack gap="xs">
-      <AdminSpecTable specs={visible} />
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg" verticalSpacing={0}>
+        {columns.map((column, index) =>
+          column.length === 0 ? null : (
+            <Table key={index} withRowBorders verticalSpacing={5} fz="sm">
+              <Table.Tbody>
+                {column.map((spec) => (
+                  <Table.Tr key={spec.key}>
+                    <Table.Td w="45%">
+                      <Text size="sm" c="dimmed">
+                        {spec.label}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm">{formatSpecValue(spec.value)}</Text>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          ),
+        )}
+      </SimpleGrid>
       {canCollapse && (
         <Button
           size="compact-xs"
@@ -247,9 +290,7 @@ const SpecsBlock = ({ specs }: { specs: OrderedSpec[] }) => {
           onClick={() => setExpanded((v) => !v)}
           style={{ alignSelf: "flex-start" }}
         >
-          {expanded
-            ? "show less"
-            : `show all ${specs.length} specs`}
+          {expanded ? "show less" : `show all ${specs.length} specs`}
         </Button>
       )}
     </Stack>

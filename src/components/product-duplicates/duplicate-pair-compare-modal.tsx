@@ -17,7 +17,6 @@ import {
   Text,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { sortBy } from "lodash";
 import { getProductById } from "@/api-actions/product/get-product";
 import {
   postDismissProductDuplicate,
@@ -26,6 +25,7 @@ import {
 import { ProductDuplicatePair } from "@/models/dtos/product-duplicate-search-models";
 import { ProductModel } from "@/models/product-model";
 import { ProductDetailsModal } from "@/components/product/details-modal";
+import { productImageUrl } from "@/utils/product-image";
 import { formatSpecValue } from "./failed-gate-badges";
 import { ScoreBreakdown } from "./score-breakdown";
 
@@ -44,8 +44,7 @@ function ProductColumn({
   contradictingSpecs: Set<string>;
   onOpenDetails: (productId: string) => void;
 }) {
-  const imageUrl =
-    product.mainImage?.url ?? sortBy(product.images ?? [], "order")[0]?.url;
+  const imageUrl = productImageUrl(product);
 
   return (
     <Stack gap="sm">
