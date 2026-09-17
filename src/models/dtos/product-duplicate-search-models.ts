@@ -45,6 +45,7 @@ export interface ProductDuplicatePairSearchParams {
   brandIds?: string[];
   productId?: string;
   minScore?: number;
+  maxScore?: number;
   detectedBy?: ProductDuplicateDetectedBy[];
 
   page?: number;
@@ -59,6 +60,7 @@ export type ProductDuplicatePairSearchResult =
     status?: ProductDuplicatePairStatus;
     categoryIds?: string[];
     minScore?: number;
+    maxScore?: number;
   };
 
 export type ProductDuplicateScanResult = { started: boolean } | { pairs: number };

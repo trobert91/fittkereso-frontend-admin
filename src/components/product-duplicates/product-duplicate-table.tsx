@@ -9,7 +9,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import {
-
   Anchor,
   Badge,
   Button,
@@ -18,12 +17,14 @@ import {
   Group,
   Image,
   Loader,
+  NumberInput,
   Select,
   Stack,
   Table,
   Text,
   UnstyledButton,
 } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { postCategorySearch } from "@/api-actions/category/category-search";
@@ -51,12 +52,6 @@ const PAGE_SIZE = 50;
 const STATUS_OPTIONS: { value: ProductDuplicatePairStatus; label: string }[] = [
   { value: "open", label: "Open" },
   { value: "dismissed", label: "Dismissed" },
-];
-
-const MIN_SCORE_OPTIONS = [
-  { value: "70", label: "70+" },
-  { value: "80", label: "80+" },
-  { value: "90", label: "90+" },
 ];
 
 const DETECTED_BY_LABELS: Record<ProductDuplicateDetectedBy, string> = {
@@ -141,13 +136,16 @@ export function ProductDuplicateTable() {
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [status, setStatus] = useState<ProductDuplicatePairStatus>("open");
   const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [minScore, setMinScore] = useState<string | null>(null);
+  // Typed straight into the query, so the value the user is still typing is
+  // held apart from the one that is searched on.
+  const [minScoreInput, setMinScoreInput] = useState<number | "">("");
+  const [maxScoreInput, setMaxScoreInput] = useState<number | "">("");
+  const [minScore] = useDebouncedValue(minScoreInput, 400);
+  const [maxScore] = useDebouncedValue(maxScoreInput, 400);
   const [comparePair, setComparePair] = useState<ProductDuplicatePair | null>(
-    null,
+    null
   );
-  const [detailsProductId, setDetailsProductId] = useState<string | null>(
-    null,
-  );
+  const [detailsProductId, setDetailsProductId] = useState<string | null>(null);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
@@ -160,7 +158,8 @@ export function ProductDuplicateTable() {
       pageSize,
       status,
       categoryIds: categoryId ? [categoryId] : undefined,
-      minScore: minScore ? Number(minScore) : undefined,
+      minScore: minScore === "" ? undefined : minScore,
+      maxScore: maxScore === "" ? undefined : maxScore,
     });
   };
 
@@ -181,7 +180,7 @@ export function ProductDuplicateTable() {
   useEffect(() => {
     doSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, status, categoryId, minScore]);
+  }, [page, pageSize, status, categoryId, minScore, maxScore]);
 
   const handleDismiss = (pair: ProductDuplicatePair) => {
     modals.openConfirmModal({
@@ -225,7 +224,7 @@ export function ProductDuplicateTable() {
 
   const columnHelper = useMemo(
     () => createColumnHelper<ProductDuplicatePair>(),
-    [],
+    []
   );
 
   const columns = useMemo(
@@ -271,57 +270,51 @@ export function ProductDuplicateTable() {
           );
         },
       }),
-      columnHelper.display({
-        id: "found",
-        header: "Found",
-        cell: (props) => {
-          const pair = props.row.original;
-          return (
-            <Stack gap={2}>
-              <Badge variant="outline" color="gray" size="sm">
-                {DETECTED_BY_LABELS[pair.detectedBy]}
-              </Badge>
-              <Text size="xs" c="dimmed">
-                on {pair.matchedOn}
-              </Text>
-              <Text size="xs" c="dimmed">
-                {new Date(pair.createdAt).toLocaleDateString()}
-              </Text>
-            </Stack>
-          );
-        },
-      }),
+      // The decision and its provenance in one column: what you can do about
+      // the pair first, then where it came from, which only matters once you
+      // are unsure.
       columnHelper.display({
         id: "actions",
         header: "",
         cell: (props) => {
           const pair = props.row.original;
           return (
-            <Group gap="xs" wrap="nowrap">
-              <Button
-                size="xs"
-                variant="light"
-                onClick={() => setComparePair(pair)}
-              >
-                Compare
-              </Button>
-              <Button
-                size="xs"
-                variant="subtle"
-                color="gray"
-                onClick={() =>
-                  pair.dismissedAt ? handleReopen(pair) : handleDismiss(pair)
-                }
-              >
-                {pair.dismissedAt ? "Reopen" : "Dismiss"}
-              </Button>
-            </Group>
+            <Stack gap="sm" align="flex-start">
+              <Group gap="xs" wrap="nowrap">
+                <Button
+                  size="xs"
+                  variant="light"
+                  onClick={() => setComparePair(pair)}
+                >
+                  Compare
+                </Button>
+                <Button
+                  size="xs"
+                  variant="subtle"
+                  color="gray"
+                  onClick={() =>
+                    pair.dismissedAt ? handleReopen(pair) : handleDismiss(pair)
+                  }
+                >
+                  {pair.dismissedAt ? "Reopen" : "Dismiss"}
+                </Button>
+              </Group>
+
+              <Stack gap={2}>
+                <Badge variant="outline" color="gray" size="sm">
+                  {DETECTED_BY_LABELS[pair.detectedBy]} · on {pair.matchedOn}
+                </Badge>
+                <Text size="xs" c="dimmed">
+                  {new Date(pair.createdAt).toLocaleDateString()}
+                </Text>
+              </Stack>
+            </Stack>
           );
         },
       }),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [columnHelper, page, status, categoryId, minScore],
+    [columnHelper, page, status, categoryId, minScore, maxScore]
   );
 
   const table = useReactTable({
@@ -365,17 +358,33 @@ export function ProductDuplicateTable() {
             disabled={categoriesLoading}
             w={260}
           />
-          <Select
-            label="Minimum score"
-            placeholder="Any"
-            data={MIN_SCORE_OPTIONS}
-            value={minScore}
+          <NumberInput
+            label="Min score"
+            placeholder="1"
+            value={minScoreInput}
             onChange={(value) => {
-              setMinScore(value);
+              setMinScoreInput(value === "" ? "" : Number(value));
               setPage(1);
             }}
-            clearable
-            w={160}
+            min={1}
+            max={100}
+            clampBehavior="strict"
+            allowDecimal={false}
+            w={110}
+          />
+          <NumberInput
+            label="Max score"
+            placeholder="100"
+            value={maxScoreInput}
+            onChange={(value) => {
+              setMaxScoreInput(value === "" ? "" : Number(value));
+              setPage(1);
+            }}
+            min={1}
+            max={100}
+            clampBehavior="strict"
+            allowDecimal={false}
+            w={110}
           />
         </Group>
       </Card>
@@ -416,7 +425,7 @@ export function ProductDuplicateTable() {
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext(),
+                            header.getContext()
                           )}
                     </Table.Th>
                   ))}
@@ -430,7 +439,7 @@ export function ProductDuplicateTable() {
                     <Table.Td key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </Table.Td>
                   ))}
