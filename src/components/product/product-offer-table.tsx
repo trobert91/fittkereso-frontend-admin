@@ -1,16 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Group, Text } from "@mantine/core";
+import { Anchor, Button, Stack, Table, Text } from "@mantine/core";
 import { sortBy } from "lodash";
-import { FiExternalLink } from "react-icons/fi";
 import { Offer } from "@/models/offer";
 import { ProductSourceRecord } from "@/models/product-source";
 import { ProductSpecs } from "@/models/product-specs";
 
 /**
- * Every offer on a product as one row of small buttons — shop, the offer's own
- * variant specs, and its price — each opening that shop's page.
+ * Every offer on a product: shop, the offer's own variant specs, and its price
+ * linking out to that listing.
  *
  * Side by side this is what decides a duplicate pair. Two products carrying the
  * *same* shop twice are far more suspicious than two that split one shop each;
@@ -56,7 +55,7 @@ function entriesOf(sources: ProductSourceRecord[]): OfferEntry[] {
     const shop = record.source?.name ?? "manual entry";
     const offers = record.offers ?? [];
 
-    // A listing with no offer still gets a button: it is a shop this product is
+    // A listing with no offer still gets a row: it is a shop this product is
     // published in, which is half of what the comparison is asking.
     if (offers.length === 0) {
       return [
@@ -69,11 +68,13 @@ function entriesOf(sources: ProductSourceRecord[]): OfferEntry[] {
       shop,
       variant: variantOf(offer.specs),
       price: priceOf(offer),
+      // The offer's own URL is the variant's page where a shop has one, and
+      // falls back to the listing the offer was scraped from.
       url: offer.url ?? record.url,
     }));
   });
 
-  // By shop, then price, so the same shop lands in the same place in both
+  // By shop, then price, so the same shop lands on the same line in both
   // columns of a comparison and the eye can run across.
   return sortBy(entries, [(entry) => entry.shop, (entry) => entry.price ?? ""]);
 }
@@ -81,7 +82,7 @@ function entriesOf(sources: ProductSourceRecord[]): OfferEntry[] {
 /** Matches the spec badges' threshold, so a row's two collapsing lists agree. */
 const COLLAPSED_COUNT = 4;
 
-export function ProductOfferButtons({
+export function ProductOfferTable({
   sources,
   emptyLabel = "No listings.",
 }: {
@@ -104,33 +105,46 @@ export function ProductOfferButtons({
     expanded || !hasMore ? entries : entries.slice(0, COLLAPSED_COUNT);
 
   return (
-    <Group gap={6}>
-      {visible.map((entry) => (
-        <Button
-          key={entry.key}
-          component={entry.url ? "a" : "button"}
-          href={entry.url}
-          target={entry.url ? "_blank" : undefined}
-          rel={entry.url ? "noreferrer noopener" : undefined}
-          disabled={!entry.url}
-          size="compact-xs"
-          variant="light"
-          color="gray"
-          rightSection={entry.url ? <FiExternalLink size={10} /> : undefined}
-          styles={{ label: { fontWeight: 400 } }}
-        >
-          <Text span size="xs" inherit>
-            {entry.shop}
-            {entry.variant ? `, ${entry.variant}` : ""}
-          </Text>
-          <Text span size="xs" c="dimmed" mx={5} inherit>
-            |
-          </Text>
-          <Text span size="xs" fw={600} inherit>
-            {entry.price ?? "no offer"}
-          </Text>
-        </Button>
-      ))}
+    <Stack gap={4} align="flex-start">
+      {/* No header: three columns whose contents say what they are. */}
+      <Table
+        withRowBorders={false}
+        verticalSpacing={2}
+        horizontalSpacing={10}
+        fz="xs"
+      >
+        <Table.Tbody>
+          {visible.map((entry) => (
+            <Table.Tr key={entry.key}>
+              <Table.Td>
+                <Text size="xs">{entry.shop}</Text>
+              </Table.Td>
+              <Table.Td>
+                <Text size="xs" c="dimmed">
+                  {entry.variant || "—"}
+                </Text>
+              </Table.Td>
+              <Table.Td ta="right" style={{ whiteSpace: "nowrap" }}>
+                {entry.url ? (
+                  <Anchor
+                    href={entry.url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    size="xs"
+                    fw={600}
+                  >
+                    {entry.price ?? "open listing"}
+                  </Anchor>
+                ) : (
+                  <Text size="xs" fw={600} c="dimmed">
+                    {entry.price ?? "—"}
+                  </Text>
+                )}
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
 
       {hasMore && (
         <Button
@@ -142,6 +156,6 @@ export function ProductOfferButtons({
           {expanded ? "Hide" : `+${entries.length - COLLAPSED_COUNT} more`}
         </Button>
       )}
-    </Group>
+    </Stack>
   );
 }

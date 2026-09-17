@@ -28,7 +28,7 @@ import { ProductDuplicatePair } from "@/models/dtos/product-duplicate-search-mod
 import { ProductModel } from "@/models/product-model";
 import { CopyIdBadge } from "@/components/copy-id-badge";
 import { ProductDetailsModal } from "@/components/product/details-modal";
-import { ProductOfferButtons } from "@/components/product/product-offer-buttons";
+import { ProductOfferTable } from "@/components/product/product-offer-table";
 import { productImageUrl } from "@/utils/product-image";
 import { formatSpecValue } from "./failed-gate-badges";
 import { ScoreBreakdown } from "./score-breakdown";
@@ -111,7 +111,7 @@ function ProductColumn({
         <Text size="xs" fw={600}>
           Sold in
         </Text>
-        <ProductOfferButtons sources={product.sources} />
+        <ProductOfferTable sources={product.sources} />
       </Stack>
 
       {(product.orderedSpecs ?? []).length > 0 && (
