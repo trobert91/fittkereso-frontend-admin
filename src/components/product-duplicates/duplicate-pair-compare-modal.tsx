@@ -15,6 +15,7 @@ import {
   Modal,
   Stack,
   Text,
+  UnstyledButton,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { getProductById } from "@/api-actions/product/get-product";
@@ -50,17 +51,27 @@ function ProductColumn({
 
   return (
     <Stack gap="sm">
-      <Card p="xs" radius="md" withBorder h={180}>
-        <Center h="100%">
-          {imageUrl ? (
-            <Image src={imageUrl} alt={product.displayName} h={160} fit="contain" />
-          ) : (
-            <Text size="sm" c="dimmed">
-              No image
-            </Text>
-          )}
-        </Center>
-      </Card>
+      <UnstyledButton
+        onClick={() => onOpenDetails(product.id)}
+        aria-label={`Open ${product.displayName}`}
+      >
+        <Card p="xs" radius="md" withBorder h={180} style={{ cursor: "pointer" }}>
+          <Center h="100%">
+            {imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt={product.displayName}
+                h={160}
+                fit="contain"
+              />
+            ) : (
+              <Text size="sm" c="dimmed">
+                No image
+              </Text>
+            )}
+          </Center>
+        </Card>
+      </UnstyledButton>
 
       <Stack gap={4}>
         <Anchor

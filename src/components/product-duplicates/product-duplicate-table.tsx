@@ -16,11 +16,13 @@ import {
   Card,
   Center,
   Group,
+  Image,
   Loader,
   Select,
   Stack,
   Table,
   Text,
+  UnstyledButton,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
@@ -30,6 +32,7 @@ import {
   postReopenProductDuplicate,
 } from "@/api-actions/product-duplicate/product-duplicate-actions";
 import { ProductSpecsBadges } from "@/components/product/product-specs-badges";
+import { productImageUrl } from "@/utils/product-image";
 import { useProductDuplicateSearch } from "@/hooks/useProductDuplicateSearch";
 import {
   ProductDuplicateDetectedBy,
@@ -61,6 +64,8 @@ const DETECTED_BY_LABELS: Record<ProductDuplicateDetectedBy, string> = {
   merge: "Merge",
 };
 
+const THUMBNAIL_SIZE = 72;
+
 function ProductCell({
   product,
   onOpenDetails,
@@ -68,23 +73,57 @@ function ProductCell({
   product: ProductModel;
   onOpenDetails: (productId: string) => void;
 }) {
+  const imageUrl = productImageUrl(product);
+
   return (
-    <Stack gap={2}>
-      <Anchor
-        component="button"
-        type="button"
+    <Group align="flex-start" wrap="nowrap" gap="sm">
+      <UnstyledButton
         onClick={() => onOpenDetails(product.id)}
-        size="sm"
-        fw={500}
-        ta="left"
+        aria-label={`Open ${product.displayName}`}
+        style={{ flexShrink: 0 }}
       >
-        {product.displayName}
-      </Anchor>
-      <Text size="xs" c="dimmed">
-        {product.brand?.name} · {product.productCategory?.name}
-      </Text>
-      <ProductSpecsBadges specs={product.orderedSpecs} />
-    </Stack>
+        <Card
+          p={4}
+          radius="sm"
+          withBorder
+          w={THUMBNAIL_SIZE}
+          h={THUMBNAIL_SIZE}
+          style={{ cursor: "pointer" }}
+        >
+          <Center h="100%">
+            {imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt={product.displayName}
+                h={THUMBNAIL_SIZE - 12}
+                fit="contain"
+              />
+            ) : (
+              <Text size="xs" c="dimmed">
+                —
+              </Text>
+            )}
+          </Center>
+        </Card>
+      </UnstyledButton>
+
+      <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+        <Anchor
+          component="button"
+          type="button"
+          onClick={() => onOpenDetails(product.id)}
+          size="sm"
+          fw={500}
+          ta="left"
+        >
+          {product.displayName}
+        </Anchor>
+        <Text size="xs" c="dimmed">
+          {product.brand?.name} · {product.productCategory?.name}
+        </Text>
+        <ProductSpecsBadges specs={product.orderedSpecs} />
+      </Stack>
+    </Group>
   );
 }
 
