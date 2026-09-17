@@ -27,7 +27,8 @@ import {
 import { ProductDuplicatePair } from "@/models/dtos/product-duplicate-search-models";
 import { ProductModel } from "@/models/product-model";
 import { routes } from "@/utils/routes";
-import { FailedGateBadges, formatSpecValue } from "./failed-gate-badges";
+import { formatSpecValue } from "./failed-gate-badges";
+import { ScoreBreakdown } from "./score-breakdown";
 
 interface DuplicatePairCompareModalProps {
   pair: ProductDuplicatePair | null;
@@ -202,19 +203,7 @@ export function DuplicatePairCompareModal({
 
       {!loading && pair && products && (
         <Stack gap="md">
-          <Group gap="xs">
-            <Badge
-              size="lg"
-              variant="light"
-              color={pair.similarityScore >= 80 ? "green" : "yellow"}
-            >
-              Score {pair.similarityScore}
-            </Badge>
-            <Text size="sm" c="dimmed">
-              Matched on {pair.matchedOn}: {pair.matchedValue}
-            </Text>
-          </Group>
-          <FailedGateBadges gates={pair.failedGates} />
+          <ScoreBreakdown pair={pair} products={products} />
 
           <Grid gutter="lg">
             <GridCol span={6}>
