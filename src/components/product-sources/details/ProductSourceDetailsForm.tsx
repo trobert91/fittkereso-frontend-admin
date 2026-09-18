@@ -53,7 +53,6 @@ function pickerToIso(value?: string | null): string | null {
 // react-hook-form's typed value cannot hold.
 interface FormValues extends Omit<ProductSourceUpdateDto, "config"> {
   nextFullSyncAt?: string | null;
-  nextIncrementalSyncAt?: string | null;
 }
 
 export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
@@ -113,9 +112,7 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
       maxConcurrent: productSource?.maxConcurrent ?? 1,
       requestsPerHour: productSource?.requestsPerHour ?? 1,
       fullSyncInterval: productSource?.fullSyncInterval ?? "",
-      incrementalSyncInterval: productSource?.incrementalSyncInterval ?? "",
       nextFullSyncAt: isoToPicker(productSource?.nextFullSyncAt),
-      nextIncrementalSyncAt: isoToPicker(productSource?.nextIncrementalSyncAt),
     },
   });
 
@@ -135,9 +132,7 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
         maxConcurrent: productSource.maxConcurrent ?? 1,
         requestsPerHour: productSource.requestsPerHour ?? 1,
         fullSyncInterval: productSource.fullSyncInterval ?? "",
-        incrementalSyncInterval: productSource.incrementalSyncInterval ?? "",
         nextFullSyncAt: isoToPicker(productSource.nextFullSyncAt),
-        nextIncrementalSyncAt: isoToPicker(productSource.nextIncrementalSyncAt),
       });
       setConfigJson(JSON.stringify(productSource.config ?? {}, null, 2));
       setConfigError(null);
@@ -194,10 +189,7 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
           sellerId: values.sellerId || undefined,
           config: parsedConfig,
           fullSyncInterval: values.fullSyncInterval?.trim() || null,
-          incrementalSyncInterval:
-            values.incrementalSyncInterval?.trim() || null,
           nextFullSyncAt: pickerToIso(values.nextFullSyncAt),
-          nextIncrementalSyncAt: pickerToIso(values.nextIncrementalSyncAt),
         },
       }),
     );
@@ -392,38 +384,6 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
             <TextInput
               label="Last full sync"
               value={formatDate(productSource?.lastFullSyncAt)}
-              disabled
-            />
-          </SimpleGrid>
-        </DetailsSection>
-
-        <DetailsSection title="Incremental sync">
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-            <TextInput
-              label="Incremental Sync Interval"
-              description="ms-compatible value, e.g. 30m or 2h"
-              placeholder="30m"
-              {...register("incrementalSyncInterval")}
-            />
-
-            <Controller
-              name="nextIncrementalSyncAt"
-              control={control}
-              render={({ field }) => (
-                <DateTimePicker
-                  label="Next Incremental Sync"
-                  placeholder="Due on next tick"
-                  withSeconds
-                  clearable
-                  value={field.value ?? null}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-
-            <TextInput
-              label="Last incremental sync"
-              value={formatDate(productSource?.lastIncrementalSyncAt)}
               disabled
             />
           </SimpleGrid>

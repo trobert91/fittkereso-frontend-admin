@@ -27,20 +27,3 @@ export async function postTriggerProductSourceFullSync(
   }
 }
 
-export async function postTriggerProductSourceIncrementalSync(
-  productSourceId: string,
-): Promise<TriggerProductSourceFullSyncResult> {
-  try {
-    const response =
-      await axiosInstance.post<TriggerProductSourceFullSyncResult>(
-        `/admin-product-source/${productSourceId}/incremental-sync`,
-      );
-
-    return response.data;
-  } catch (error: any) {
-    throw new Error(
-      error?.response?.data?.message ||
-        "Failed to trigger product source incremental sync",
-    );
-  }
-}

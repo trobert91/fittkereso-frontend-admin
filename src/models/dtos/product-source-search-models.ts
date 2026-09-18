@@ -35,9 +35,6 @@ export interface ProductSource {
   fullSyncInterval?: string | null;
   nextFullSyncAt?: string | null;
   lastFullSyncAt?: string | null;
-  incrementalSyncInterval?: string | null;
-  nextIncrementalSyncAt?: string | null;
-  lastIncrementalSyncAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -61,9 +58,6 @@ export interface ProductSourceSearchParams {
     | "fullSyncInterval"
     | "nextFullSyncAt"
     | "lastFullSyncAt"
-    | "incrementalSyncInterval"
-    | "nextIncrementalSyncAt"
-    | "lastIncrementalSyncAt"
     | "createdAt"
     | "updatedAt";
   order?: "ASC" | "DESC";

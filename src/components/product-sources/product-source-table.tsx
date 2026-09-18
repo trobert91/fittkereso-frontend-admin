@@ -241,45 +241,6 @@ export function ProductSourceTable() {
         ),
         cell: (props) => formatDate(props.getValue()),
       }),
-      columnHelper.accessor("incrementalSyncInterval", {
-        id: "incrementalSyncInterval",
-        header: ({ column }) => (
-          <Text
-            fw={500}
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            style={{ cursor: "pointer" }}
-          >
-            Incr. Sync
-          </Text>
-        ),
-        cell: (props) => props.getValue() ?? "-",
-      }),
-      columnHelper.accessor("lastIncrementalSyncAt", {
-        id: "lastIncrementalSyncAt",
-        header: ({ column }) => (
-          <Text
-            fw={500}
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            style={{ cursor: "pointer" }}
-          >
-            Last Incr. Sync
-          </Text>
-        ),
-        cell: (props) => formatDate(props.getValue()),
-      }),
-      columnHelper.accessor("nextIncrementalSyncAt", {
-        id: "nextIncrementalSyncAt",
-        header: ({ column }) => (
-          <Text
-            fw={500}
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            style={{ cursor: "pointer" }}
-          >
-            Next Incr. Sync
-          </Text>
-        ),
-        cell: (props) => formatDate(props.getValue()),
-      }),
       columnHelper.accessor("createdAt", {
         id: "createdAt",
         header: ({ column }) => (

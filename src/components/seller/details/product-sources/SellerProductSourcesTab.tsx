@@ -100,9 +100,6 @@ export function SellerProductSourcesTab() {
                 <Text size="sm" c="dimmed">
                   Next full sync: {formatDate(source.nextFullSyncAt)}
                 </Text>
-                <Text size="sm" c="dimmed">
-                  Next incremental sync: {formatDate(source.nextIncrementalSyncAt)}
-                </Text>
 
                 <Button
                   variant="light"

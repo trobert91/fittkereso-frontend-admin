@@ -6,7 +6,6 @@ import { IoMdSettings } from "react-icons/io";
 import { useAppSelector } from "@/store/store-hooks";
 import { selectProductSource } from "@/store/slices/product-source-slice";
 import { TriggerProductSourceFullSyncAction } from "./TriggerProductSourceFullSyncAction";
-import { TriggerProductSourceIncrementalSyncAction } from "./TriggerProductSourceIncrementalSyncAction";
 
 export function ProductSourceActions() {
   const productSource = useAppSelector(selectProductSource);
@@ -34,9 +33,6 @@ export function ProductSourceActions() {
       >
         <Stack gap="md">
           <TriggerProductSourceFullSyncAction
-            productSourceId={productSource.id}
-          />
-          <TriggerProductSourceIncrementalSyncAction
             productSourceId={productSource.id}
           />
         </Stack>

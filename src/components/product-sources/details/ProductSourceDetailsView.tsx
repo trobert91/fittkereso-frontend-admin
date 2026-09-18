@@ -177,23 +177,6 @@ export function ProductSourceDetailsView({
         </SimpleGrid>
       </DetailsSection>
 
-      <DetailsSection title="Incremental sync">
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-          <DetailItem
-            label="Interval"
-            value={productSource.incrementalSyncInterval}
-          />
-          <DetailItem
-            label="Next incremental sync"
-            value={formatDate(productSource.nextIncrementalSyncAt)}
-          />
-          <DetailItem
-            label="Last incremental sync"
-            value={formatDate(productSource.lastIncrementalSyncAt)}
-          />
-        </SimpleGrid>
-      </DetailsSection>
-
       <DetailsSection
         title="Config"
         description="The declarative scraping definition interpreted by the scrape interpreter."

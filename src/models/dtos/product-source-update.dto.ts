@@ -10,9 +10,7 @@ export interface ProductSourceUpdateDto {
   maxConcurrent?: number;
   requestsPerHour?: number;
   fullSyncInterval?: string | null;
-  incrementalSyncInterval?: string | null;
   // ISO strings; null clears the schedule, which makes that sync due on the
   // collector's next tick.
   nextFullSyncAt?: string | null;
-  nextIncrementalSyncAt?: string | null;
 }

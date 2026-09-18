@@ -56,7 +56,6 @@ export function EditProductSourceModal({
       maxConcurrent: productSource.maxConcurrent,
       requestsPerHour: productSource.requestsPerHour,
       fullSyncInterval: productSource.fullSyncInterval ?? "",
-      incrementalSyncInterval: productSource.incrementalSyncInterval ?? "",
     },
   });
 
@@ -70,7 +69,6 @@ export function EditProductSourceModal({
         maxConcurrent: productSource.maxConcurrent,
         requestsPerHour: productSource.requestsPerHour,
         fullSyncInterval: productSource.fullSyncInterval ?? "",
-        incrementalSyncInterval: productSource.incrementalSyncInterval ?? "",
       });
       setConfigJson(JSON.stringify(productSource.config ?? {}, null, 2));
       setConfigError(null);
@@ -92,7 +90,6 @@ export function EditProductSourceModal({
         ...values,
         config: parsedConfig,
         fullSyncInterval: values.fullSyncInterval?.trim() || null,
-        incrementalSyncInterval: values.incrementalSyncInterval?.trim() || null,
       });
 
       notifications.show({
@@ -195,20 +192,12 @@ export function EditProductSourceModal({
             />
           </Group>
 
-          <Group grow>
-            <TextInput
-              label="Full Sync Interval"
-              description="ms-compatible value, e.g. 6h or 1d"
-              placeholder="6h"
-              {...register("fullSyncInterval")}
-            />
-            <TextInput
-              label="Incremental Sync Interval"
-              description="ms-compatible value, e.g. 30m or 2h"
-              placeholder="30m"
-              {...register("incrementalSyncInterval")}
-            />
-          </Group>
+          <TextInput
+            label="Full Sync Interval"
+            description="ms-compatible value, e.g. 6h or 1d"
+            placeholder="6h"
+            {...register("fullSyncInterval")}
+          />
 
           <JsonEditor
             label="Config"
