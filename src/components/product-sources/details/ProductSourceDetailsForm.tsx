@@ -29,6 +29,7 @@ import {
 import { ProductSourceUpdateDto } from "@/models/dtos/product-source-update.dto";
 import { ProductSourceConfig } from "@/models/product-source";
 import { JsonEditor } from "@/components/JsonEditor";
+import { getProductSourceConfigSchema } from "@/api-actions/product-source/get-product-source-config-schema";
 import { CopyIdBadge } from "@/components/copy-id-badge";
 import { DetailsSection } from "@/components/details/details-section";
 import { useSellerSearch } from "@/hooks/useSellerSearch";
@@ -69,6 +70,32 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
     JSON.stringify(productSource?.config ?? {}, null, 2),
   );
   const [configError, setConfigError] = useState<string | null>(null);
+
+  // The schema the backend validates against, fetched once so the editor can
+  // flag an unknown operation or a misspelled parameter while it is being
+  // typed rather than on the round trip to a rejected save.
+  //
+  // A failure here is deliberately silent: the editor still works without a
+  // schema, and the save is validated server-side regardless, so a blocking
+  // error would stop somebody editing a config over a check they are about to
+  // get anyway.
+  const [configSchema, setConfigSchema] = useState<
+    Record<string, unknown> | undefined
+  >(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getProductSourceConfigSchema()
+      .then((schema) => {
+        if (!cancelled) setConfigSchema(schema);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const {
     control,
@@ -413,7 +440,7 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
               setConfigJson(value);
               setConfigError(null);
             }}
-            schema={undefined}
+            schema={configSchema as never}
             minHeight={300}
             maxHeight={500}
           />

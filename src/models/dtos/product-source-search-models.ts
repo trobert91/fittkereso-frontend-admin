@@ -1,6 +1,10 @@
 import { BasePageResult } from "./base-page-result";
 import { ProductSourceConfig, ProductSourceType } from "../product-source";
 import type { Seller } from "../seller";
+import type {
+  ProductSourceAction,
+  ProductSourceVersion,
+} from "./product-source-history-models";
 
 export { ProductSourceType };
 export type { ProductSourceConfig };
@@ -12,6 +16,16 @@ export interface ProductSource {
   // search route leaves it out.
   seller?: Seller | null;
   config?: ProductSourceConfig;
+  /**
+   * The config history and audit trail, newest first.
+   *
+   * Only populated by the admin details, update and restore routes — the
+   * search route leaves them out, like `seller`. They travel with the source
+   * so the details page renders everything from one response, and a save
+   * answers with the history it just changed.
+   */
+  versions?: ProductSourceVersion[];
+  actions?: ProductSourceAction[];
   schedulingEnabled: boolean;
   processingEnabled: boolean;
   priority: number;
