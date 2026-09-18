@@ -8,7 +8,9 @@ import {
 } from "react-icons/pi";
 import { TbBuildingFactory2, TbCategory } from "react-icons/tb";
 import { VscTasklist } from "react-icons/vsc";
+import { PiUsers } from "react-icons/pi";
 import { routes } from "@/utils/routes";
+import type { UserRole } from "@/models/admin-user";
 
 export interface NavEntry {
   label: string;
@@ -23,6 +25,13 @@ export interface NavEntry {
    * start with "/products", and "/scrape-tasks" does not start with "/tasks".
    */
   match: string;
+  /**
+   * Hide the row unless the signed-in account reaches this level.
+   *
+   * Presentation only - the middleware and the API both enforce the same rule,
+   * and this just avoids offering a destination that would bounce.
+   */
+  requiredRole?: UserRole;
 }
 
 export interface NavSection {
@@ -94,6 +103,18 @@ export const navSections: NavSection[] = [
         href: routes.scrapeTasks.list,
         icon: PiRobot,
         match: "/scrape-tasks",
+      },
+    ],
+  },
+  {
+    title: "Administration",
+    entries: [
+      {
+        label: "Users",
+        href: routes.users.list,
+        icon: PiUsers,
+        match: "/users",
+        requiredRole: "superadmin",
       },
     ],
   },

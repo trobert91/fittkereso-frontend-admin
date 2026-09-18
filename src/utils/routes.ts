@@ -16,9 +16,32 @@ export function buildLoginUrl(redirectUrl?: string): string {
   return `${routes.auth.login}?redirectUrl=${encodeURIComponent(redirectUrl)}`;
 }
 
+export function buildSetPasswordUrl(nextUrl?: string): string {
+  if (!nextUrl || !isValidRedirectUrl(nextUrl)) {
+    return routes.auth.setPassword;
+  }
+  return `${routes.auth.setPassword}?next=${encodeURIComponent(nextUrl)}`;
+}
+
+/**
+ * Where to land after the password gate has been satisfied.
+ *
+ * Anything that fails the redirect check falls back to the dashboard rather
+ * than being followed, so a crafted `next` cannot bounce someone off-site.
+ */
+export function safeNext(nextUrl?: string | null): string {
+  if (!nextUrl || !isValidRedirectUrl(nextUrl)) {
+    return routes.dashboard.root;
+  }
+  return nextUrl;
+}
+
 export const routes = {
   auth: {
     login: "/auth/login",
+    setPassword: "/auth/set-password",
+    confirm: "/auth/confirm",
+    forgotPassword: "/auth/forgot-password",
   },
 
   dashboard: {
@@ -50,6 +73,10 @@ export const routes = {
   sellers: {
     list: "/sellers/list",
     details: (id: string) => `/sellers/${id}`,
+  },
+  users: {
+    list: "/users/list",
+    details: (id: string) => `/users/${id}`,
   },
   tasks: {
     list: "/tasks/list",

@@ -5,6 +5,7 @@ import categoryReducer from "./slices/category-slice";
 import productReducer from "./slices/product-slice";
 import productSourceReducer from "./slices/product-source-slice";
 import sellerReducer from "./slices/seller-slice";
+import userReducer from "./slices/user-slice";
 import storage from "redux-persist/lib/storage"; // localStorage for web
 import { persistReducer, persistStore } from "redux-persist";
 
@@ -23,6 +24,7 @@ const rootReducer = combineReducers({
   category: categoryReducer,
   productSource: productSourceReducer,
   seller: sellerReducer,
+  user: userReducer,
 });
 
 // 3️⃣ Wrap reducer in persistReducer

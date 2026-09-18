@@ -1,42 +1,29 @@
-import { Box, Center, Flex, SimpleGrid, Text, Title } from "@mantine/core";
-import demoImg from "@assets/app-demo.webp";
-import Image from "next/image";
+import { Box, Paper, Stack } from "@mantine/core";
 import { Logo } from "@/components/logo";
+import classes from "./auth.module.scss";
 
+/**
+ * One centred column over the abstract backdrop in auth.module.scss - the wordmark, then a
+ * card holding whichever auth screen is mounted.
+ *
+ * The card is Mantine's Paper, so it picks up the theme's flat house style (1px border, no
+ * shadow) and, importantly, an opaque --mantine-color-body fill: the washes behind it stop at
+ * its edge rather than tinting the inputs.
+ */
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <SimpleGrid mih="100vh" p="md" cols={{ base: 1, lg: 2 }}>
-      <Flex direction="column" align="flex-start">
-        <Center flex={1} w="100%">
-          <Box maw="25rem">
-            <Logo size={34} mb="xl" />
+    <Box className={classes.page} p="md">
+      <Stack className={classes.panel} align="center" gap="lg">
+        <Logo size={32} />
 
-            {children}
-          </Box>
-        </Center>
-      </Flex>
-
-      <Center
-        ta="center"
-        p="4rem"
-        bg="var(--mantine-color-default-hover)"
-        display={{ base: "none", lg: "flex" }}
-        style={{ borderRadius: "var(--mantine-radius-md)" }}
-      >
-        <Box maw="40rem">
-          <Title order={2}>The simplest way to manage your workspace.</Title>
-          <Text my="lg" c="dimmed">
-            Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet
-            sint velit officia consequat duis.
-          </Text>
-
-          <Image src={demoImg} alt="Demo" />
-        </Box>
-      </Center>
-    </SimpleGrid>
+        <Paper w="100%" p="xl">
+          {children}
+        </Paper>
+      </Stack>
+    </Box>
   );
 }

@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { CopyIdBadge } from "@/components/copy-id-badge";
 import { JsonEditor } from "@/components/JsonEditor";
-import { DetailsSection } from "./DetailsSection";
+import { DetailsSection } from "@/components/details/details-section";
 import { ProductSource } from "@/models/dtos/product-source-search-models";
 import { formatDate } from "@/utils/date";
 import { routes } from "@/utils/routes";

@@ -87,12 +87,14 @@ export const BrandDetailsForm = () => {
           )}
         />
 
-        {/* Sticky Save Button */}
+        {/* Sticky Save Button - the z-index stays below Mantine's floating layers
+            (popover 300, modal 200), or it covers any select dropdown that opens
+            over it. 2 is all it needs to clear the form's own cards. */}
         <div
           style={{
             position: "sticky",
             bottom: 16,
-            zIndex: 3000,
+            zIndex: 2,
             marginTop: 400,
           }}
         >

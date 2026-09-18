@@ -52,8 +52,12 @@ export const createAxiosInstance = (
     async (error) => {
       const originalRequest = error.config;
 
+      // 401 only. A 403 means the token is fine but the account may not do
+      // this - the password-change gate answers that way - and refreshing
+      // cannot change the outcome; retrying would only end in a pointless
+      // bounce to the login page instead of wherever the caller belongs.
       if (
-        (error.response?.status === 401 || error.response?.status === 403) &&
+        error.response?.status === 401 &&
         !originalRequest._retry &&
         !originalRequest.url.includes("/auth/refresh-token")
       ) {

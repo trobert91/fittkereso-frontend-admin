@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isEntryActive, navSections } from "./nav-config";
+import { useAppSelector } from "@/store/store-hooks";
+import { selectUser } from "@/store/slices/auth-slice";
+import { hasRole } from "@/models/admin-user";
 import classes from "./shell.module.scss";
 
 /**
@@ -14,10 +17,24 @@ import classes from "./shell.module.scss";
  */
 export function Nav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const currentUser = useAppSelector(selectUser);
+
+  // The auth slice is persisted, so the role is available on first paint and
+  // the menu does not flicker. It comes from localStorage, which the viewer
+  // can edit - hence presentation only; the real gates are elsewhere.
+  const visibleSections = navSections
+    .map((section) => ({
+      ...section,
+      entries: section.entries.filter(
+        (entry) =>
+          !entry.requiredRole || hasRole(currentUser?.role, entry.requiredRole)
+      ),
+    }))
+    .filter((section) => section.entries.length > 0);
 
   return (
     <>
-      {navSections.map((section) => (
+      {visibleSections.map((section) => (
         <nav key={section.title} className={classes.section}>
           <div className={`${classes.sectionTitle} ${classes.reveal}`}>
             {section.title}

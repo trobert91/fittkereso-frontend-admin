@@ -1,0 +1,130 @@
+/**
+ * The auth backdrop.
+ *
+ * What used to sit here was a two-column split: the form on the left, a marketing panel on the
+ * right carrying a headline, a paragraph of lorem ipsum and a screenshot of the app. None of
+ * that has an audience - this is an internal admin, and everyone who reaches this screen was
+ * sent here by the middleware, not by a landing page. So the panel is gone and the form is
+ * centred on its own.
+ *
+ * What replaces it is abstract on purpose: four washes drawn straight from the theme's palette,
+ * plus a grid that dissolves before it reaches the card. No imagery to go stale, no copy to
+ * maintain, and nothing behind the form that competes with it for attention.
+ *
+ * Colours are written as custom properties re-declared under Mantine's scheme attribute rather
+ * than with light-dark(), matching json-editor.module.scss: the two schemes are stated plainly
+ * in one place, and the gradient stacks below never have to care which one is in force.
+ */
+
+.page {
+  /* One wash per corner, each at shade 5 - the peak-chroma stop of its scale, where the ramp
+     is most saturated before lightness starts eating the colour.
+
+     These are four of the theme's semantic scales, used here as pigment rather than as
+     signal. That is a liberty worth naming: green means success and orange means warning
+     everywhere else in the app. It holds on this screen because there is no status on it -
+     no badge, no row, nothing a hue could be read as labelling - and because a 30%-alpha
+     wash the size of a quarter-screen behind an opaque card is texture, not a chip. The
+     moment something status-bearing lands on an auth screen, this is the thing to revisit.
+
+     Alphas are the knob for how loud this reads. Even at 0.3 they sit UNDER a form: the
+     washes have to register as colour, never as a background the labels are fighting. */
+  --wash-brand: oklch(66% 0.18 250 / 0.32);
+  --wash-accent: oklch(67% 0.115 190 / 0.3);
+  --wash-deep: oklch(67% 0.133 150 / 0.24);
+  --wash-warm: oklch(75% 0.152 64 / 0.3);
+
+  /* A trace of brand chroma rather than neutral grey, so the grid belongs to the same
+     picture as the washes instead of reading as a separate technical overlay. */
+  --grid-line: oklch(52% 0.04 250 / 0.12);
+
+  position: relative;
+  display: grid;
+  place-items: center;
+
+  /* min-height, not height: a card taller than the viewport - set-password with every field
+     in error, say - grows this box rather than overflowing a centred grid row, which is the
+     one way `place-items: center` can put content somewhere you cannot scroll to. */
+  min-height: 100dvh;
+
+  /* Every centre sits outside the box. A radial gradient centred off-canvas reads as part of
+     something larger passing through the frame; one centred inside it reads as a blob
+     sitting on the page.
+
+     Corner order is a hue ramp, not an arrangement of favourites: blue 250 top-left, teal
+     190 top-right, green 150 bottom-right, orange 64 bottom-left. Going round clockwise the
+     hue only ever falls, so neighbours are always close on the wheel and blend cleanly where
+     they meet. The one near-complementary pair, blue and orange, is deliberately the pair
+     placed furthest apart - stacking those two would mix to grey, which is exactly the mud
+     that makes a four-colour mesh look like a smudge.
+
+     First layer listed paints on top, so the brand leads. Each stop runs out by ~70%, well
+     before the centre: the washes meet the middle of the screen already faint, which is what
+     keeps the area behind the card calm. */
+  background-color: var(--mantine-color-body);
+  background-image:
+    radial-gradient(
+      48rem 38rem at 6% -12%,
+      var(--wash-brand) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      44rem 34rem at 98% 4%,
+      var(--wash-accent) 0%,
+      transparent 68%
+    ),
+    radial-gradient(
+      46rem 36rem at 92% 106%,
+      var(--wash-deep) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      48rem 36rem at 2% 102%,
+      var(--wash-warm) 0%,
+      transparent 70%
+    );
+}
+
+/* The grid, masked to nothing before it gets anywhere near the card.
+   Without the mask this reads as a spreadsheet; with it, it is texture at the edges of vision
+   and the middle of the screen stays plain. Decorative, so it lives on a pseudo-element -
+   there is no element in the layout for it and it must not be announced. */
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 2.75rem 2.75rem;
+
+  /* Inverted: opaque at the edges, transparent where the card sits. */
+  mask-image: radial-gradient(
+    ellipse 55% 45% at 50% 50%,
+    transparent 30%,
+    #000 100%
+  );
+}
+
+/* Dark mode drops each wash a shade and raises its alpha by roughly half.
+   The light-mode values are mixed against a white ground; laid over the 19% dark body they
+   turn to grey haze at the same alpha, because there is far less luminance underneath for a
+   translucent colour to tint. Shade 6 carried further is what keeps them reading as colour
+   rather than as dirt on the screen - and the headroom is real here in a way it is not in
+   light mode, where the same alphas would already be shouting. */
+:global([data-mantine-color-scheme='dark']) .page {
+  --wash-brand: oklch(57% 0.195 250 / 0.46);
+  --wash-accent: oklch(59% 0.112 190 / 0.4);
+  --wash-deep: oklch(60% 0.13 150 / 0.32);
+  --wash-warm: oklch(69% 0.155 62 / 0.36);
+  --grid-line: oklch(85% 0.02 250 / 0.07);
+}
+
+/* The form column. Width is the old layout's 25rem, minus the padding the card now adds, so
+   the inputs themselves stay the size they have always been. */
+.panel {
+  width: 100%;
+  max-width: 24rem;
+}

@@ -30,7 +30,7 @@ import { ProductSourceUpdateDto } from "@/models/dtos/product-source-update.dto"
 import { ProductSourceConfig } from "@/models/product-source";
 import { JsonEditor } from "@/components/JsonEditor";
 import { CopyIdBadge } from "@/components/copy-id-badge";
-import { DetailsSection } from "./DetailsSection";
+import { DetailsSection } from "@/components/details/details-section";
 import { useSellerSearch } from "@/hooks/useSellerSearch";
 import { formatDate } from "@/utils/date";
 

@@ -3,10 +3,11 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { TextInput, Button } from "@mantine/core";
+import { TextInput, Button, Anchor, Group } from "@mantine/core";
 import { useAppDispatch } from "@/store/store-hooks";
 import { loginUser } from "@/store/slices/auth-slice";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { isValidRedirectUrl, routes } from "@/utils/routes";
 
 // ✅ Define the Yup schema
@@ -72,6 +73,12 @@ export function LoginForm() {
         withAsterisk
         mt="md"
       />
+
+      <Group justify="flex-end" mt="xs">
+        <Anchor component={Link} href={routes.auth.forgotPassword} size="xs">
+          Forgot password?
+        </Anchor>
+      </Group>
 
       <Button type="submit" mt="lg" fullWidth>
         Sign In

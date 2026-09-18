@@ -4,9 +4,9 @@ import { ReactNode } from "react";
 import { Paper, Stack, Text, Title } from "@mantine/core";
 
 /**
- * One titled block of the product source details page. The view and the edit
- * form share it so the same fields sit under the same headings in both modes,
- * and switching between them doesn't reshuffle the page.
+ * One titled block of a details page. A view and its edit form share it so
+ * the same fields sit under the same headings in both modes, and switching
+ * between them doesn't reshuffle the page.
  */
 export function DetailsSection({
   title,
