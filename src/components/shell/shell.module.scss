@@ -47,8 +47,13 @@
     inset-block: 0;
     inset-inline-start: 0;
 
+    /* :has(:focus-visible), not :focus-within. A mouse click on a nav link leaves that link
+       focused, and client-side navigation never blurs it - so :focus-within held the rail
+       expanded over the page long after the pointer had gone, covering the left of whatever
+       you had just opened. :focus-visible matches only focus that warrants a visible ring,
+       which a click does not: tabbing still expands the rail, the mouse no longer pins it. */
     &:hover,
-    &:focus-within {
+    &:has(:focus-visible) {
       width: var(--rail-w-open);
     }
   }
@@ -197,10 +202,10 @@
 
 .rail[data-floating='false'] .reveal,
 .rail[data-floating='true']:hover .reveal,
-.rail[data-floating='true']:focus-within .reveal,
+.rail[data-floating='true']:has(:focus-visible) .reveal,
 .rail[data-floating='false'] .userEmail,
 .rail[data-floating='true']:hover .userEmail,
-.rail[data-floating='true']:focus-within .userEmail {
+.rail[data-floating='true']:has(:focus-visible) .userEmail {
   opacity: 1;
   pointer-events: auto;
 }

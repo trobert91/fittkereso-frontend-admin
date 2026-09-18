@@ -17,6 +17,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IoMdCheckmark } from "react-icons/io";
 import { getProductById } from "@/api-actions/product/get-product";
 import {
   postDismissProductDuplicate,
@@ -44,12 +45,77 @@ interface DuplicatePairCompareModalProps {
  * sections shares a grid row and therefore a height. Two independent columns
  * would let a product with four offers push its specs below the other's, which
  * is exactly the comparison this modal exists to make.
+ *
+ * Choosing a survivor happens in the product's own column, on the "Keep this"
+ * button above its image, rather than through a "Keep left"/"Keep right" pair
+ * in the footer — those made the reader map a side onto a column while the
+ * evidence they had just read sat under one of them. The buttons are their own
+ * grid row for the same reason every other section is: two columns of
+ * independent height would not keep them level.
+ *
+ * Both verdicts confirm in the place they were started: "Keep this" becomes
+ * Confirm/Cancel in its own column, and the header's dismiss does the same
+ * beside the title. Neither is a dialog on top of a dialog, and neither leaves
+ * the reader hunting for where the action they just chose went.
  */
+
+/**
+ * "Keep this" until it is pressed, then Confirm/Cancel in the same place. The
+ * other column keeps its "Keep this" live throughout, so changing your mind is
+ * one click rather than Cancel and then choose again.
+ */
+function ProductKeepAction({
+  product,
+  selected,
+  submitting,
+  onKeep,
+  onCancel,
+  onConfirm,
+}: {
+  product: ProductModel;
+  selected: boolean;
+  submitting: boolean;
+  onKeep: (productId: string) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (selected) {
+    return (
+      // The pair spans exactly the width "Keep this" did, so the two column
+      // headers stay level — but Confirm takes what it needs and Cancel only
+      // what it needs, rather than splitting in half and leaving Cancel as wide
+      // as a sentence.
+      <Group gap="xs" wrap="nowrap">
+        <Button
+          color="red"
+          loading={submitting}
+          onClick={onConfirm}
+          leftSection={<IoMdCheckmark size={16} />}
+          style={{ flex: 1 }}
+        >
+          Confirm, merge into this
+        </Button>
+        <Button variant="default" disabled={submitting} onClick={onCancel}>
+          Cancel
+        </Button>
+      </Group>
+    );
+  }
+
+  return (
+    <Button fullWidth disabled={submitting} onClick={() => onKeep(product.id)}>
+      Keep this
+    </Button>
+  );
+}
+
 function ProductImage({
   product,
+  selected,
   onOpenDetails,
 }: {
   product: ProductModel;
+  selected: boolean;
   onOpenDetails: (productId: string) => void;
 }) {
   const imageUrl = productImageUrl(product);
@@ -59,7 +125,19 @@ function ProductImage({
       onClick={() => onOpenDetails(product.id)}
       aria-label={`Open ${product.displayName}`}
     >
-      <Card p="xs" radius="md" withBorder h={180} style={{ cursor: "pointer" }}>
+      <Card
+        p="xs"
+        radius="md"
+        withBorder
+        h={180}
+        style={{
+          cursor: "pointer",
+          borderColor: selected
+            ? "var(--mantine-primary-color-filled)"
+            : undefined,
+          borderWidth: selected ? 2 : undefined,
+        }}
+      >
         <Center h="100%">
           {imageUrl ? (
             <Image
@@ -176,6 +254,24 @@ function ProductSpecs({
   );
 }
 
+/**
+ * The fuller product first, so it is always the left column.
+ *
+ * A pair's two ids are stored sorted as strings — the table checks
+ * `productAId < productBId` — so which one arrives as A is an accident of UUID
+ * ordering. Putting the product with more listings, then more offers, on the
+ * left makes the columns mean something: the left is the one that has gathered
+ * more of the market, and in nearly every merge it is the one worth keeping.
+ * The id is the last tiebreak only so a pair never swaps sides between opens.
+ */
+function fullerFirst(a: ProductModel, b: ProductModel): number {
+  return (
+    (b.sources?.length ?? 0) - (a.sources?.length ?? 0) ||
+    (b.offers?.length ?? 0) - (a.offers?.length ?? 0) ||
+    a.id.localeCompare(b.id)
+  );
+}
+
 export function DuplicatePairCompareModal({
   pair,
   onClose,
@@ -186,12 +282,14 @@ export function DuplicatePairCompareModal({
   );
   const [loading, setLoading] = useState(false);
   const [survivorId, setSurvivorId] = useState<string | null>(null);
+  const [confirmingDismiss, setConfirmingDismiss] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [detailsProductId, setDetailsProductId] = useState<string | null>(null);
 
   useEffect(() => {
     setProducts(null);
     setSurvivorId(null);
+    setConfirmingDismiss(false);
     setDetailsProductId(null);
     if (!pair) return;
 
@@ -206,7 +304,10 @@ export function DuplicatePairCompareModal({
         if (!productA || !productB) {
           throw new Error("One of the two products no longer exists");
         }
-        setProducts([productA, productB]);
+        // Sorted here rather than at each render, so every section — images,
+        // identity, offers, specs, the keep buttons — reads the same order.
+        const [left, right] = [productA, productB].sort(fullerFirst);
+        setProducts([left, right]);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -254,7 +355,75 @@ export function DuplicatePairCompareModal({
       <Modal
         opened={!!pair}
         onClose={() => !submitting && onClose()}
-        title="Compare possible duplicates"
+        // Mantine's header is `space-between` and its title does not grow, so
+        // without this the title keeps its natural width and the action lands
+        // beside the heading instead of out at the close button.
+        styles={{ title: { flex: 1 } }}
+        title={
+          <Group justify="space-between" wrap="nowrap" gap="md" pr="sm">
+            <Text fw={600}>Compare possible duplicates</Text>
+            {/* The verdict that is *not* a merge: it belongs beside the title
+              rather than under the evidence, because "these are two different
+              products" is a judgement on the pair as a whole, while keeping one
+              is a choice between the two columns.
+
+              Reopen is deliberately the one action with no confirm step — it
+              only puts the pair back in the queue, and it is the undo for
+              having dismissed it in the first place. */}
+            {pair &&
+              (pair.dismissedAt ? (
+                <Button
+                  size="xs"
+                  variant="default"
+                  loading={submitting}
+                  onClick={() =>
+                    runAction(
+                      () => postReopenProductDuplicate(pair.id),
+                      "Back in the queue"
+                    )
+                  }
+                >
+                  Reopen
+                </Button>
+              ) : confirmingDismiss ? (
+                <Group gap="xs" wrap="nowrap">
+                  <Button
+                    size="xs"
+                    loading={submitting}
+                    leftSection={<IoMdCheckmark size={14} />}
+                    onClick={() =>
+                      runAction(
+                        () => postDismissProductDuplicate(pair.id),
+                        "Marked as different products"
+                      )
+                    }
+                  >
+                    Confirm, dismiss
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="default"
+                    disabled={submitting}
+                    onClick={() => setConfirmingDismiss(false)}
+                  >
+                    Cancel
+                  </Button>
+                </Group>
+              ) : (
+                <Button
+                  size="xs"
+                  variant="default"
+                  disabled={submitting}
+                  onClick={() => {
+                    setConfirmingDismiss(true);
+                    setSurvivorId(null);
+                  }}
+                >
+                  Dismiss, separate products
+                </Button>
+              ))}
+          </Group>
+        }
         centered
         size="90%"
       >
@@ -273,9 +442,29 @@ export function DuplicatePairCompareModal({
               carries. */}
             <SimpleGrid cols={2} spacing="lg" verticalSpacing="sm">
               {products.map((product) => (
+                <ProductKeepAction
+                  key={product.id}
+                  product={product}
+                  selected={survivorId === product.id}
+                  submitting={submitting}
+                  onKeep={(productId) => {
+                    setSurvivorId(productId);
+                    setConfirmingDismiss(false);
+                  }}
+                  onCancel={() => setSurvivorId(null)}
+                  onConfirm={() =>
+                    runAction(
+                      () => postMergeProductDuplicate(pair.id, product.id),
+                      "Products merged"
+                    )
+                  }
+                />
+              ))}
+              {products.map((product) => (
                 <ProductImage
                   key={product.id}
                   product={product}
+                  selected={survivorId === product.id}
                   onOpenDetails={setDetailsProductId}
                 />
               ))}
@@ -299,84 +488,35 @@ export function DuplicatePairCompareModal({
             </SimpleGrid>
 
             {survivor && mergedAway ? (
-              <Stack gap="xs">
-                <Text size="sm">
-                  Keep <b>{survivor.displayName}</b>?{" "}
-                  <b>{mergedAway.displayName}</b> is deleted, and its listings,
-                  offers, images, aliases and price history move to the product
-                  you keep.
-                </Text>
-                <Group justify="flex-end">
-                  <Button
-                    variant="default"
-                    onClick={() => setSurvivorId(null)}
-                    disabled={submitting}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    color="red"
-                    loading={submitting}
-                    onClick={() =>
-                      runAction(
-                        () => postMergeProductDuplicate(pair.id, survivor.id),
-                        "Products merged"
-                      )
-                    }
-                  >
-                    Merge
-                  </Button>
-                </Group>
-              </Stack>
+              // Confirm and Cancel live in the kept product's own column now,
+              // so this is only the warning about what Confirm destroys — a
+              // second Merge button down here would be the same action twice.
+              <Text size="sm">
+                Keeping <b>{survivor.displayName}</b>.{" "}
+                <b>{mergedAway.displayName}</b> is deleted, and its listings,
+                offers, images, aliases and price history move to the product you
+                keep.
+              </Text>
+            ) : confirmingDismiss ? (
+              // What Confirm actually does, in the same place the merge warning
+              // appears — the pair stops coming back rather than being deleted,
+              // which is the part worth knowing before pressing it.
+              <Text size="sm">
+                Recording these as two different products. The pair leaves the
+                queue and the nightly scan will not raise it again, though you
+                can reopen it here at any time.
+              </Text>
             ) : (
-              <Stack gap="xs">
-                {/* A dismissal records what someone thought at the time, not a
-                  verdict — so it says so and leaves every action available. */}
-                {pair.dismissedAt && (
-                  <Text size="sm" c="dimmed">
-                    Dismissed as two different products on{" "}
-                    {new Date(pair.dismissedAt).toLocaleDateString()}. You can
-                    still merge them, or put the pair back in the queue.
-                  </Text>
-                )}
-                <Group justify="space-between">
-                  {pair.dismissedAt ? (
-                    <Button
-                      variant="default"
-                      loading={submitting}
-                      onClick={() =>
-                        runAction(
-                          () => postReopenProductDuplicate(pair.id),
-                          "Back in the queue"
-                        )
-                      }
-                    >
-                      Reopen
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="default"
-                      loading={submitting}
-                      onClick={() =>
-                        runAction(
-                          () => postDismissProductDuplicate(pair.id),
-                          "Marked as different products"
-                        )
-                      }
-                    >
-                      Not duplicates
-                    </Button>
-                  )}
-                  <Group gap="xs">
-                    <Button onClick={() => setSurvivorId(products[0].id)}>
-                      Keep left
-                    </Button>
-                    <Button onClick={() => setSurvivorId(products[1].id)}>
-                      Keep right
-                    </Button>
-                  </Group>
-                </Group>
-              </Stack>
+              // A dismissal records what someone thought at the time, not a
+              // verdict — so it says so and leaves every action available. The
+              // acting on it is in the header; this is only the note.
+              pair.dismissedAt && (
+                <Text size="sm" c="dimmed">
+                  Dismissed as two different products on{" "}
+                  {new Date(pair.dismissedAt).toLocaleDateString()}. You can
+                  still merge them, or put the pair back in the queue.
+                </Text>
+              )
             )}
           </Stack>
         )}

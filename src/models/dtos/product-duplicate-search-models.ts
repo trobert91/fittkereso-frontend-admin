@@ -34,7 +34,12 @@ export interface ProductDuplicatePair {
   matchedOn: ProductDuplicateMatchedOn;
   matchedValue: string;
   failedGates: ProductDuplicateFailedGate[];
-  nameSimilarity?: { trigram: number; levenshtein: number } | null;
+  nameSimilarity?: {
+    trigram: number;
+    levenshtein: number;
+    /** Absent on rows detected before baseScore became a blend. */
+    alignment?: number;
+  } | null;
   detectedBy: ProductDuplicateDetectedBy;
   dismissedAt?: string | null;
 }

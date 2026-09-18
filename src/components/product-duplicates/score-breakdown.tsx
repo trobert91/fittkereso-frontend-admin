@@ -36,11 +36,21 @@ function scoreColor(score: number): string {
 /**
  * Why this pair scores what it does, as the engine actually computes it:
  *
- *   score = clamp(round(100 × max(trigram, levenshtein)) − Σ severities, 1, 100)
+ *   base  = round(100 × (trigram + levenshtein + 3 × alignment) / 5)
+ *   score = clamp(base − Σ severities, 1, 100)
  *
- * Everything here comes off the stored pair row — the two similarities and each
- * failed gate with both products' values — so the table is the calculation
- * rather than a re-derivation of it.
+ * Everything here comes off the stored pair row — the three similarities and
+ * each failed gate with both products' values — so the table is the
+ * calculation rather than a re-derivation of it.
+ *
+ * Rows detected before the blend existed carry no alignment; those fall back
+ * to the rule that wrote them, max(trigram, levenshtein), so an old row still
+ * shows the number it was scored with.
+ *
+ * A gate stores its two values as the pair's A and B, which is UUID order. The
+ * compare modal orders its columns by how many listings each product has, so
+ * those two can disagree — every pair of values here is therefore printed in
+ * the caller's column order, not the row's.
  */
 export function ScoreBreakdown({
   pair,
@@ -79,10 +89,21 @@ export function ScoreBreakdown({
     );
   }
 
-  const trigramWins = similarity.trigram >= similarity.levenshtein;
-  const base = Math.round(
-    100 * Math.max(similarity.trigram, similarity.levenshtein),
-  );
+  // True when the caller put the pair's B product in the left column.
+  const flipped = products?.[0]?.id === pair.productBId;
+  const inColumnOrder = (gate: { productAValue: unknown; productBValue: unknown }) =>
+    flipped
+      ? ([gate.productBValue, gate.productAValue] as const)
+      : ([gate.productAValue, gate.productBValue] as const);
+
+  const { alignment } = similarity;
+  const base =
+    alignment === undefined
+      ? Math.round(100 * Math.max(similarity.trigram, similarity.levenshtein))
+      : Math.round(
+          (100 * (similarity.trigram + similarity.levenshtein + 3 * alignment)) /
+            5,
+        );
   const beforeClamp = base - deductions;
   const clamped = beforeClamp !== pair.similarityScore;
 
@@ -117,7 +138,9 @@ export function ScoreBreakdown({
                 Name similarity
               </Text>
               <Text size="xs" c="dimmed">
-                the better of the two
+                {alignment === undefined
+                  ? "the better of the two"
+                  : "blended, alignment weighted 3×"}
               </Text>
             </Table.Td>
             <Table.Td>
@@ -133,13 +156,24 @@ export function ScoreBreakdown({
                   </Stack>
                 )}
                 <Group gap="md">
-                  <Text size="xs" fw={trigramWins ? 700 : 400}>
-                    trigram {ratio(similarity.trigram)}
-                  </Text>
-                  <Text size="xs" fw={trigramWins ? 400 : 700}>
+                  <Text size="xs">trigram {ratio(similarity.trigram)}</Text>
+                  <Text size="xs">
                     Levenshtein {ratio(similarity.levenshtein)}
                   </Text>
+                  {alignment !== undefined && (
+                    <Text size="xs" fw={700}>
+                      alignment {ratio(alignment)}
+                    </Text>
+                  )}
                 </Group>
+                {alignment !== undefined && (
+                  <Text size="xs" c="dimmed">
+                    Alignment reads the leftover words: one name simply omitting
+                    a word costs little, the two names disagreeing about one
+                    costs a lot, and a word every product of the brand carries
+                    costs nothing either way.
+                  </Text>
+                )}
                 {pair.matchedOn === "alias" && (
                   <Text size="xs" c="dimmed">
                     Found through an alias, not the product&apos;s own name key:{" "}
@@ -184,11 +218,15 @@ export function ScoreBreakdown({
               </Table.Td>
               <Table.Td>
                 <Group gap={6}>
-                  <Code fz="xs">{formatSpecValue(gate.productAValue)}</Code>
+                  <Code fz="xs">
+                    {formatSpecValue(inColumnOrder(gate)[0])}
+                  </Code>
                   <Text size="xs" c="dimmed">
                     ≠
                   </Text>
-                  <Code fz="xs">{formatSpecValue(gate.productBValue)}</Code>
+                  <Code fz="xs">
+                    {formatSpecValue(inColumnOrder(gate)[1])}
+                  </Code>
                 </Group>
               </Table.Td>
               <Table.Td style={{ textAlign: "right" }}>
