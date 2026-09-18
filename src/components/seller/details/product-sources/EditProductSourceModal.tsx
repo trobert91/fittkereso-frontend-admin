@@ -17,6 +17,7 @@ import { notifications } from "@mantine/notifications";
 import { putProductSourceUpdate } from "@/api-actions/product-source/product-source-update";
 import { ProductSource } from "@/models/dtos/product-source-search-models";
 import { ProductSourceUpdateDto } from "@/models/dtos/product-source-update.dto";
+import { ProductSourceConfig } from "@/models/product-source";
 import { JsonEditor } from "@/components/JsonEditor";
 
 interface EditProductSourceModalProps {
@@ -77,9 +78,9 @@ export function EditProductSourceModal({
   }, [opened, productSource, reset]);
 
   const onSubmit = async (values: FormValues) => {
-    let parsedConfig: unknown;
+    let parsedConfig: ProductSourceConfig;
     try {
-      parsedConfig = JSON.parse(configJson);
+      parsedConfig = JSON.parse(configJson) as ProductSourceConfig;
     } catch {
       setConfigError("Config must be valid JSON");
       return;

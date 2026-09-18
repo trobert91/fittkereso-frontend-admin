@@ -8,6 +8,17 @@ export enum ProductSourceType {
   manual = "manual",
 }
 
+// The declarative scraping definition stored on ProductSource.config (jsonb).
+// Only the handful of top-level keys the admin UI surfaces are named — the rest
+// of the pipeline (listPage, detailPage, discovery, …) is edited as raw JSON,
+// so the shape stays open rather than mirroring the backend interface.
+export interface ProductSourceConfig {
+  baseUrl?: string;
+  fullSyncStartUrl?: string;
+  categories?: Record<string, { enabled: boolean; sourceTitle?: string }>;
+  [key: string]: unknown;
+}
+
 // A single raw label/value row exactly as scraped, before deterministic
 // mapping to canonical field names — see ScrapedProductSpec on the backend.
 export interface ScrapedProductSpec {

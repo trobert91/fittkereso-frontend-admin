@@ -1,13 +1,17 @@
 import { BasePageResult } from "./base-page-result";
-import { ProductSourceType } from "../product-source";
+import { ProductSourceConfig, ProductSourceType } from "../product-source";
+import type { Seller } from "../seller";
 
 export { ProductSourceType };
+export type { ProductSourceConfig };
 
 export interface ProductSource {
   id: string;
   name: string;
-  type: ProductSourceType;
-  config?: unknown;
+  // Only populated by the admin details route, which joins the relation; the
+  // search route leaves it out.
+  seller?: Seller | null;
+  config?: ProductSourceConfig;
   schedulingEnabled: boolean;
   processingEnabled: boolean;
   priority: number;
@@ -34,7 +38,6 @@ export interface ProductSourceSearchParams {
 
   sort?:
     | "name"
-    | "type"
     | "schedulingEnabled"
     | "processingEnabled"
     | "priority"

@@ -26,8 +26,12 @@ export const updateProductSource = createAsyncThunk<
 >("productSource/updateProductSource", async ({ id, data }, thunkApi) => {
   try {
     return await putProductSourceUpdate(id, data);
-  } catch {
-    return thunkApi.rejectWithValue("Failed to update product source");
+  } catch (error) {
+    // The API's own message is the useful one here — an invalid sync interval
+    // or a bad config comes back as a specific 400, not a generic failure.
+    return thunkApi.rejectWithValue(
+      error instanceof Error ? error.message : "Failed to update product source",
+    );
   }
 });
 
@@ -45,17 +49,20 @@ export const productSourceSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // A save flips saveInProgress, not loading: `loading` blanks the whole
+      // details page out for a spinner, which would unmount the edit form
+      // mid-submit and throw away what was typed.
       .addCase(updateProductSource.pending, (state) => {
-        state.loading = true;
+        state.saveInProgress = true;
         state.error = null;
       })
       .addCase(updateProductSource.fulfilled, (state, action) => {
-        state.loading = false;
+        state.saveInProgress = false;
         state.productSource = action.payload;
         state.error = null;
       })
       .addCase(updateProductSource.rejected, (state, action) => {
-        state.loading = false;
+        state.saveInProgress = false;
         state.error = action.payload ?? "Unexpected error";
       });
   },
