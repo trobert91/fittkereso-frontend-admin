@@ -58,6 +58,17 @@ export interface ProductCategoryConfig {
   useCases?: UseCaseConfig[];
   features?: FeatureLabelConfig[];
   promptConfig?: CategoryPromptConfig;
+
+  /**
+   * The matching gates, in the order the category declares them. A primary
+   * spec contradicting costs a duplicate pair 30 points and a matcher spec 5,
+   * which is why the duplicate compare modal groups its spec tables this way.
+   *
+   * Served by `GET /admin-category/:id?includeConfig=true`, which reads the
+   * category's own `config.json` — these are not columns on the category row.
+   */
+  primarySpecs?: string[];
+  matcherSpecs?: string[];
 }
 
 export interface CategoryWithConfigResponse {
