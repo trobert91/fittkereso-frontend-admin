@@ -132,6 +132,25 @@ export function ProductSourceTable() {
           );
         },
       }),
+      // Not sortable: `type` is not in the backend's sort whitelist, and a
+      // header that looks clickable but silently does nothing is worse than a
+      // plain one. The type filter above the table is how you narrow by it.
+      columnHelper.accessor("type", {
+        id: "type",
+        header: () => <Text fw={500}>Type</Text>,
+        cell: (props) => {
+          const type = props.getValue();
+          return (
+            <Badge
+              variant="light"
+              color={type === "arukereso" ? "grape" : "blue"}
+              tt="none"
+            >
+              {type}
+            </Badge>
+          );
+        },
+      }),
       columnHelper.accessor("schedulingEnabled", {
         id: "schedulingEnabled",
         header: ({ column }) => (
@@ -202,41 +221,41 @@ export function ProductSourceTable() {
           </Text>
         ),
       }),
-      columnHelper.accessor("fullSyncInterval", {
-        id: "fullSyncInterval",
+      columnHelper.accessor("frequency", {
+        id: "frequency",
         header: ({ column }) => (
           <Text
             fw={500}
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             style={{ cursor: "pointer" }}
           >
-            Full Sync
+            Frequency
           </Text>
         ),
         cell: (props) => props.getValue() ?? "-",
       }),
-      columnHelper.accessor("lastFullSyncAt", {
-        id: "lastFullSyncAt",
+      columnHelper.accessor("lastRunAt", {
+        id: "lastRunAt",
         header: ({ column }) => (
           <Text
             fw={500}
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             style={{ cursor: "pointer" }}
           >
-            Last Full Sync
+            Last Run
           </Text>
         ),
         cell: (props) => formatDate(props.getValue()),
       }),
-      columnHelper.accessor("nextFullSyncAt", {
-        id: "nextFullSyncAt",
+      columnHelper.accessor("nextRunAt", {
+        id: "nextRunAt",
         header: ({ column }) => (
           <Text
             fw={500}
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             style={{ cursor: "pointer" }}
           >
-            Next Full Sync
+            Next Run
           </Text>
         ),
         cell: (props) => formatDate(props.getValue()),
@@ -399,7 +418,7 @@ export function ProductSourceTable() {
             <Table.Tbody>
               {isEmpty(table.getRowModel().rows) ? (
                 <Table.Tr>
-                  <Table.Td colSpan={15}>
+                  <Table.Td colSpan={16}>
                     <Center>No product sources found</Center>
                   </Table.Td>
                 </Table.Tr>

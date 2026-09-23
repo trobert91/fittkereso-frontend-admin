@@ -2,10 +2,15 @@ import { Offer } from "./offer";
 import type { ProductModel } from "./product-model";
 import { ProductSpecs } from "./product-specs";
 
+// Mirrors PRODUCT_SOURCE_TYPES in the backend. Decides which config format a
+// source uses, and is fixed at creation.
+//
+// Previously listed arukereso/displayspecs/manual, none of which were ever
+// ProductSource types — the backend had no type column at all, so the filters
+// built on this enum were sent and silently ignored.
 export enum ProductSourceType {
+  scraping = "scraping",
   arukereso = "arukereso",
-  displaySpecs = "displayspecs",
-  manual = "manual",
 }
 
 // The declarative scraping definition stored on ProductSource.config (jsonb).

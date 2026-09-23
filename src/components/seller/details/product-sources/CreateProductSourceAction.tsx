@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { Button, Modal, Stack, TextInput } from "@mantine/core";
+import { Controller, useForm } from "react-hook-form";
+import { Button, Modal, Select, Stack, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IoIosAdd } from "react-icons/io";
 import { postSellerProductSourceCreate } from "@/api-actions/seller/seller-product-source-create";
-import { SellerProductSourceCreateDto } from "@/models/dtos/seller-product-source-create.dto";
+import {
+  PRODUCT_SOURCE_TYPES,
+  SellerProductSourceCreateDto,
+} from "@/models/dtos/seller-product-source-create.dto";
+import { ProductSourceType } from "@/models/product-source";
 
 interface CreateProductSourceActionProps {
   sellerId: string;
@@ -21,11 +25,12 @@ export function CreateProductSourceAction({
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<SellerProductSourceCreateDto>({
-    defaultValues: { name: "" },
+    defaultValues: { name: "", type: ProductSourceType.scraping },
   });
 
   const handleClose = () => {
@@ -75,6 +80,28 @@ export function CreateProductSourceAction({
               required
               {...register("name", { required: "Name is required" })}
               error={errors.name?.message}
+            />
+
+            <Controller
+              name="type"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Type"
+                  description="Cannot be changed later — each type has its own config format."
+                  data={PRODUCT_SOURCE_TYPES.map((value) => ({
+                    value,
+                    label:
+                      value === ProductSourceType.scraping
+                        ? "Scraping — page pipelines"
+                        : "Árukereső — product feed",
+                  }))}
+                  allowDeselect={false}
+                  required
+                  value={field.value}
+                  onChange={(value) => field.onChange(value)}
+                />
+              )}
             />
 
             <Button type="submit" loading={isSubmitting}>

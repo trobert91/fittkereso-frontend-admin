@@ -95,6 +95,19 @@ export function ProductSourceDetailsView({
               ) : null
             }
           />
+          {/* Which config format this source uses, and therefore what the run
+              actually does — fixed at creation. */}
+          <DetailItem
+            label="Type"
+            value={
+              <Badge
+                variant="light"
+                color={productSource.type === "arukereso" ? "grape" : "blue"}
+              >
+                {productSource.type}
+              </Badge>
+            }
+          />
           <DetailItem
             label="ID"
             value={<CopyIdBadge id={productSource.id} />}
@@ -158,35 +171,57 @@ export function ProductSourceDetailsView({
       </DetailsSection>
 
       <DetailsSection
-        title="Full sync"
-        description="An unset next-sync time means the sync is due on the collector's next tick."
+        title="Schedule"
+        description="Runs are started overnight, between 02:00 and 06:00. An unset next-run time means this source is due on the next tick inside that window."
       >
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+          <DetailItem label="Frequency" value={productSource.frequency} />
           <DetailItem
-            label="Interval"
-            value={productSource.fullSyncInterval}
+            label="Next run"
+            value={formatDate(productSource.nextRunAt)}
           />
           <DetailItem
-            label="Next full sync"
-            value={formatDate(productSource.nextFullSyncAt)}
-          />
-          <DetailItem
-            label="Last full sync"
-            value={formatDate(productSource.lastFullSyncAt)}
+            label="Last run"
+            value={formatDate(productSource.lastRunAt)}
           />
         </SimpleGrid>
       </DetailsSection>
 
       <DetailsSection
         title="Config"
-        description="The declarative scraping definition interpreted by the scrape interpreter."
+        description={
+          productSource.type === "arukereso"
+            ? "Where the product feed is, and how its fields map onto ours."
+            : "The declarative scraping definition interpreted by the scrape interpreter."
+        }
       >
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
           <DetailItem label="Base URL" value={config?.baseUrl} />
-          <DetailItem
-            label="Full sync start URL"
-            value={config?.fullSyncStartUrl}
-          />
+          {/* The two shapes share no keys, so each type shows its own entry
+              point. This used to read `fullSyncStartUrl`, which no config has
+              carried since start URLs replaced it — so the field rendered
+              empty for every source rather than saying anything. */}
+          {productSource.type === "arukereso" ? (
+            <DetailItem
+              label="Feed URL"
+              value={config?.feedUrl as string | undefined}
+            />
+          ) : (
+            <DetailItem
+              label="Start URLs"
+              value={
+                Array.isArray(config?.startUrls) && config.startUrls.length > 0 ? (
+                  <Stack gap={2}>
+                    {(config.startUrls as string[]).map((url) => (
+                      <Text key={url} size="sm">
+                        {url}
+                      </Text>
+                    ))}
+                  </Stack>
+                ) : null
+              }
+            />
+          )}
         </SimpleGrid>
 
         <DetailItem

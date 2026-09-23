@@ -55,7 +55,7 @@ export function EditProductSourceModal({
       priority: productSource.priority,
       maxConcurrent: productSource.maxConcurrent,
       requestsPerHour: productSource.requestsPerHour,
-      fullSyncInterval: productSource.fullSyncInterval ?? "",
+      frequency: productSource.frequency ?? "",
     },
   });
 
@@ -68,7 +68,7 @@ export function EditProductSourceModal({
         priority: productSource.priority,
         maxConcurrent: productSource.maxConcurrent,
         requestsPerHour: productSource.requestsPerHour,
-        fullSyncInterval: productSource.fullSyncInterval ?? "",
+        frequency: productSource.frequency ?? "",
       });
       setConfigJson(JSON.stringify(productSource.config ?? {}, null, 2));
       setConfigError(null);
@@ -89,7 +89,7 @@ export function EditProductSourceModal({
       await putProductSourceUpdate(productSource.id, {
         ...values,
         config: parsedConfig,
-        fullSyncInterval: values.fullSyncInterval?.trim() || null,
+        frequency: values.frequency?.trim() || null,
       });
 
       notifications.show({
@@ -196,7 +196,7 @@ export function EditProductSourceModal({
             label="Full Sync Interval"
             description="ms-compatible value, e.g. 6h or 1d"
             placeholder="6h"
-            {...register("fullSyncInterval")}
+            {...register("frequency")}
           />
 
           <JsonEditor

@@ -30,9 +30,10 @@ export interface Offer extends BaseEntity {
   priceWithoutDiscount?: number;
   currency: string;
   url?: string;
-  availability: OfferAvailability;
+  /** Absent when the source publishes no stock data at all — distinct from `unknown`, which means it published something unmappable. */
+  availability?: OfferAvailability | null;
   externalId?: string;
-  lastSeenAt: string;
+  lastSynced: string;
   active: boolean;
 
   // Used-goods fields

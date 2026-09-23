@@ -42,7 +42,7 @@ export interface ProductModel extends BaseEntity {
   ratingLastUpdated?: string | null; // adminList
 
   // Every offer on this product across all sellers, returned by the product
-  // details endpoint (newest `lastSeenAt` first). Distinct from
+  // details endpoint (newest `lastSynced` first). Distinct from
   // `sources[].offers`, which is only the subset tied to one source listing.
   offers?: Offer[]; // details
 

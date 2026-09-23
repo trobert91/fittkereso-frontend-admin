@@ -52,7 +52,7 @@ function pickerToIso(value?: string | null): string | null {
 // to keep unparseable intermediate text around while you type, which
 // react-hook-form's typed value cannot hold.
 interface FormValues extends Omit<ProductSourceUpdateDto, "config"> {
-  nextFullSyncAt?: string | null;
+  nextRunAt?: string | null;
 }
 
 export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
@@ -82,10 +82,16 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
     Record<string, unknown> | undefined
   >(undefined);
 
+  // Keyed on the source's type: the two types' configs share no keys, so the
+  // wrong schema would reject every valid config rather than merely miss
+  // mistakes.
+  const sourceType = productSource?.type;
+
   useEffect(() => {
+    if (!sourceType) return;
     let cancelled = false;
 
-    getProductSourceConfigSchema()
+    getProductSourceConfigSchema(sourceType)
       .then((schema) => {
         if (!cancelled) setConfigSchema(schema);
       })
@@ -94,7 +100,7 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [sourceType]);
 
   const {
     control,
@@ -111,8 +117,8 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
       priority: productSource?.priority ?? 0,
       maxConcurrent: productSource?.maxConcurrent ?? 1,
       requestsPerHour: productSource?.requestsPerHour ?? 1,
-      fullSyncInterval: productSource?.fullSyncInterval ?? "",
-      nextFullSyncAt: isoToPicker(productSource?.nextFullSyncAt),
+      frequency: productSource?.frequency ?? "",
+      nextRunAt: isoToPicker(productSource?.nextRunAt),
     },
   });
 
@@ -131,8 +137,8 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
         priority: productSource.priority ?? 0,
         maxConcurrent: productSource.maxConcurrent ?? 1,
         requestsPerHour: productSource.requestsPerHour ?? 1,
-        fullSyncInterval: productSource.fullSyncInterval ?? "",
-        nextFullSyncAt: isoToPicker(productSource.nextFullSyncAt),
+        frequency: productSource.frequency ?? "",
+        nextRunAt: isoToPicker(productSource.nextRunAt),
       });
       setConfigJson(JSON.stringify(productSource.config ?? {}, null, 2));
       setConfigError(null);
@@ -188,8 +194,8 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
           // check.
           sellerId: values.sellerId || undefined,
           config: parsedConfig,
-          fullSyncInterval: values.fullSyncInterval?.trim() || null,
-          nextFullSyncAt: pickerToIso(values.nextFullSyncAt),
+          frequency: values.frequency?.trim() || null,
+          nextRunAt: pickerToIso(values.nextRunAt),
         },
       }),
     );
@@ -221,6 +227,21 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
               required
               {...register("name", { required: "Name is required" })}
               error={errors.name?.message}
+            />
+
+            {/* Read-only on purpose, and the backend refuses a change anyway:
+                the config format is bound to the type, so reinterpreting a
+                stored config under a different one reads the wrong keys for
+                everything. A shop that needs both gets a second source. */}
+            <TextInput
+              label="Type"
+              description={
+                sourceType === "arukereso"
+                  ? "Imports a product feed. Fixed at creation."
+                  : "Scrapes list and detail pages. Fixed at creation."
+              }
+              value={sourceType ?? ""}
+              disabled
             />
 
             <Controller
@@ -355,23 +376,23 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
         </DetailsSection>
 
         <DetailsSection
-          title="Full sync"
-          description="Clearing the next-sync time makes the sync due on the collector's next tick."
+          title="Schedule"
+          description="Runs happen overnight between 02:00 and 06:00. Clearing the next-run time makes the source due on the next tick in that window."
         >
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
             <TextInput
-              label="Full Sync Interval"
+              label="Frequency"
               description="ms-compatible value, e.g. 6h or 1d"
               placeholder="6h"
-              {...register("fullSyncInterval")}
+              {...register("frequency")}
             />
 
             <Controller
-              name="nextFullSyncAt"
+              name="nextRunAt"
               control={control}
               render={({ field }) => (
                 <DateTimePicker
-                  label="Next Full Sync"
+                  label="Next Run"
                   placeholder="Due on next tick"
                   withSeconds
                   clearable
@@ -382,8 +403,8 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
             />
 
             <TextInput
-              label="Last full sync"
-              value={formatDate(productSource?.lastFullSyncAt)}
+              label="Last run"
+              value={formatDate(productSource?.lastRunAt)}
               disabled
             />
           </SimpleGrid>

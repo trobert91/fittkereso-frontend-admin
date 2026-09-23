@@ -30,6 +30,20 @@ const availabilityLabel: Record<OfferAvailability, string> = {
   [OfferAvailability.unknown]: "Unknown",
 };
 
+// Absent is not the same as `unknown`, and the badge says so: null means the
+// source publishes no stock data at all (an Árukereső feed, say), while
+// `unknown` means it published something we could not map — the second is a
+// config bug worth spotting, the first is just how that source is.
+const availabilityBadge = (
+  availability: OfferAvailability | null | undefined
+): { color: string; label: string } =>
+  availability
+    ? {
+        color: availabilityColor[availability],
+        label: availabilityLabel[availability],
+      }
+    : { color: "gray", label: "Not reported" };
+
 const conditionLabel: Record<OfferCondition, string> = {
   [OfferCondition.new]: "New",
   [OfferCondition.used]: "Used",
@@ -108,11 +122,11 @@ export function OfferCard({
                 </Badge>
               )}
               <Badge
-                color={availabilityColor[offer.availability]}
+                color={availabilityBadge(offer.availability).color}
                 variant="light"
                 size="sm"
               >
-                {availabilityLabel[offer.availability]}
+                {availabilityBadge(offer.availability).label}
               </Badge>
               <Badge variant="outline" color="gray" size="sm">
                 {conditionLabel[offer.condition]}
@@ -157,7 +171,7 @@ export function OfferCard({
             )}
 
             <Text size="xs" c="dimmed">
-              Updated {formatDate(offer.lastSeenAt) || "—"}
+              Synced {formatDate(offer.lastSynced) || "—"}
             </Text>
           </Stack>
         </Group>

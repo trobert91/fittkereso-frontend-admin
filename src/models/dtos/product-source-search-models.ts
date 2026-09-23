@@ -12,6 +12,8 @@ export type { ProductSourceConfig };
 export interface ProductSource {
   id: string;
   name: string;
+  /** Import type — fixed at creation. */
+  type: ProductSourceType;
   // Only populated by the admin details route, which joins the relation; the
   // search route leaves it out.
   seller?: Seller | null;
@@ -32,9 +34,8 @@ export interface ProductSource {
   maxConcurrent: number;
   requestsPerHour: number;
   lastRunAt?: string | null;
-  fullSyncInterval?: string | null;
-  nextFullSyncAt?: string | null;
-  lastFullSyncAt?: string | null;
+  frequency?: string | null;
+  nextRunAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -55,9 +56,8 @@ export interface ProductSourceSearchParams {
     | "maxConcurrent"
     | "requestsPerHour"
     | "lastRunAt"
-    | "fullSyncInterval"
-    | "nextFullSyncAt"
-    | "lastFullSyncAt"
+    | "frequency"
+    | "nextRunAt"
     | "createdAt"
     | "updatedAt";
   order?: "ASC" | "DESC";

@@ -98,7 +98,7 @@ export function SellerProductSourcesTab() {
                   Last run: {formatDate(source.lastRunAt)}
                 </Text>
                 <Text size="sm" c="dimmed">
-                  Next full sync: {formatDate(source.nextFullSyncAt)}
+                  Next full sync: {formatDate(source.nextRunAt)}
                 </Text>
 
                 <Button

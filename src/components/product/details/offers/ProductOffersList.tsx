@@ -9,7 +9,7 @@ import { OfferCard } from "./OfferCard";
 const DEFAULT_PAGE_SIZE = 20;
 
 type OfferSortKey =
-  | "lastSeenAt"
+  | "lastSynced"
   | "createdAt"
   | "price"
   | "availability"
@@ -23,7 +23,7 @@ const sortOptions: {
   order: OfferSortOrder;
   label: string;
 }[] = [
-  { value: "lastSeenAt-DESC", sort: "lastSeenAt", order: "desc", label: "Last updated" },
+  { value: "lastSynced-DESC", sort: "lastSynced", order: "desc", label: "Last updated" },
   { value: "createdAt-DESC", sort: "createdAt", order: "desc", label: "Newest" },
   { value: "createdAt-ASC", sort: "createdAt", order: "asc", label: "Oldest" },
   { value: "price-ASC", sort: "price", order: "asc", label: "Price: low to high" },
@@ -55,12 +55,16 @@ function sortValue(offer: Offer, sort: OfferSortKey): number {
   switch (sort) {
     case "price":
       return Number(offer.price);
-    case "lastSeenAt":
-      return new Date(offer.lastSeenAt).getTime();
+    case "lastSynced":
+      return new Date(offer.lastSynced).getTime();
     case "createdAt":
       return new Date(offer.createdAt).getTime();
     case "availability":
-      return availabilityRank[offer.availability] ?? Number.MAX_SAFE_INTEGER;
+      // Offers whose source reports no stock at all sort last, beside the
+      // ones whose reported value we could not map.
+      return offer.availability
+        ? (availabilityRank[offer.availability] ?? Number.MAX_SAFE_INTEGER)
+        : Number.MAX_SAFE_INTEGER;
     case "condition":
       return conditionRank[offer.condition] ?? Number.MAX_SAFE_INTEGER;
   }
