@@ -252,6 +252,11 @@ function ProductSourceCard({
                 externalId: {source.externalId}
               </Badge>
             )}
+            {scraped?.siblingExternalIds?.length ? (
+              <Badge color="gray" variant="outline" size="sm" style={{ textTransform: "none" }}>
+                Declared sizes: {scraped.siblingExternalIds.join(", ")}
+              </Badge>
+            ) : null}
             <Badge color="gray" variant="outline" size="sm" style={{ textTransform: "none" }}>
               Updated {formatDate(source.lastUpdated) || "—"}
             </Badge>

@@ -1,8 +1,20 @@
 "use client";
 
-import { Avatar, Badge, Button, Card, Group, Stack, Text } from "@mantine/core";
+import { Fragment } from "react";
+import Link from "next/link";
+import {
+  Anchor,
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Group,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { Offer, OfferAvailability, OfferCondition } from "@/models/offer";
 import { formatDate } from "@/utils/date";
+import { routes } from "@/utils/routes";
 
 const formatPrice = (price: number, currency: string): string => {
   try {
@@ -95,6 +107,26 @@ export function OfferCard({
     offer.locations?.length ? offer.locations.join(", ") : null,
   ].filter(Boolean);
 
+  // GTIN and MPN are what an import matches this offer on across shops, so
+  // each links to every product carrying the same one: more than one product
+  // there is usually the same bike created twice.
+  const identifierLinks = [
+    offer.gtin
+      ? {
+          label: "GTIN",
+          value: offer.gtin,
+          href: routes.products.listFiltered({ gtin: offer.gtin }),
+        }
+      : null,
+    offer.mpn
+      ? {
+          label: "MPN",
+          value: offer.mpn,
+          href: routes.products.listFiltered({ mpn: offer.mpn }),
+        }
+      : null,
+  ].filter((link) => link !== null);
+
   return (
     <Card
       withBorder
@@ -150,9 +182,18 @@ export function OfferCard({
               </Text>
             )}
 
-            {metaDetails.length > 0 && (
+            {(metaDetails.length > 0 || identifierLinks.length > 0) && (
               <Text size="xs" c="dimmed">
                 {metaDetails.join(" · ")}
+                {identifierLinks.map((link, index) => (
+                  <Fragment key={link.label}>
+                    {(metaDetails.length > 0 || index > 0) && " · "}
+                    {link.label}:{" "}
+                    <Anchor component={Link} href={link.href} size="xs">
+                      {link.value}
+                    </Anchor>
+                  </Fragment>
+                ))}
               </Text>
             )}
 

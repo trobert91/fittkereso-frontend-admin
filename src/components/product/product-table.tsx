@@ -46,6 +46,7 @@ import { postBrandSearch } from "@/api-actions/brand/brand-search";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useListRegistration } from "@/components/list/list-context";
 import { ListPagination } from "@/components/list/list-pagination";
+import { normalizeGtin, normalizeMpn } from "@/utils/identifiers";
 
 /** Mirrors the backend's own guard: a non-uuid cannot match a uuid column, so
  *  it is worth saying so in the field rather than issuing the search. */
@@ -96,6 +97,9 @@ export function ProductTable({
     return initialSearchTerm;
   };
 
+  const resolveInitialIdentifier = (key: "gtin" | "mpn") => (): string =>
+    syncWithUrl ? searchParams.get(key) ?? "" : "";
+
   const [data, setData] = useState<ProductModel[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(40);
@@ -112,15 +116,31 @@ export function ProductTable({
     useState(resolveInitialSearch);
   const [idFilter, setIdFilter] = useState("");
   const [debouncedIdFilter, setDebouncedIdFilter] = useState("");
+  const [gtinFilter, setGtinFilter] = useState(resolveInitialIdentifier("gtin"));
+  const [debouncedGtinFilter, setDebouncedGtinFilter] = useState(
+    resolveInitialIdentifier("gtin")
+  );
+  const [mpnFilter, setMpnFilter] = useState(resolveInitialIdentifier("mpn"));
+  const [debouncedMpnFilter, setDebouncedMpnFilter] = useState(
+    resolveInitialIdentifier("mpn")
+  );
 
   // Sync filter state to URL query params
   const syncFiltersToUrl = useCallback(
-    (params: { categories: string[]; brands: string[]; search: string }) => {
+    (params: {
+      categories: string[];
+      brands: string[];
+      search: string;
+      gtin: string;
+      mpn: string;
+    }) => {
       if (!syncWithUrl) return;
       const query = new URLSearchParams();
       params.categories.forEach((id) => query.append("categoryId", id));
       params.brands.forEach((id) => query.append("brandId", id));
       if (params.search) query.set("search", params.search);
+      if (params.gtin.trim()) query.set("gtin", params.gtin.trim());
+      if (params.mpn.trim()) query.set("mpn", params.mpn.trim());
       const qs = query.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
@@ -133,6 +153,11 @@ export function ProductTable({
   // a log line usually brings whitespace with it.
   const invalidId =
     idFilter.trim().length > 0 && !UUID_PATTERN.test(idFilter.trim());
+  // The same for a barcode with a bad check digit, and an article number too
+  // short to be stored as one: the backend matches nothing for either.
+  const invalidGtin =
+    gtinFilter.trim().length > 0 && !normalizeGtin(gtinFilter);
+  const shortMpn = mpnFilter.trim().length > 0 && !normalizeMpn(mpnFilter);
 
   // TanStack sorting state
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
@@ -146,9 +171,15 @@ export function ProductTable({
       debounce((val: string) => {
         setPage(1);
         setDebouncedSearchTerm(val);
-        syncFiltersToUrl({ categories: categoryFilter, brands: brandFilter, search: val });
+        syncFiltersToUrl({
+          categories: categoryFilter,
+          brands: brandFilter,
+          search: val,
+          gtin: debouncedGtinFilter,
+          mpn: debouncedMpnFilter,
+        });
       }, 1000),
-    [syncFiltersToUrl, categoryFilter, brandFilter]
+    [syncFiltersToUrl, categoryFilter, brandFilter, debouncedGtinFilter, debouncedMpnFilter]
   );
 
   useEffect(() => {
@@ -174,6 +205,30 @@ export function ProductTable({
       setDebouncedIdFilterDebounced.cancel();
     };
   }, [setDebouncedIdFilterDebounced]);
+
+  // Pasted like an id, so as short a wait. One debounce for both fields: each
+  // call carries both values, so the last edit to either one wins.
+  const setDebouncedIdentifiersDebounced = useMemo(
+    () =>
+      debounce((next: { gtin: string; mpn: string }) => {
+        setPage(1);
+        setDebouncedGtinFilter(next.gtin);
+        setDebouncedMpnFilter(next.mpn);
+        syncFiltersToUrl({
+          categories: categoryFilter,
+          brands: brandFilter,
+          search: debouncedSearchTerm,
+          ...next,
+        });
+      }, 300),
+    [syncFiltersToUrl, categoryFilter, brandFilter, debouncedSearchTerm]
+  );
+
+  useEffect(() => {
+    return () => {
+      setDebouncedIdentifiersDebounced.cancel();
+    };
+  }, [setDebouncedIdentifiersDebounced]);
 
   // Fetch top 50 categories on mount
   useEffect(() => {
@@ -259,6 +314,8 @@ export function ProductTable({
       brandIds: brandFilter.length ? brandFilter : undefined,
       searchTerm: debouncedSearchTerm || undefined,
       id: debouncedIdFilter.trim() || undefined,
+      gtin: debouncedGtinFilter.trim() || undefined,
+      mpn: debouncedMpnFilter.trim() || undefined,
       includeImages: false,
     };
   };
@@ -285,6 +342,8 @@ export function ProductTable({
     brandFilter,
     debouncedSearchTerm,
     debouncedIdFilter,
+    debouncedGtinFilter,
+    debouncedMpnFilter,
   ]);
 
   //
@@ -485,7 +544,13 @@ export function ProductTable({
                     value={categoryFilter}
                     onChange={(vals) => {
                       setCategoryFilter(vals);
-                      syncFiltersToUrl({ categories: vals, brands: brandFilter, search: debouncedSearchTerm });
+                      syncFiltersToUrl({
+                        categories: vals,
+                        brands: brandFilter,
+                        search: debouncedSearchTerm,
+                        gtin: debouncedGtinFilter,
+                        mpn: debouncedMpnFilter,
+                      });
                     }}
                     clearable
                     searchable
@@ -499,7 +564,13 @@ export function ProductTable({
                     value={brandFilter}
                     onChange={(vals) => {
                       setBrandFilter(vals);
-                      syncFiltersToUrl({ categories: categoryFilter, brands: vals, search: debouncedSearchTerm });
+                      syncFiltersToUrl({
+                        categories: categoryFilter,
+                        brands: vals,
+                        search: debouncedSearchTerm,
+                        gtin: debouncedGtinFilter,
+                        mpn: debouncedMpnFilter,
+                      });
                     }}
                     clearable
                     searchable
@@ -555,6 +626,60 @@ export function ProductTable({
                       )
                     }
                     maw={340}
+                  />
+                  <TextInput
+                    label="GTIN"
+                    placeholder="Paste a barcode"
+                    description={
+                      invalidGtin ? "Not a valid GTIN" : "Exact match, any shop"
+                    }
+                    error={invalidGtin}
+                    value={gtinFilter}
+                    onChange={(e) => {
+                      const val = e.currentTarget.value;
+                      setGtinFilter(val);
+                      setDebouncedIdentifiersDebounced({ gtin: val, mpn: mpnFilter });
+                    }}
+                    rightSection={
+                      gtinFilter && (
+                        <CloseButton
+                          size="sm"
+                          onClick={() => {
+                            setGtinFilter("");
+                            setDebouncedIdentifiersDebounced({ gtin: "", mpn: mpnFilter });
+                            setDebouncedIdentifiersDebounced.flush();
+                          }}
+                        />
+                      )
+                    }
+                    maw={200}
+                  />
+                  <TextInput
+                    label="MPN"
+                    placeholder="Manufacturer article no."
+                    description={
+                      shortMpn ? "At least 5 characters" : "Starts with, any shop"
+                    }
+                    error={shortMpn}
+                    value={mpnFilter}
+                    onChange={(e) => {
+                      const val = e.currentTarget.value;
+                      setMpnFilter(val);
+                      setDebouncedIdentifiersDebounced({ gtin: gtinFilter, mpn: val });
+                    }}
+                    rightSection={
+                      mpnFilter && (
+                        <CloseButton
+                          size="sm"
+                          onClick={() => {
+                            setMpnFilter("");
+                            setDebouncedIdentifiersDebounced({ gtin: gtinFilter, mpn: "" });
+                            setDebouncedIdentifiersDebounced.flush();
+                          }}
+                        />
+                      )
+                    }
+                    maw={200}
                   />
                 </Group>
               </Stack>

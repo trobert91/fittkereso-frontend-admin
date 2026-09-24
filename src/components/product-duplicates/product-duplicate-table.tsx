@@ -46,6 +46,7 @@ import { ProductModel } from "@/models/product-model";
 import { ProductDetailsModal } from "@/components/product/details-modal";
 import { DuplicatePairCompareModal } from "./duplicate-pair-compare-modal";
 import { FailedGateBadges } from "./failed-gate-badges";
+import { isIdentifierMatch, MATCHED_ON_LABELS } from "./matched-on";
 
 const PAGE_SIZE = 50;
 
@@ -256,15 +257,23 @@ export function ProductDuplicateTable() {
         header: "Score",
         cell: (props) => {
           const pair = props.row.original;
+          // An identifier pair's 100 is a placeholder, not a name score: the
+          // shared identifier is what it rests on, so that is what it shows.
           return (
             <Stack gap={6} align="flex-start" miw={200}>
-              <Badge
-                color={pair.similarityScore >= 80 ? "green" : "yellow"}
-                variant="light"
-                size="lg"
-              >
-                {pair.similarityScore}
-              </Badge>
+              {isIdentifierMatch(pair.matchedOn) ? (
+                <Badge color="blue" variant="light" size="lg">
+                  Shared {MATCHED_ON_LABELS[pair.matchedOn]}
+                </Badge>
+              ) : (
+                <Badge
+                  color={pair.similarityScore >= 80 ? "green" : "yellow"}
+                  variant="light"
+                  size="lg"
+                >
+                  {pair.similarityScore}
+                </Badge>
+              )}
               <FailedGateBadges gates={pair.failedGates} />
             </Stack>
           );
@@ -302,7 +311,8 @@ export function ProductDuplicateTable() {
 
               <Stack gap={2}>
                 <Badge variant="outline" color="gray" size="sm">
-                  {DETECTED_BY_LABELS[pair.detectedBy]} · on {pair.matchedOn}
+                  {DETECTED_BY_LABELS[pair.detectedBy]} · on{" "}
+                  {MATCHED_ON_LABELS[pair.matchedOn]}
                 </Badge>
                 <Text size="xs" c="dimmed">
                   {new Date(pair.createdAt).toLocaleDateString()}

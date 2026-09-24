@@ -1,10 +1,16 @@
 import { Alert, Badge, Code, Group, Stack, Table, Text } from "@mantine/core";
 import {
+  ProductDuplicateFailedGate,
   ProductDuplicateGate,
   ProductDuplicatePair,
 } from "@/models/dtos/product-duplicate-search-models";
 import { ProductModel } from "@/models/product-model";
 import { formatSpecValue } from "./failed-gate-badges";
+import {
+  isIdentifierMatch,
+  MATCHED_ON_LABELS,
+  ProductDuplicateIdentifier,
+} from "./matched-on";
 
 /** Mirrors ACCEPT_SCORE / NEAR_MISS_SCORE in libs/product-identity. */
 const ACCEPT_SCORE = 80;
@@ -22,6 +28,13 @@ const GATE_EXPLANATIONS: Record<ProductDuplicateGate, string> = {
   modelNumberMismatch:
     "The numbers in the two names differ, and neither set contains the other.",
   matcherSpecMismatch: "A supporting spec disagrees.",
+};
+
+const IDENTIFIER_EXPLANATIONS: Record<ProductDuplicateIdentifier, string> = {
+  gtin: "Both products have an offer carrying this GTIN. A GTIN is issued for one size of one bike, so the same one on two products usually means the bike was created twice — unless a shop entered the wrong barcode.",
+  mpn: "Both products are of one brand and have an offer carrying this manufacturer article number, which names one size of one bike — unless a shop entered a code of its own in its place.",
+  sibling:
+    "A shop page declared this as another size of the same bike, and that size sits on the other product. Only the shop that declared it vouches for it.",
 };
 
 function ratio(value: number): string {
@@ -63,6 +76,24 @@ export function ScoreBreakdown({
   const gates = pair.failedGates ?? [];
   const deductions = gates.reduce((sum, gate) => sum + gate.severity, 0);
 
+  // True when the caller put the pair's B product in the left column.
+  const flipped = products?.[0]?.id === pair.productBId;
+  const inColumnOrder = (gate: { productAValue: unknown; productBValue: unknown }) =>
+    flipped
+      ? ([gate.productBValue, gate.productAValue] as const)
+      : ([gate.productAValue, gate.productBValue] as const);
+
+  if (isIdentifierMatch(pair.matchedOn)) {
+    return (
+      <IdentifierBreakdown
+        identifier={pair.matchedOn}
+        value={pair.matchedValue}
+        gates={gates}
+        inColumnOrder={inColumnOrder}
+      />
+    );
+  }
+
   // A pair carried onto a survivor by a merge keeps the old score but no
   // similarities and no gates — they compared the product that is now gone.
   if (!similarity) {
@@ -88,13 +119,6 @@ export function ScoreBreakdown({
       </Alert>
     );
   }
-
-  // True when the caller put the pair's B product in the left column.
-  const flipped = products?.[0]?.id === pair.productBId;
-  const inColumnOrder = (gate: { productAValue: unknown; productBValue: unknown }) =>
-    flipped
-      ? ([gate.productBValue, gate.productAValue] as const)
-      : ([gate.productAValue, gate.productBValue] as const);
 
   const { alignment } = similarity;
   const base =
@@ -291,6 +315,75 @@ export function ScoreBreakdown({
 }
 
 /**
+ * A pair found through an identifier both products carry. No names were
+ * compared, so there is no score to take apart: what it shows instead is the
+ * identifier, and whatever still contradicts it — which is why an import
+ * paired the two rather than putting the listing on one of them.
+ */
+function IdentifierBreakdown({
+  identifier,
+  value,
+  gates,
+  inColumnOrder,
+}: {
+  identifier: ProductDuplicateIdentifier;
+  value: string;
+  gates: ProductDuplicateFailedGate[];
+  inColumnOrder: (gate: ProductDuplicateFailedGate) => readonly [unknown, unknown];
+}) {
+  return (
+    <Stack gap={6}>
+      <Group gap="sm" align="center">
+        <Badge size="lg" variant="light" color="blue">
+          Shared {MATCHED_ON_LABELS[identifier]}
+        </Badge>
+        <Code fz="sm">{value}</Code>
+      </Group>
+      <Text size="sm">{IDENTIFIER_EXPLANATIONS[identifier]}</Text>
+
+      {gates.length > 0 ? (
+        <>
+          <Text size="sm">
+            It stays two products because a spec that decides identity
+            contradicts it:
+          </Text>
+          <Table withTableBorder withColumnBorders verticalSpacing={6} fz="xs">
+            <Table.Tbody>
+              {gates.map((gate, index) => (
+                <Table.Tr key={`${gate.gate}-${gate.spec ?? index}`}>
+                  <Table.Td style={{ width: 170 }}>
+                    <Text size="xs" fw={600} c="red">
+                      {GATE_LABELS[gate.gate]}
+                      {gate.spec ? `: ${gate.spec}` : ""}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap={6}>
+                      <Code fz="xs">{formatSpecValue(inColumnOrder(gate)[0])}</Code>
+                      <Text size="xs" c="dimmed">
+                        ≠
+                      </Text>
+                      <Code fz="xs">{formatSpecValue(inColumnOrder(gate)[1])}</Code>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </>
+      ) : (
+        <Text size="sm" c="dimmed">
+          No spec that decides identity contradicts it. An import leaves such a
+          pair to a person when the identifier points at both products, the
+          brands differ, or the listing had already been placed by its own
+          history or an earlier identifier.
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
+/**
  * What this score decides at scrape time. Note it says nothing about whether
  * this pair needs merging — that is the question you are here to answer, and
  * the score deliberately does not answer it: a pair exists precisely because
@@ -301,7 +394,7 @@ function decisionOf(score: number): string {
     return "Attaches on its own — a scraped listing lands here with no LLM call";
   }
   if (score >= NEAR_MISS_SCORE) {
-    return "Goes to the LLM — too close to create, too far to attach";
+    return "Asks a person — the listing becomes a new product, paired with this one";
   }
   return "Creates a new product — nothing here is close enough to ask about";
 }
@@ -315,5 +408,5 @@ function thresholdNoteOf(score: number): string {
     const gap = ACCEPT_SCORE - score;
     return `${gap} ${gap === 1 ? "point" : "points"} below the ${ACCEPT_SCORE} that would attach it outright, and at or above the ${NEAR_MISS_SCORE} that makes it worth asking about.`;
   }
-  return `Below the ${NEAR_MISS_SCORE} needed to reach the LLM or to write a pair.`;
+  return `Below the ${NEAR_MISS_SCORE} needed to write a pair.`;
 }

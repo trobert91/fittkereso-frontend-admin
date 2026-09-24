@@ -49,10 +49,17 @@ export const routes = {
   },
   products: {
     list: "/products/list",
-    listFiltered: (params: { categoryId?: string; brandId?: string }) => {
+    listFiltered: (params: {
+      categoryId?: string;
+      brandId?: string;
+      gtin?: string;
+      mpn?: string;
+    }) => {
       const query = new URLSearchParams();
       if (params.categoryId) query.set("categoryId", params.categoryId);
       if (params.brandId) query.set("brandId", params.brandId);
+      if (params.gtin) query.set("gtin", params.gtin);
+      if (params.mpn) query.set("mpn", params.mpn);
       const qs = query.toString();
       return qs ? `/products/list?${qs}` : "/products/list";
     },

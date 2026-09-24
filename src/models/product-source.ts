@@ -69,9 +69,13 @@ export interface ProductSourceRecord {
     rawSpecs?: ScrapedProductSpec[];
     // Free-text marketing/description copy from the listing, when the
     // source's config extracts one. Lower-confidence prose, not a
-    // structured field — only fed to the model-spec LLM call, never the
-    // offer-identity one.
+    // structured field — fed to spec unification, and to the identity
+    // extraction only where the source config opts in.
     description?: string;
+    // The source-native ids of the other sizes this page declares as the
+    // same bike (ebikeshop's frame-size variations). An import attaches a
+    // listing to the product any of them already sits on.
+    siblingExternalIds?: string[];
     images?: ProductSourceImage[];
   };
   specValid?: boolean;

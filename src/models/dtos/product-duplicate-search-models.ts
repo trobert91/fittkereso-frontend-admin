@@ -3,7 +3,17 @@ import { ProductModel } from "../product-model";
 
 export type ProductDuplicateDetectedBy = "scrape" | "scan" | "merge";
 
-export type ProductDuplicateMatchedOn = "name" | "alias";
+/**
+ * What connects a pair: names that look alike (`name`, `alias`), or an
+ * identifier both products carry — a size one shop declared as a sibling, a
+ * GTIN, or an MPN within one brand.
+ */
+export type ProductDuplicateMatchedOn =
+  | "name"
+  | "alias"
+  | "sibling"
+  | "gtin"
+  | "mpn";
 
 export type ProductDuplicatePairStatus = "open" | "dismissed";
 

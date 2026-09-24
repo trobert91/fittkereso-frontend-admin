@@ -10,6 +10,10 @@ export interface ProductSearchParams {
   /** Exact product id. Kept separate from `searchTerm` so pasting a uuid finds
    *  that one product rather than whatever the trigram ranker scores near it. */
   id?: string;
+  /** Products with an offer carrying this GTIN; EAN-13 and GTIN-14 both work. */
+  gtin?: string;
+  /** Products with an offer whose MPN starts with this (at least 5 characters). */
+  mpn?: string;
 
   page?: number;
   pageSize?: number;
