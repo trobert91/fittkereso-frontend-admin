@@ -88,8 +88,8 @@ export const routes = {
   tasks: {
     list: "/tasks/list",
   },
-  scrapeTasks: {
-    list: "/scrape-tasks/list",
+  importTasks: {
+    list: "/product-import-tasks/list",
   },
   productDuplicates: {
     list: "/product-duplicates/list",

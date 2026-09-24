@@ -32,13 +32,13 @@ import { FiCopy, FiCheck } from "react-icons/fi";
 import { useDisclosure } from "@mantine/hooks";
 import { isEmpty } from "lodash";
 import {
-  ScrapeTask,
-  ScrapeTaskSearchParams,
-  ScrapeQueueName,
+  ProductImportTask,
+  ProductImportTaskSearchParams,
+  ProductImportTaskKind,
   ProductSourceType,
   TaskStatus,
-} from "@/models/dtos/scrape-task-search-models";
-import { useScrapeTaskSearch } from "@/hooks/useScrapeTaskSearch";
+} from "@/models/dtos/product-import-task-search-models";
+import { useProductImportTaskSearch } from "@/hooks/useProductImportTaskSearch";
 import { routes } from "@/utils/routes";
 import Link from "next/link";
 import { formatDate } from "@/utils/date";
@@ -61,16 +61,16 @@ const getColorForTaskStatus = (status: TaskStatus): string => {
 import { useListRegistration } from "@/components/list/list-context";
 import { ListPagination } from "@/components/list/list-pagination";
 
-export function ScrapeTaskTable() {
-  const [data, setData] = useState<ScrapeTask[]>([]);
+export function ProductImportTaskTable() {
+  const [data, setData] = useState<ProductImportTask[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState<number | null>(null);
   const [statusesFilter, setStatusesFilter] = useState<TaskStatus[]>([]);
-  const [queuesFilter, setQueuesFilter] = useState<ScrapeQueueName[]>([]);
+  const [kindsFilter, setKindsFilter] = useState<ProductImportTaskKind[]>([]);
   const [sourceTypesFilter, setSourceTypesFilter] = useState<ProductSourceType[]>([]);
-  const [selectedTask, setSelectedTask] = useState<ScrapeTask | null>(null);
+  const [selectedTask, setSelectedTask] = useState<ProductImportTask | null>(null);
   const [detailsOpened, { open: openDetails, close: closeDetails }] =
     useDisclosure(false);
   const clipboard = useClipboard({ timeout: 2000 });
@@ -79,8 +79,8 @@ export function ScrapeTaskTable() {
     { id: "createdAt", desc: true },
   ]);
 
-  const { search, loading, searchResult } = useScrapeTaskSearch();
-  const columnHelper = useMemo(() => createColumnHelper<ScrapeTask>(), []);
+  const { search, loading, searchResult } = useProductImportTaskSearch();
+  const columnHelper = useMemo(() => createColumnHelper<ProductImportTask>(), []);
 
   useEffect(() => {
     setData(searchResult?.items || []);
@@ -88,8 +88,8 @@ export function ScrapeTaskTable() {
     setTotalItems(searchResult?.totalItems ?? null);
   }, [searchResult]);
 
-  const buildSearchParams = (): ScrapeTaskSearchParams => {
-    const sortField = sorting[0]?.id as ScrapeTaskSearchParams["sort"];
+  const buildSearchParams = (): ProductImportTaskSearchParams => {
+    const sortField = sorting[0]?.id as ProductImportTaskSearchParams["sort"];
     const sortOrder =
       sorting[0]?.desc === true ? "DESC" : sorting.length ? "ASC" : undefined;
 
@@ -99,7 +99,7 @@ export function ScrapeTaskTable() {
       sort: sortField,
       order: sortOrder,
       statuses: statusesFilter.length ? statusesFilter : undefined,
-      queues: queuesFilter.length ? queuesFilter : undefined,
+      kinds: kindsFilter.length ? kindsFilter : undefined,
       sourceTypes: sourceTypesFilter.length ? sourceTypesFilter : undefined,
     };
   };
@@ -117,7 +117,7 @@ export function ScrapeTaskTable() {
 
     search(buildSearchParams());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, sorting, pageSize, statusesFilter, queuesFilter, sourceTypesFilter]);
+  }, [page, sorting, pageSize, statusesFilter, kindsFilter, sourceTypesFilter]);
 
   const columns = useMemo(
     () => [
@@ -139,8 +139,8 @@ export function ScrapeTaskTable() {
         ),
       }),
 
-      columnHelper.accessor("queue", {
-        id: "queue",
+      columnHelper.accessor("kind", {
+        id: "kind",
         header: ({ column }) => (
           <Text
             fw={500}
@@ -149,7 +149,7 @@ export function ScrapeTaskTable() {
             }
             style={{ cursor: "pointer" }}
           >
-            Queue
+            Kind
           </Text>
         ),
         cell: (props) => (
@@ -157,6 +157,22 @@ export function ScrapeTaskTable() {
             {props.getValue()}
           </Badge>
         ),
+      }),
+
+      columnHelper.accessor("priority", {
+        id: "priority",
+        header: ({ column }) => (
+          <Text
+            fw={500}
+            onClick={() =>
+              column.toggleSorting(column.getIsSorted() === "asc")
+            }
+            style={{ cursor: "pointer" }}
+          >
+            Priority
+          </Text>
+        ),
+        cell: (props) => <Text size="sm">{props.getValue()}</Text>,
       }),
 
       columnHelper.accessor("url", {
@@ -351,7 +367,7 @@ export function ScrapeTaskTable() {
       <Modal
         opened={detailsOpened}
         onClose={closeDetails}
-        title={`Scrape task details — ${selectedTask?.id ?? ""}`}
+        title={`Import task details — ${selectedTask?.id ?? ""}`}
         size="xl"
       >
         {selectedTask && (
@@ -360,7 +376,10 @@ export function ScrapeTaskTable() {
               <strong>ID:</strong> {selectedTask.id}
             </Text>
             <Text size="sm">
-              <strong>Queue:</strong> {selectedTask.queue}
+              <strong>Kind:</strong> {selectedTask.kind}
+            </Text>
+            <Text size="sm">
+              <strong>Priority:</strong> {selectedTask.priority}
             </Text>
             <Text size="sm">
               <strong>Status:</strong> {selectedTask.status}
@@ -502,16 +521,16 @@ export function ScrapeTaskTable() {
                 maw={300}
               />
               <MultiSelect
-                label="Filter by queue"
-                placeholder="Select queues"
-                data={Object.values(ScrapeQueueName).map((q) => ({
-                  value: q,
-                  label: q,
+                label="Filter by kind"
+                placeholder="Select kinds"
+                data={Object.values(ProductImportTaskKind).map((kind) => ({
+                  value: kind,
+                  label: kind,
                 }))}
-                value={queuesFilter as unknown as string[]}
+                value={kindsFilter as unknown as string[]}
                 onChange={(vals) => {
                   setPage(1);
-                  setQueuesFilter(vals as unknown as ScrapeQueueName[]);
+                  setKindsFilter(vals as unknown as ProductImportTaskKind[]);
                 }}
                 clearable
                 searchable
@@ -595,7 +614,7 @@ export function ScrapeTaskTable() {
               {isEmpty(table.getRowModel().rows) ? (
                 <Table.Tr>
                   <Table.Td colSpan={11}>
-                    <Center>No scrape tasks found</Center>
+                    <Center>No import tasks found</Center>
                   </Table.Td>
                 </Table.Tr>
               ) : (

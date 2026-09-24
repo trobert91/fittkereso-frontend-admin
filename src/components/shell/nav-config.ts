@@ -22,7 +22,7 @@ export interface NavEntry {
    * A list lives at /products/list but a detail page at /products/<id>, and both should light
    * the same row - matching on href alone would leave every detail page with nothing
    * highlighted. The prefixes are mutually exclusive as written: "/product-sources" does not
-   * start with "/products", and "/scrape-tasks" does not start with "/tasks".
+   * start with "/products", and "/product-import-tasks" does not start with "/tasks".
    */
   match: string;
   /**
@@ -99,10 +99,10 @@ export const navSections: NavSection[] = [
         match: "/tasks",
       },
       {
-        label: "Scrape Tasks",
-        href: routes.scrapeTasks.list,
+        label: "Import Tasks",
+        href: routes.importTasks.list,
         icon: PiRobot,
-        match: "/scrape-tasks",
+        match: "/product-import-tasks",
       },
     ],
   },

@@ -5,28 +5,37 @@ import { ProductSourceType } from "../product-source";
 export { TaskStatus };
 export { ProductSourceType };
 
-export enum ScrapeQueueName {
-  ScrapeProductList = "scrape-product-list",
-  ScrapeProductDetails = "scrape-product-details",
+/** Mirrors the backend: 0–100, higher runs first. */
+export const MIN_IMPORT_TASK_PRIORITY = 0;
+export const MAX_IMPORT_TASK_PRIORITY = 100;
+/** What a task a person creates runs at unless they choose otherwise. */
+export const MANUAL_IMPORT_TASK_PRIORITY = 90;
+
+export enum ProductImportTaskKind {
+  ListPage = "list_page",
+  DetailPage = "detail_page",
+  /** One Árukereső feed row; queued by its feed run, never by hand. */
+  FeedEntry = "feed_entry",
 }
 
-export interface ScrapeTaskProduct {
+export interface ProductImportTaskProduct {
   id: string;
   displayName: string;
   brand?: { name: string };
 }
 
-export interface ScrapeTaskSource {
+export interface ProductImportTaskSource {
   id: string;
   name: string;
   type: string;
 }
 
-export interface ScrapeTask {
+export interface ProductImportTask {
   id: string;
-  queue: ScrapeQueueName;
-  source: ScrapeTaskSource;
-  product?: ScrapeTaskProduct | null;
+  kind: ProductImportTaskKind;
+  priority: number;
+  source: ProductImportTaskSource;
+  product?: ProductImportTaskProduct | null;
   url: string;
   status: TaskStatus;
   attempts: number;
@@ -40,16 +49,17 @@ export interface ScrapeTask {
   updatedAt: string;
 }
 
-export interface ScrapeTaskSearchParams {
+export interface ProductImportTaskSearchParams {
   statuses?: TaskStatus[];
-  queues?: ScrapeQueueName[];
+  kinds?: ProductImportTaskKind[];
   sourceTypes?: ProductSourceType[];
 
   page?: number;
   pageSize?: number;
 
   sort?:
-    | "queue"
+    | "kind"
+    | "priority"
     | "status"
     | "attempts"
     | "scheduledAt"
@@ -61,8 +71,8 @@ export interface ScrapeTaskSearchParams {
   order?: "ASC" | "DESC";
 }
 
-export type ScrapeTaskSearchResult = BasePageResult<ScrapeTask> & {
+export type ProductImportTaskSearchResult = BasePageResult<ProductImportTask> & {
   statuses?: TaskStatus[];
-  queues?: ScrapeQueueName[];
+  kinds?: ProductImportTaskKind[];
   sourceTypes?: ProductSourceType[];
 };

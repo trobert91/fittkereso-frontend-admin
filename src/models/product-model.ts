@@ -7,7 +7,7 @@ import { ProductImage } from "./product-image";
 import { ProductSourceRecord } from "./product-source";
 import { OrderedSpec, ProductSpecs } from "./product-specs";
 import { ProductRating } from "./rating-types";
-import { ScrapeTask } from "./dtos/scrape-task-search-models";
+import { ProductImportTask } from "./dtos/product-import-task-search-models";
 
 export interface ProductModel extends BaseEntity {
   displayName: string;
@@ -49,5 +49,5 @@ export interface ProductModel extends BaseEntity {
   // Admin only:
   sources?: ProductSourceRecord[];
   aliases?: ProductAlias[];
-  scrapeTasks?: ScrapeTask[];
+  importTasks?: ProductImportTask[];
 }

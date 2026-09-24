@@ -1,26 +1,26 @@
 import { useState } from "react";
 import { notifications } from "@mantine/notifications";
-import { postScrapeTaskSearch } from "@/api-actions/scrape-task/scrape-task-search";
+import { postProductImportTaskSearch } from "@/api-actions/product-import-task/product-import-task-search";
 import {
-  ScrapeTaskSearchParams,
-  ScrapeTaskSearchResult,
-} from "@/models/dtos/scrape-task-search-models";
+  ProductImportTaskSearchParams,
+  ProductImportTaskSearchResult,
+} from "@/models/dtos/product-import-task-search-models";
 
-export const useScrapeTaskSearch = () => {
+export const useProductImportTaskSearch = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchResult, setSearchResult] =
-    useState<ScrapeTaskSearchResult | null>(null);
+    useState<ProductImportTaskSearchResult | null>(null);
 
-  const search = async (searchParams: ScrapeTaskSearchParams) => {
+  const search = async (searchParams: ProductImportTaskSearchParams) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await postScrapeTaskSearch(searchParams);
+      const response = await postProductImportTaskSearch(searchParams);
 
       if (!response) {
-        throw new Error("Failed to search scrape tasks");
+        throw new Error("Failed to search import tasks");
       }
 
       setSearchResult(response);
@@ -32,7 +32,7 @@ export const useScrapeTaskSearch = () => {
       notifications.show({
         color: "red",
         title: errorMessage,
-        message: "Scrape task search failed",
+        message: "Import task search failed",
       });
       setError(errorMessage);
     } finally {

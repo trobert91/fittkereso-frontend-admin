@@ -17,7 +17,7 @@ import { ProductHeroHeader } from "./hero/ProductHeroHeader";
 import { IoMdAlert } from "react-icons/io";
 import { ProductSourcesTab } from "./sources/ProductSourcesTab";
 import { ProductOffersTab } from "./offers/ProductOffersTab";
-import { ProductScrapeTasksTab } from "./scrape-tasks/ProductScrapeTasksTab";
+import { ProductImportTasksTab } from "./product-import-tasks/ProductImportTasksTab";
 import { ProductAliasesTab } from "./aliases/ProductAliasesTab";
 
 export const ProductDetails = () => {
@@ -62,8 +62,8 @@ export const ProductDetails = () => {
           <Tabs.Tab value="offers" leftSection={<BsTag size={12} />}>
             Offers
           </Tabs.Tab>
-          <Tabs.Tab value="scrapeTasks" leftSection={<FaTasks size={12} />}>
-            Scrape Tasks
+          <Tabs.Tab value="importTasks" leftSection={<FaTasks size={12} />}>
+            Import Tasks
           </Tabs.Tab>
           <Tabs.Tab value="aliases" leftSection={<FaTags size={12} />}>
             Aliases
@@ -94,8 +94,8 @@ export const ProductDetails = () => {
           <ProductOffersTab />
         </Tabs.Panel>
 
-        <Tabs.Panel value="scrapeTasks" pt="lg">
-          <ProductScrapeTasksTab />
+        <Tabs.Panel value="importTasks" pt="lg">
+          <ProductImportTasksTab />
         </Tabs.Panel>
 
         <Tabs.Panel value="aliases" pt="lg">

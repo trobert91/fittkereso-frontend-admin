@@ -3,7 +3,7 @@
 import { Anchor, Badge, Table, Text } from "@mantine/core";
 import { selectProduct } from "@/store/slices/product-slice";
 import { useAppSelector } from "@/store/store-hooks";
-import { TaskStatus } from "@/models/dtos/scrape-task-search-models";
+import { TaskStatus } from "@/models/dtos/product-import-task-search-models";
 import { formatDate } from "@/utils/date";
 
 const getColorForTaskStatus = (status: TaskStatus): string => {
@@ -21,24 +21,25 @@ const getColorForTaskStatus = (status: TaskStatus): string => {
   }
 };
 
-export function ProductScrapeTasksTab() {
+export function ProductImportTasksTab() {
   const product = useAppSelector(selectProduct);
 
   if (!product) {
     return null;
   }
 
-  const scrapeTasks = product.scrapeTasks ?? [];
+  const importTasks = product.importTasks ?? [];
 
-  if (!scrapeTasks.length) {
-    return <Text c="dimmed">No scrape tasks</Text>;
+  if (!importTasks.length) {
+    return <Text c="dimmed">No import tasks</Text>;
   }
 
   return (
     <Table>
       <Table.Thead>
         <Table.Tr>
-          <Table.Th>Queue</Table.Th>
+          <Table.Th>Kind</Table.Th>
+          <Table.Th>Priority</Table.Th>
           <Table.Th>URL</Table.Th>
           <Table.Th>Status</Table.Th>
           <Table.Th>Source</Table.Th>
@@ -50,13 +51,15 @@ export function ProductScrapeTasksTab() {
       </Table.Thead>
 
       <Table.Tbody>
-        {scrapeTasks.map((task) => (
+        {importTasks.map((task) => (
           <Table.Tr key={task.id}>
             <Table.Td>
               <Badge variant="light" color="gray" tt="none">
-                {task.queue}
+                {task.kind}
               </Badge>
             </Table.Td>
+
+            <Table.Td>{task.priority}</Table.Td>
 
             <Table.Td>
               {task.url ? (
