@@ -29,6 +29,7 @@ import {
   ProductSourceSearchParams,
   ProductSourceType,
 } from "@/models/dtos/product-source-search-models";
+import { PRODUCT_SOURCE_TYPE_COLORS } from "@/models/product-source";
 import { useProductSourceSearch } from "@/hooks/useProductSourceSearch";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
@@ -143,7 +144,7 @@ export function ProductSourceTable() {
           return (
             <Badge
               variant="light"
-              color={type === "arukereso" ? "grape" : "blue"}
+              color={PRODUCT_SOURCE_TYPE_COLORS[type]}
               tt="none"
             >
               {type}

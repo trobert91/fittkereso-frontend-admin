@@ -17,7 +17,10 @@ import { notifications } from "@mantine/notifications";
 import { putProductSourceUpdate } from "@/api-actions/product-source/product-source-update";
 import { ProductSource } from "@/models/dtos/product-source-search-models";
 import { ProductSourceUpdateDto } from "@/models/dtos/product-source-update.dto";
-import { ProductSourceConfig } from "@/models/product-source";
+import {
+  isFeedSourceType,
+  ProductSourceConfig,
+} from "@/models/product-source";
 import { JsonEditor } from "@/components/JsonEditor";
 
 interface EditProductSourceModalProps {
@@ -53,6 +56,8 @@ export function EditProductSourceModal({
       schedulingEnabled: productSource.schedulingEnabled,
       processingEnabled: productSource.processingEnabled,
       priority: productSource.priority,
+      identifiesProducts: productSource.identifiesProducts,
+      hasAllProducts: productSource.hasAllProducts,
       maxConcurrent: productSource.maxConcurrent,
       requestsPerHour: productSource.requestsPerHour,
       frequency: productSource.frequency ?? "",
@@ -66,6 +71,8 @@ export function EditProductSourceModal({
         schedulingEnabled: productSource.schedulingEnabled,
         processingEnabled: productSource.processingEnabled,
         priority: productSource.priority,
+        identifiesProducts: productSource.identifiesProducts,
+        hasAllProducts: productSource.hasAllProducts,
         maxConcurrent: productSource.maxConcurrent,
         requestsPerHour: productSource.requestsPerHour,
         frequency: productSource.frequency ?? "",
@@ -145,6 +152,34 @@ export function EditProductSourceModal({
                   label="Processing Enabled"
                   checked={field.value ?? false}
                   onChange={(e) => field.onChange(e.currentTarget.checked)}
+                />
+              )}
+            />
+          </Group>
+
+          <Group gap="xl" align="flex-start">
+            <Controller
+              name="identifiesProducts"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  label="Identifies products"
+                  description="Off: only adds prices, specs and descriptions to the seller's existing offers, matched by external id."
+                  checked={field.value ?? true}
+                  onChange={(event) => field.onChange(event.currentTarget.checked)}
+                />
+              )}
+            />
+            <Controller
+              name="hasAllProducts"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  label="Has all products"
+                  description="Feed sources only: a complete run removes the offers it did not see."
+                  disabled={!isFeedSourceType(productSource.type)}
+                  checked={field.value ?? false}
+                  onChange={(event) => field.onChange(event.currentTarget.checked)}
                 />
               )}
             />

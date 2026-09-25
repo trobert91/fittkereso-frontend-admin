@@ -27,6 +27,11 @@ const ACTION_META: Record<
   scheduling_changed: { label: "Scheduling changed", color: "yellow" },
   processing_changed: { label: "Processing changed", color: "yellow" },
   seller_changed: { label: "Seller changed", color: "indigo" },
+  identifies_products_changed: {
+    label: "Identifies products changed",
+    color: "orange",
+  },
+  has_all_products_changed: { label: "Has all products changed", color: "orange" },
 };
 
 const str = (value: unknown): string | null =>
@@ -97,6 +102,8 @@ function ActionDetail({ action }: { action: ProductSourceAction }): ReactNode {
 
     case "scheduling_changed":
     case "processing_changed":
+    case "identifies_products_changed":
+    case "has_all_products_changed":
       return (
         <Text size="sm">
           {onOff(payload["from"])} → {onOff(payload["to"])}

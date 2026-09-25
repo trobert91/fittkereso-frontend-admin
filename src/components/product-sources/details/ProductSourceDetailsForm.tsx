@@ -27,7 +27,11 @@ import {
   updateProductSource,
 } from "@/store/slices/product-source-slice";
 import { ProductSourceUpdateDto } from "@/models/dtos/product-source-update.dto";
-import { ProductSourceConfig } from "@/models/product-source";
+import {
+  isFeedSourceType,
+  PRODUCT_SOURCE_TYPE_LABELS,
+  ProductSourceConfig,
+} from "@/models/product-source";
 import { JsonEditor } from "@/components/JsonEditor";
 import { getProductSourceConfigSchema } from "@/api-actions/product-source/get-product-source-config-schema";
 import { CopyIdBadge } from "@/components/copy-id-badge";
@@ -115,6 +119,8 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
       schedulingEnabled: productSource?.schedulingEnabled ?? false,
       processingEnabled: productSource?.processingEnabled ?? false,
       priority: productSource?.priority ?? 0,
+      identifiesProducts: productSource?.identifiesProducts ?? true,
+      hasAllProducts: productSource?.hasAllProducts ?? false,
       maxConcurrent: productSource?.maxConcurrent ?? 1,
       requestsPerHour: productSource?.requestsPerHour ?? 1,
       frequency: productSource?.frequency ?? "",
@@ -135,6 +141,8 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
         schedulingEnabled: productSource.schedulingEnabled ?? false,
         processingEnabled: productSource.processingEnabled ?? false,
         priority: productSource.priority ?? 0,
+        identifiesProducts: productSource.identifiesProducts ?? true,
+        hasAllProducts: productSource.hasAllProducts ?? false,
         maxConcurrent: productSource.maxConcurrent ?? 1,
         requestsPerHour: productSource.requestsPerHour ?? 1,
         frequency: productSource.frequency ?? "",
@@ -236,9 +244,9 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
             <TextInput
               label="Type"
               description={
-                sourceType === "arukereso"
-                  ? "Imports a product feed. Fixed at creation."
-                  : "Scrapes list and detail pages. Fixed at creation."
+                sourceType
+                  ? `${PRODUCT_SOURCE_TYPE_LABELS[sourceType]}. Fixed at creation.`
+                  : "Fixed at creation."
               }
               value={sourceType ?? ""}
               disabled
@@ -338,6 +346,34 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
               disabled
             />
           </SimpleGrid>
+
+          <Group gap="xl" align="flex-start">
+            <Controller
+              name="identifiesProducts"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  label="Identifies products"
+                  description="Off: only adds prices, specs and descriptions to the seller's existing offers, matched by external id."
+                  checked={field.value ?? true}
+                  onChange={(event) => field.onChange(event.currentTarget.checked)}
+                />
+              )}
+            />
+            <Controller
+              name="hasAllProducts"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  label="Has all products"
+                  description="Feed sources only: a complete run removes the offers it did not see."
+                  disabled={!isFeedSourceType(sourceType)}
+                  checked={field.value ?? false}
+                  onChange={(event) => field.onChange(event.currentTarget.checked)}
+                />
+              )}
+            />
+          </Group>
         </DetailsSection>
 
         <DetailsSection

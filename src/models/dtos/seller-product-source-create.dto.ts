@@ -9,4 +9,10 @@ export interface SellerProductSourceCreateDto {
    * creation — the backend rejects an update that tries to.
    */
   type: ProductSourceType;
+  /** Unique per seller. Omitted, the backend picks a free one. */
+  priority?: number;
+  /** Defaults to true; a seller's first source must identify products. */
+  identifiesProducts?: boolean;
+  /** Defaults to false; feed sources only. */
+  hasAllProducts?: boolean;
 }

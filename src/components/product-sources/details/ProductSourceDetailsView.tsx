@@ -14,6 +14,10 @@ import { CopyIdBadge } from "@/components/copy-id-badge";
 import { JsonEditor } from "@/components/JsonEditor";
 import { DetailsSection } from "@/components/details/details-section";
 import { ProductSource } from "@/models/dtos/product-source-search-models";
+import {
+  isFeedSourceType,
+  PRODUCT_SOURCE_TYPE_COLORS,
+} from "@/models/product-source";
 import { formatDate } from "@/utils/date";
 import { routes } from "@/utils/routes";
 
@@ -102,7 +106,7 @@ export function ProductSourceDetailsView({
             value={
               <Badge
                 variant="light"
-                color={productSource.type === "arukereso" ? "grape" : "blue"}
+                color={PRODUCT_SOURCE_TYPE_COLORS[productSource.type]}
               >
                 {productSource.type}
               </Badge>
@@ -151,6 +155,24 @@ export function ProductSourceDetailsView({
             }
           />
           <DetailItem label="Priority" value={productSource.priority} />
+          <DetailItem
+            label="Identifies products"
+            value={
+              <BoolBadge
+                value={productSource.identifiesProducts}
+                label="Identifies products"
+              />
+            }
+          />
+          <DetailItem
+            label="Has all products"
+            value={
+              <BoolBadge
+                value={productSource.hasAllProducts}
+                label="Has all products"
+              />
+            }
+          />
         </SimpleGrid>
       </DetailsSection>
 
@@ -190,7 +212,7 @@ export function ProductSourceDetailsView({
       <DetailsSection
         title="Config"
         description={
-          productSource.type === "arukereso"
+          isFeedSourceType(productSource.type)
             ? "Where the product feed is, and how its fields map onto ours."
             : "The declarative scraping definition interpreted by the scrape interpreter."
         }
@@ -201,7 +223,7 @@ export function ProductSourceDetailsView({
               point. This used to read `fullSyncStartUrl`, which no config has
               carried since start URLs replaced it — so the field rendered
               empty for every source rather than saying anything. */}
-          {productSource.type === "arukereso" ? (
+          {isFeedSourceType(productSource.type) ? (
             <DetailItem
               label="Feed URL"
               value={config?.feedUrl as string | undefined}

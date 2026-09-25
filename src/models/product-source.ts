@@ -11,7 +11,26 @@ import { ProductSpecs } from "./product-specs";
 export enum ProductSourceType {
   scraping = "scraping",
   arukereso = "arukereso",
+  googleshop = "googleshop",
 }
+
+// Mirrors isFeedSourceType in the backend: only a feed run sees the whole
+// catalog in one pass, so only a feed source may set hasAllProducts.
+export const isFeedSourceType = (type?: ProductSourceType): boolean =>
+  type === ProductSourceType.arukereso || type === ProductSourceType.googleshop;
+
+export const PRODUCT_SOURCE_TYPE_LABELS: Record<ProductSourceType, string> = {
+  [ProductSourceType.scraping]: "Scraping — page pipelines",
+  [ProductSourceType.arukereso]: "Árukereső — product feed",
+  [ProductSourceType.googleshop]: "Google Shopping — TSV product feed",
+};
+
+// The badge colour of each type, wherever a source's type is shown.
+export const PRODUCT_SOURCE_TYPE_COLORS: Record<ProductSourceType, string> = {
+  [ProductSourceType.scraping]: "blue",
+  [ProductSourceType.arukereso]: "grape",
+  [ProductSourceType.googleshop]: "teal",
+};
 
 // The declarative scraping definition stored on ProductSource.config (jsonb).
 // Only the handful of top-level keys the admin UI surfaces are named — the rest

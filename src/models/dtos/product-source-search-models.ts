@@ -30,7 +30,13 @@ export interface ProductSource {
   actions?: ProductSourceAction[];
   schedulingEnabled: boolean;
   processingEnabled: boolean;
+  // Unique per seller: the higher one overwrites the lower one field by field.
   priority: number;
+  // Off: the source only contributes to offers an identifying source of the
+  // seller created. Every seller keeps at least one identifying source.
+  identifiesProducts: boolean;
+  // Feed sources only: a complete run may remove the offers it did not see.
+  hasAllProducts: boolean;
   maxConcurrent: number;
   requestsPerHour: number;
   lastRunAt?: string | null;

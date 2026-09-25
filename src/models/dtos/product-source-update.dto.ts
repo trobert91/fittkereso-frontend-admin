@@ -7,6 +7,8 @@ export interface ProductSourceUpdateDto {
   schedulingEnabled?: boolean;
   processingEnabled?: boolean;
   priority?: number;
+  identifiesProducts?: boolean;
+  hasAllProducts?: boolean;
   maxConcurrent?: number;
   requestsPerHour?: number;
   frequency?: string | null;

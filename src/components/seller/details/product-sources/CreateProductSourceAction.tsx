@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Button, Modal, Select, Stack, TextInput } from "@mantine/core";
+import {
+  Button,
+  Modal,
+  NumberInput,
+  Select,
+  Stack,
+  Switch,
+  TextInput,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IoIosAdd } from "react-icons/io";
 import { postSellerProductSourceCreate } from "@/api-actions/seller/seller-product-source-create";
@@ -10,7 +18,11 @@ import {
   PRODUCT_SOURCE_TYPES,
   SellerProductSourceCreateDto,
 } from "@/models/dtos/seller-product-source-create.dto";
-import { ProductSourceType } from "@/models/product-source";
+import {
+  isFeedSourceType,
+  PRODUCT_SOURCE_TYPE_LABELS,
+  ProductSourceType,
+} from "@/models/product-source";
 
 interface CreateProductSourceActionProps {
   sellerId: string;
@@ -27,11 +39,18 @@ export function CreateProductSourceAction({
     register,
     control,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
     reset,
   } = useForm<SellerProductSourceCreateDto>({
-    defaultValues: { name: "", type: ProductSourceType.scraping },
+    defaultValues: {
+      name: "",
+      type: ProductSourceType.scraping,
+      identifiesProducts: true,
+      hasAllProducts: false,
+    },
   });
+  const type = watch("type");
 
   const handleClose = () => {
     setOpened(false);
@@ -40,7 +59,10 @@ export function CreateProductSourceAction({
 
   const onSubmit = async (values: SellerProductSourceCreateDto) => {
     try {
-      await postSellerProductSourceCreate(sellerId, values);
+      await postSellerProductSourceCreate(sellerId, {
+        ...values,
+        hasAllProducts: isFeedSourceType(values.type) && values.hasAllProducts,
+      });
 
       notifications.show({
         title: "Success",
@@ -91,15 +113,61 @@ export function CreateProductSourceAction({
                   description="Cannot be changed later — each type has its own config format."
                   data={PRODUCT_SOURCE_TYPES.map((value) => ({
                     value,
-                    label:
-                      value === ProductSourceType.scraping
-                        ? "Scraping — page pipelines"
-                        : "Árukereső — product feed",
+                    label: PRODUCT_SOURCE_TYPE_LABELS[value],
                   }))}
                   allowDeselect={false}
                   required
                   value={field.value}
                   onChange={(value) => field.onChange(value)}
+                />
+              )}
+            />
+
+            <Controller
+              name="priority"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Priority"
+                  description="Unique per seller; higher wins field by field. Leave empty to pick one below the seller's lowest."
+                  min={0}
+                  step={1}
+                  allowDecimal={false}
+                  value={field.value ?? ""}
+                  onChange={(value) =>
+                    field.onChange(value === "" ? undefined : Number(value))
+                  }
+                />
+              )}
+            />
+
+            <Controller
+              name="identifiesProducts"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  label="Identifies products"
+                  description="Off: only adds prices, specs and descriptions to the seller's existing offers. A seller's first source must identify."
+                  checked={field.value ?? true}
+                  onChange={(event) =>
+                    field.onChange(event.currentTarget.checked)
+                  }
+                />
+              )}
+            />
+
+            <Controller
+              name="hasAllProducts"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  label="Has all products"
+                  description="Feed sources only: a complete run removes the offers it did not see."
+                  disabled={!isFeedSourceType(type)}
+                  checked={field.value ?? false}
+                  onChange={(event) =>
+                    field.onChange(event.currentTarget.checked)
+                  }
                 />
               )}
             />

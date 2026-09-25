@@ -10,8 +10,9 @@ import { axiosInstance } from "../axios-instance";
  * valid config is invalid — or worse, the reverse.
  *
  * There is one schema PER TYPE, and the type must be passed: "scraping"
- * (startUrls, listPage, detailPage pipelines) and "arukereso" (feedUrl, field
- * mapping) share no keys at all. Omitting it returns every schema keyed by
+ * (startUrls, listPage, detailPage pipelines) and the feed types "arukereso"
+ * and "googleshop" (feedUrl, field mapping; one schema for both) share no keys
+ * at all. Omitting it returns every schema keyed by
  * type, which is not itself a schema — handing that to the editor validates
  * nothing while looking like it validates everything.
  */

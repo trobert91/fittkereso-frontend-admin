@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "@/store/store-hooks";
 import { ProductSourceDetailsForm } from "./ProductSourceDetailsForm";
 import { ProductSourceDetailsView } from "./ProductSourceDetailsView";
 import { ProductSourceHistory } from "./ProductSourceHistory";
+import { ProductSourceListings } from "./ProductSourceListings";
 import { ProductSourceVersions } from "./ProductSourceVersions";
 
 export function ProductSourceDetails() {
@@ -52,6 +53,9 @@ export function ProductSourceDetails() {
           answers with the whole source, history included, and putting that in
           the store re-renders every box at once — so none of them can be
           showing something the last write already moved past. */}
+      {/* Fetched on its own: a feed source holds thousands of listings. */}
+      <ProductSourceListings productSource={productSource} />
+
       <ProductSourceVersions
         productSource={productSource}
         onRestored={(updated) => dispatch(setProductSource(updated))}
