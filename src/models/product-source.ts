@@ -1,4 +1,4 @@
-import { Offer } from "./offer";
+import { Offer, OfferAvailability } from "./offer";
 import type { ProductModel } from "./product-model";
 import { ProductSpecs } from "./product-specs";
 
@@ -60,6 +60,26 @@ export interface ProductSourceImage {
   order: number;
 }
 
+// One offer as a listing stated it, before the seller's sources are composed
+// into the Offer — see ScrapedOffer on the backend. A key the source maps but
+// found empty is null; a key it does not map is absent, and then the seller's
+// other sources decide that field.
+export interface ScrapedOffer {
+  price: number;
+  priceWithoutDiscount?: number | null;
+  currency?: string | null;
+  availability?: OfferAvailability | null;
+  url?: string | null;
+  externalId?: string;
+  // The Offer.externalId the entry was stored under. Null when its id collided
+  // with another entry on the same page, so it has no offer of its own.
+  resolvedExternalId?: string | null;
+  gtin?: string | null;
+  mpn?: string | null;
+  locations?: string[] | null;
+  specs?: ProductSpecs;
+}
+
 export interface ProductSourceRecord {
   id: string;
   url?: string;
@@ -73,9 +93,15 @@ export interface ProductSourceRecord {
   // separate top-level fields. See ProductSourceRecord.scrapedProduct on
   // the backend entity.
   scrapedProduct?: {
+    category?: { id: string; slug: string; name: string };
     brand?: string;
     model?: string;
+    // Whether `model` came back from the LLM identity extraction, rather than
+    // being the raw title because the call was skipped or failed.
+    nameCleaned?: boolean;
     displayName?: string;
+    aliases?: string[];
+    externalId?: string;
     // The raw, unfiltered title/model text exactly as scraped, before
     // brand/marketing/size/color boilerplate is stripped into `model`.
     originalName?: string;
@@ -85,6 +111,9 @@ export interface ProductSourceRecord {
     // post-process pass merges its own contribution on top to produce
     // `specs` above — also exactly what was sent to the LLM as input.
     extractedSpecs?: ProductSpecs;
+    // The offer-level part of `extractedSpecs` (frame size, colour…), which
+    // goes to the offer entries rather than to the product's specs.
+    offerLevelDeterministicSpecs?: ProductSpecs;
     rawSpecs?: ScrapedProductSpec[];
     // Free-text marketing/description copy from the listing, when the
     // source's config extracts one. Lower-confidence prose, not a
@@ -96,6 +125,7 @@ export interface ProductSourceRecord {
     // listing to the product any of them already sits on.
     siblingExternalIds?: string[];
     images?: ProductSourceImage[];
+    offers?: ScrapedOffer[];
   };
   specValid?: boolean;
   specErrors?: Record<string, any>;
@@ -105,6 +135,17 @@ export interface ProductSourceRecord {
   // ProductScrapeUpdaterService), derived from scrapedProduct at scrape time.
   normalizedSourceName?: string;
   // The linked supplier/source config, e.g. "ebikeshop". Null for manual (admin-entered) specs.
-  source?: { id: string; name: string } | null;
+  // The product details route also joins its seller and multi-source settings.
+  source?: {
+    id: string;
+    name: string;
+    type?: ProductSourceType;
+    priority?: number;
+    identifiesProducts?: boolean;
+    hasAllProducts?: boolean;
+    seller?: { id: string; name: string } | null;
+  } | null;
+  // The offers this listing supplied the price of — the seller's
+  // highest-priority listing of each. Other fields may come from its other sources.
   offers?: Offer[];
 }

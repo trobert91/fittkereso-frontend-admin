@@ -46,7 +46,7 @@ const availabilityLabel: Record<OfferAvailability, string> = {
 // source publishes no stock data at all (an Árukereső feed, say), while
 // `unknown` means it published something we could not map — the second is a
 // config bug worth spotting, the first is just how that source is.
-const availabilityBadge = (
+export const availabilityBadge = (
   availability: OfferAvailability | null | undefined
 ): { color: string; label: string } =>
   availability

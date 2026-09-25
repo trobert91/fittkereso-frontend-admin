@@ -1,306 +1,154 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import {
+  Anchor,
   Badge,
-  Box,
-  Button,
   Card,
-  CopyButton,
   Group,
-  Modal,
-  SimpleGrid,
-  Spoiler,
   Stack,
   Text,
-  Title,
   Tooltip,
-  UnstyledButton,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { selectProduct } from "@/store/slices/product-slice";
 import { useAppSelector } from "@/store/store-hooks";
-import { ProductSourceRecord, ScrapedProductSpec } from "@/models/product-source";
-import { sortBy } from "lodash";
-import { OrderedSpec, ProductSpecs } from "@/models/product-specs";
-import { AdminSpecTable } from "../specs/AdminSpecTable";
-import { OfferCard } from "../offers/OfferCard";
-import { DeleteSourceButton } from "./DeleteSourceButton";
-import { ResyncSourceButton } from "./ResyncSourceButton";
-import { formatDate } from "@/utils/date";
+import { Offer } from "@/models/offer";
+import { SpecDefinitionJsonSchema } from "@/models/product-specs";
+import { routes } from "@/utils/routes";
+import { availabilityBadge, OfferCard } from "../offers/OfferCard";
+import { ListingCard } from "./ListingCard";
+import { formatMoney, groupListingsByShop, ShopGroup } from "./listing-fields";
+import { SectionTitle } from "./ListingFieldTables";
 
-// Reshapes a source's raw specs/specs into AdminSpecTable's input shape so
-// the Specs/Raw specs panels below render with the exact same component
-// (and visual language) as the "Specifications" tab.
-function toOrderedSpecs(specs?: ProductSpecs): OrderedSpec[] {
-  return Object.entries(specs ?? {})
-    .filter(([, value]) => value !== undefined && value !== null && value !== "")
-    .map(([key, value]) => ({ key, label: key, value }));
-}
+// The shop's composed offers on this product, on the shop's header line, so
+// the result stays visible while every source below it is closed.
+function ShopOfferSummary({ offers }: { offers: Offer[] }) {
+  if (!offers.length) {
+    return (
+      <Text size="xs" c="dimmed">
+        No offer
+      </Text>
+    );
+  }
 
-function toOrderedRawSpecs(rawSpecs?: ScrapedProductSpec[]): OrderedSpec[] {
-  return (rawSpecs ?? []).map((spec, index) => ({
-    key: `${spec.name}-${index}`,
-    label: spec.sectionTitle ? `${spec.sectionTitle} / ${spec.name}` : spec.name,
-    value: spec.values?.length ? spec.values.join(", ") : (spec.description ?? "—"),
-  }));
-}
+  if (offers.length > 1) {
+    const cheapest = offers.reduce((min, offer) =>
+      offer.price < min.price ? offer : min
+    );
+    return (
+      <Text size="sm">
+        {offers.length} offers · from{" "}
+        <b>{formatMoney(cheapest.price, cheapest.currency)}</b>
+      </Text>
+    );
+  }
 
-// Toggles a value in/out of an open-panels array — drives which of the
-// Specs/Raw specs panels the header buttons currently reveal.
-function togglePanel(open: string[], panel: string): string[] {
-  return open.includes(panel) ? open.filter((v) => v !== panel) : [...open, panel];
-}
-
-// Small thumbnail that opens the full-size scraped image in a modal on
-// click, instead of navigating away to the source-shop's own image URL.
-function SourceImageThumbnail({ url }: { url: string }) {
-  const [opened, { open, close }] = useDisclosure(false);
-
+  const [offer] = offers;
+  const availability = availabilityBadge(offer.availability);
   return (
-    <>
-      <UnstyledButton onClick={open} style={{ cursor: "zoom-in" }}>
-        <Box
-          style={{
-            position: "relative",
-            width: 48,
-            height: 48,
-            borderRadius: 6,
-            overflow: "hidden",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- scraped
-              images live on arbitrary source-shop hosts, not the CDN
-              domains next/image is configured to allow */}
-          <img
-            src={url}
-            alt="Scraped product"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-            }}
-          />
-        </Box>
-      </UnstyledButton>
-
-      <Modal opened={opened} onClose={close} centered size="auto">
-        {/* eslint-disable-next-line @next/next/no-img-element -- see above */}
-        <img
-          src={url}
-          alt="Scraped product"
-          style={{ maxWidth: "80vw", maxHeight: "80vh", display: "block" }}
-        />
-      </Modal>
-    </>
+    <Group gap={8} wrap="nowrap">
+      {offer.priceWithoutDiscount != null && (
+        <Text size="xs" c="dimmed" td="line-through">
+          {formatMoney(offer.priceWithoutDiscount, offer.currency)}
+        </Text>
+      )}
+      <Text size="sm" fw={700}>
+        {formatMoney(offer.price, offer.currency)}
+      </Text>
+      <Badge size="sm" variant="light" color={availability.color}>
+        {availability.label}
+      </Badge>
+      {!offer.active && (
+        <Badge size="sm" variant="filled" color="gray">
+          Inactive
+        </Badge>
+      )}
+    </Group>
   );
 }
 
-function ProductSourceCard({
-  source,
+/**
+ * One box per seller: its name and its composed offer on top, and each of its
+ * sources inside as a box of its own, closed, highest priority first.
+ */
+function ShopSection({
+  group,
   productId,
+  schema,
+  offers,
+  unpricedOffers,
 }: {
-  source: ProductSourceRecord;
+  group: ShopGroup;
   productId: string;
+  schema: SpecDefinitionJsonSchema | undefined;
+  // The shop's offers on this product.
+  offers: Offer[];
+  // Those of them that no source supplied the price of.
+  unpricedOffers: Offer[];
 }) {
-  const [openSpecs, setOpenSpecs] = useState<string[]>([]);
-
-  const canResync = Boolean(source.source) && Boolean(source.url);
-  const scraped = source.scrapedProduct;
-  const errorCount = source.specErrors ? Object.keys(source.specErrors).length : 0;
-  const offers = source.offers ?? [];
-
-  const orderedSpecs = toOrderedSpecs(scraped?.specs);
-  const orderedRawSpecs = toOrderedRawSpecs(scraped?.rawSpecs);
-  const images = sortBy(scraped?.images ?? [], (img) => img.order);
+  const count = group.listings.length;
 
   return (
-    <Card withBorder radius="sm" padding="sm">
+    <Card withBorder radius="md" padding="sm" shadow="xs">
       <Card.Section withBorder inheritPadding py="xs">
-        <Group justify="space-between" align="center" wrap="nowrap" gap="md">
-          <Group gap={6} wrap="wrap" style={{ minWidth: 0, flex: 1 }}>
-            {source.source ? (
-              <Title order={5} fw={600}>
-                {source.source.name}
-              </Title>
-            ) : (
-              <Title order={5} fw={600} c="dimmed">
-                Manual entry
-              </Title>
-            )}
-            <Badge color={source.specValid ? "green" : "red"} variant="light" size="sm">
-              {source.specValid ? "Valid" : "Invalid"}
-            </Badge>
-            {source.deduplicated && (
-              <Badge color="orange" variant="light" size="sm">
-                Deduplicated
-              </Badge>
-            )}
-            {errorCount > 0 && (
-              <Tooltip
-                label={
-                  <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>
-                    {JSON.stringify(source.specErrors, null, 2)}
-                  </pre>
-                }
-                multiline
-                w={400}
-                withArrow
+        <Group justify="space-between" align="center" gap="sm">
+          <Group gap="xs" align="center">
+            {group.sellerId ? (
+              <Anchor
+                component={Link}
+                href={routes.sellers.details(group.sellerId)}
+                fw={700}
               >
-                <Badge color="red" variant="light" size="sm" style={{ cursor: "pointer" }}>
-                  {errorCount} spec error{errorCount === 1 ? "" : "s"}
+                {group.name}
+              </Anchor>
+            ) : (
+              <Text fw={700} c={group.manual ? "dimmed" : undefined}>
+                {group.name}
+              </Text>
+            )}
+            {!group.manual && (
+              <Tooltip
+                label="The shop's offers are composed field by field from its sources, highest priority first. A field a source does not read is left to the others."
+                multiline
+                w={320}
+                withArrow
+                disabled={count < 2}
+              >
+                <Badge variant="default" size="sm" tt="none">
+                  {count} source{count === 1 ? "" : "s"}
                 </Badge>
               </Tooltip>
             )}
-            <CopyButton value={source.id}>
-              {({ copied, copy }) => (
-                <Tooltip label={copied ? "Copied!" : "Copy ID"} withArrow>
-                  <Badge
-                    color={copied ? "green" : "gray"}
-                    variant="outline"
-                    size="sm"
-                    style={{ cursor: "pointer" }}
-                    onClick={copy}
-                  >
-                    {source.id.slice(0, 8)}…
-                  </Badge>
-                </Tooltip>
-              )}
-            </CopyButton>
           </Group>
-
-          <Group gap="xs" style={{ flexShrink: 0 }} wrap="nowrap">
-            {orderedSpecs.length > 0 && (
-              <Button
-                variant={openSpecs.includes("specs") ? "filled" : "default"}
-                size="xs"
-                onClick={() => setOpenSpecs((open) => togglePanel(open, "specs"))}
-              >
-                Final specs ({orderedSpecs.length})
-              </Button>
-            )}
-            {orderedRawSpecs.length > 0 && (
-              <Button
-                variant={openSpecs.includes("rawSpecs") ? "filled" : "default"}
-                size="xs"
-                onClick={() => setOpenSpecs((open) => togglePanel(open, "rawSpecs"))}
-              >
-                Raw specs ({orderedRawSpecs.length})
-              </Button>
-            )}
-            {canResync && source.url ? (
-              <ResyncSourceButton
-                productId={productId}
-                sourceRecordId={source.id}
-                sourceUrl={source.url}
-              />
-            ) : null}
-            <DeleteSourceButton productId={productId} sourceId={source.id} />
-          </Group>
+          {!group.manual && <ShopOfferSummary offers={offers} />}
         </Group>
       </Card.Section>
 
-      <Stack gap="sm" mt="sm">
-        <Stack gap={2}>
-          {scraped?.displayName && (
-            source.url ? (
-              <Button
-                component="a"
-                href={source.url}
-                target="_blank"
-                rel="noreferrer"
-                size="xs"
-                variant="light"
-                justify="flex-start"
-                style={{ maxWidth: "fit-content" }}
-              >
-                <Text size="sm" fw={500} lineClamp={1} c="inherit">
-                  {scraped.displayName}
-                </Text>
-              </Button>
-            ) : (
-              <Text size="sm" fw={500} lineClamp={1}>
-                {scraped.displayName}
-              </Text>
-            )
-          )}
+      <Card.Section
+        inheritPadding
+        py="sm"
+        bg="var(--mantine-color-default-hover)"
+      >
+        <Stack gap="xs">
+          {group.listings.map((listing) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              productId={productId}
+              schema={schema}
+            />
+          ))}
 
-          {scraped?.originalName && scraped.originalName !== scraped?.model && (
-            <Badge
-              color="gray"
-              variant="outline"
-              size="sm"
-              style={{ textTransform: "none", maxWidth: "fit-content" }}
-            >
-              Original title: {scraped.originalName}
-            </Badge>
-          )}
-
-          <Group gap={12} wrap="wrap">
-            {(scraped?.brand || scraped?.model) && (
-              <Badge color="gray" variant="outline" size="sm" style={{ textTransform: "none" }}>
-                {[scraped?.brand, scraped?.model].filter(Boolean).join(" · ")}
-              </Badge>
-            )}
-            {scraped?.releaseYear && (
-              <Text size="xs" c="dimmed">
-                Released {scraped.releaseYear}
-              </Text>
-            )}
-            {source.externalId && (
-              <Badge color="gray" variant="outline" size="sm" style={{ textTransform: "none" }}>
-                externalId: {source.externalId}
-              </Badge>
-            )}
-            {scraped?.siblingExternalIds?.length ? (
-              <Badge color="gray" variant="outline" size="sm" style={{ textTransform: "none" }}>
-                Declared sizes: {scraped.siblingExternalIds.join(", ")}
-              </Badge>
-            ) : null}
-            <Badge color="gray" variant="outline" size="sm" style={{ textTransform: "none" }}>
-              Updated {formatDate(source.lastUpdated) || "—"}
-            </Badge>
-          </Group>
-
-          {scraped?.description && (
-            <Spoiler
-              maxHeight={40}
-              showLabel="Show description"
-              hideLabel="Hide"
-              w="100%"
-              mt="xs"
-            >
-              <Text size="xs" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
-                {scraped.description}
-              </Text>
-            </Spoiler>
+          {unpricedOffers.length > 0 && (
+            <Stack gap={6}>
+              <SectionTitle>Offers not priced from any source</SectionTitle>
+              {unpricedOffers.map((offer) => (
+                <OfferCard key={offer.id} offer={offer} compact />
+              ))}
+            </Stack>
           )}
         </Stack>
-
-        {openSpecs.includes("specs") && orderedSpecs.length > 0 && (
-          <AdminSpecTable specs={orderedSpecs} />
-        )}
-
-        {openSpecs.includes("rawSpecs") && orderedRawSpecs.length > 0 && (
-          <AdminSpecTable specs={orderedRawSpecs} />
-        )}
-
-        {images.length > 0 && (
-          <SimpleGrid cols={{ base: 6, sm: 8, md: 10, lg: 12 }} spacing={6}>
-            {images.map((img) => (
-              <SourceImageThumbnail key={img.url} url={img.url} />
-            ))}
-          </SimpleGrid>
-        )}
-
-        {offers.length > 0 && (
-          <Stack gap="xs">
-            {offers.map((offer) => (
-              <OfferCard key={offer.id} offer={offer} compact />
-            ))}
-          </Stack>
-        )}
-      </Stack>
+      </Card.Section>
     </Card>
   );
 }
@@ -318,10 +166,29 @@ export function ProductSourcesTab() {
     return <Text c="dimmed">No sources</Text>;
   }
 
+  const schema = product.productCategory?.jsonSchema;
+  const offers = product.offers ?? [];
+  const pricedOfferIds = new Set(
+    sources.flatMap((source) => (source.offers ?? []).map((offer) => offer.id))
+  );
+  const offersOf = (group: ShopGroup) =>
+    group.sellerId
+      ? offers.filter((offer) => offer.seller?.id === group.sellerId)
+      : [];
+
   return (
-    <Stack gap="md">
-      {sources.map((source) => (
-        <ProductSourceCard key={source.id} source={source} productId={product.id} />
+    <Stack gap="sm">
+      {groupListingsByShop(sources).map((group) => (
+        <ShopSection
+          key={group.key}
+          group={group}
+          productId={product.id}
+          schema={schema}
+          offers={offersOf(group)}
+          unpricedOffers={offersOf(group).filter(
+            (offer) => !pricedOfferIds.has(offer.id)
+          )}
+        />
       ))}
     </Stack>
   );
