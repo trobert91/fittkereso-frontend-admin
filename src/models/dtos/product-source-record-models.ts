@@ -1,9 +1,19 @@
 import { BasePageResult } from "./base-page-result";
 import { OfferAvailability } from "../offer";
 import { ProductSourceRecord, ProductSourceType } from "../product-source";
-import { SpecDefinitionJsonSchema } from "../product-specs";
+import { ProductSpecs, SpecDefinitionJsonSchema } from "../product-specs";
 
-/** One listing of a source, as the list shows it. See the backend's ProductSourceRecordRow. */
+/** One offer-level spec of a listing, labelled from its category's schema. */
+export interface ListingOfferSpec {
+  key: string;
+  /** The schema's title for the key, else the key itself. */
+  label: string;
+  unit?: string;
+  /** Every value its offer entries state, once each. */
+  values: ProductSpecs[string][];
+}
+
+/** One listing of a source, as the list shows it. See the backend's ProductSourceRecordListItem. */
 export interface ProductSourceRecordRow {
   id: string;
   sourceId: string;
@@ -16,8 +26,12 @@ export interface ProductSourceRecordRow {
   /** The externalIds its offers are stored under. */
   offerExternalIds: string[];
   title: string | null;
+  /** The title exactly as the shop showed it; null on a record stored before it was kept. */
+  originalName: string | null;
   brand: string | null;
   categoryName: string | null;
+  /** Its offer entries' offer-level specs (size, colour…), one per key. */
+  offerSpecs: ListingOfferSpec[];
   /** How many offer entries (sizes, colours…) the listing states. */
   offerCount: number;
   /** The lowest price among its offer entries. */
@@ -30,6 +44,8 @@ export interface ProductSourceRecordRow {
   /** Null while the listing waits unattached. */
   productId: string | null;
   productName: string | null;
+  /** The product's price: its cheapest active offer, across every seller. */
+  productPrice: number | null;
   /** When its source last listed it. */
   seenAt: string;
   lastUpdated: string;

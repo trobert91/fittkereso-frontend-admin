@@ -146,7 +146,7 @@ export function ProductSourceRecordDetailsModal({
       size="80rem"
       title={
         <Text fw={600} lineClamp={1}>
-          {row?.title ?? row?.url ?? "Listing"}
+          {row?.originalName ?? row?.title ?? row?.url ?? "Listing"}
         </Text>
       }
     >

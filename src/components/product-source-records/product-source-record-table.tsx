@@ -45,7 +45,10 @@ import {
 } from "@/models/dtos/product-source-record-models";
 import { PRODUCT_SOURCE_TYPE_COLORS } from "@/models/product-source";
 import { availabilityBadge } from "@/components/product/details/offers/OfferCard";
-import { formatMoney } from "@/components/product/details/sources/listing-fields";
+import {
+  formatMoney,
+  formatSpecValue,
+} from "@/components/product/details/sources/listing-fields";
 import { useListRegistration } from "@/components/list/list-context";
 import { ListPagination } from "@/components/list/list-pagination";
 import { formatDate, formatRelativeDate } from "@/utils/date";
@@ -81,6 +84,9 @@ interface Filters extends TextFilters {
 }
 
 const TEXT_FILTER_KEYS: (keyof TextFilters)[] = ["search", "productName", "brand"];
+
+// A product's price carries no currency of its own; its offers default to HUF.
+const PRODUCT_PRICE_CURRENCY = "HUF";
 
 // The filters live in the URL too, so a filtered list can be linked to — the
 // source details page links here with its own source selected.
@@ -255,10 +261,10 @@ export function ProductSourceRecordTable() {
         cell: ({ row }) => {
           const listing = row.original;
           return (
-            <Stack gap={2} maw={360}>
+            <Stack gap={2} miw={240} maw={420}>
               <Group gap={4} wrap="nowrap" align="flex-start">
-                <Text size="sm" lineClamp={2}>
-                  {listing.title ?? listing.url ?? "—"}
+                <Text size="sm">
+                  {listing.originalName ?? listing.title ?? listing.url ?? "—"}
                 </Text>
                 {listing.url && (
                   <Tooltip label="Open the listing" withArrow>
@@ -301,10 +307,25 @@ export function ProductSourceRecordTable() {
         },
       }),
 
-      columnHelper.accessor("brand", {
-        id: "brand",
-        header: "Brand",
-        cell: ({ getValue }) => getValue() ?? <Dimmed />,
+      columnHelper.display({
+        id: "offerSpecs",
+        header: "Offer specs",
+        cell: ({ row }) => {
+          const specs = row.original.offerSpecs;
+          if (isEmpty(specs)) return <Dimmed />;
+          return (
+            <Group gap={4} miw={160}>
+              {specs.map((spec) => (
+                <Badge key={spec.key} size="sm" variant="default" tt="none">
+                  {spec.label}:{" "}
+                  {spec.values
+                    .map((value) => formatSpecValue(value, spec.unit))
+                    .join(", ")}
+                </Badge>
+              ))}
+            </Group>
+          );
+        },
       }),
 
       columnHelper.accessor("sourceName", {
@@ -331,29 +352,20 @@ export function ProductSourceRecordTable() {
                   {listing.sourceType}
                 </Badge>
               </Group>
-              {listing.sellerName && (
-                <Text size="xs" c="dimmed">
-                  {listing.sellerName}
-                </Text>
+              {listing.url && (
+                <Anchor
+                  href={listing.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  size="xs"
+                  truncate="end"
+                  maw={240}
+                  title={listing.url}
+                >
+                  {listing.url.replace(/^https?:\/\//, "")}
+                </Anchor>
               )}
             </Stack>
-          );
-        },
-      }),
-
-      columnHelper.accessor("externalId", {
-        id: "externalId",
-        header: "External id",
-        cell: ({ row }) => {
-          const ids = row.original.offerExternalIds.length
-            ? row.original.offerExternalIds.join(", ")
-            : row.original.externalId;
-          return ids ? (
-            <Text size="xs" ff="monospace" maw={200} lineClamp={2}>
-              {ids}
-            </Text>
-          ) : (
-            <Dimmed />
           );
         },
       }),
@@ -401,15 +413,24 @@ export function ProductSourceRecordTable() {
         cell: ({ row }) => {
           const listing = row.original;
           return listing.productId ? (
-            <Anchor
-              component={Link}
-              href={routes.products.details(listing.productId)}
-              size="sm"
-              lineClamp={2}
-              maw={280}
-            >
-              {listing.productName ?? listing.productId}
-            </Anchor>
+            <Group gap={8} wrap="nowrap" align="flex-start">
+              <Anchor
+                component={Link}
+                href={routes.products.details(listing.productId)}
+                size="sm"
+                lineClamp={2}
+                maw={280}
+              >
+                {listing.productName ?? listing.productId}
+              </Anchor>
+              {listing.productPrice !== null && (
+                <Tooltip label="The product's price: its cheapest offer" withArrow>
+                  <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+                    {formatMoney(listing.productPrice, PRODUCT_PRICE_CURRENCY)}
+                  </Text>
+                </Tooltip>
+              )}
+            </Group>
           ) : (
             <Badge color="orange" variant="light">
               Unattached
@@ -433,16 +454,6 @@ export function ProductSourceRecordTable() {
       columnHelper.accessor("lastUpdated", {
         id: "lastUpdated",
         header: "Updated",
-        cell: ({ getValue }) => (
-          <Text size="sm" style={{ whiteSpace: "nowrap" }}>
-            {formatDate(getValue())}
-          </Text>
-        ),
-      }),
-
-      columnHelper.accessor("createdAt", {
-        id: "createdAt",
-        header: "Created",
         cell: ({ getValue }) => (
           <Text size="sm" style={{ whiteSpace: "nowrap" }}>
             {formatDate(getValue())}
