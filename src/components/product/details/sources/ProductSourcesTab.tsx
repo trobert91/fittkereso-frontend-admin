@@ -58,11 +58,6 @@ function ShopOfferSummary({ offers }: { offers: Offer[] }) {
       <Badge size="sm" variant="light" color={availability.color}>
         {availability.label}
       </Badge>
-      {!offer.active && (
-        <Badge size="sm" variant="filled" color="gray">
-          Inactive
-        </Badge>
-      )}
     </Group>
   );
 }

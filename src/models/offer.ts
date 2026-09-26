@@ -41,7 +41,6 @@ export interface Offer extends BaseEntity {
   /** The manufacturer's article number, uppercased with spaces and hyphens removed. */
   mpn?: string | null;
   lastSynced: string;
-  active: boolean;
 
   // Used-goods fields
   mileageKm?: number;

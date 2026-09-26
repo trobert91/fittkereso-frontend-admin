@@ -133,7 +133,6 @@ export function OfferCard({
       radius="sm"
       padding={compact ? "xs" : "sm"}
       bg="var(--mantine-color-body)"
-      style={{ opacity: offer.active ? 1 : 0.6 }}
     >
       <Group justify="space-between" align="center" wrap="nowrap" gap="md">
         <Group gap="sm" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
@@ -163,11 +162,6 @@ export function OfferCard({
               <Badge variant="outline" color="gray" size="sm">
                 {conditionLabel[offer.condition]}
               </Badge>
-              {!offer.active && (
-                <Badge color="gray" variant="filled" size="sm">
-                  Inactive
-                </Badge>
-              )}
             </Group>
 
             {!compact && offer.seller.location && (
