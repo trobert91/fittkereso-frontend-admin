@@ -32,6 +32,40 @@ export const PRODUCT_SOURCE_TYPE_COLORS: Record<ProductSourceType, string> = {
   [ProductSourceType.googleshop]: "teal",
 };
 
+// Mirrors PRODUCT_SOURCE_FETCH_MODES in the backend: how every page and feed of
+// a source is fetched. Proxied unless someone chose otherwise — calling a shop
+// directly needs its consent, and a switch lands on the source's timeline.
+export enum ProductSourceFetchMode {
+  proxied = "proxied",
+  direct = "direct",
+}
+
+export const DEFAULT_PRODUCT_SOURCE_FETCH_MODE = ProductSourceFetchMode.proxied;
+
+export const PRODUCT_SOURCE_FETCH_MODE_LABELS: Record<ProductSourceFetchMode, string> = {
+  [ProductSourceFetchMode.proxied]: "Proxied — Zyte, paid",
+  [ProductSourceFetchMode.direct]: "Direct — free, needs the shop's consent",
+};
+
+// Short labels for badges and table cells.
+export const PRODUCT_SOURCE_FETCH_MODE_SHORT_LABELS: Record<ProductSourceFetchMode, string> = {
+  [ProductSourceFetchMode.proxied]: "Proxied",
+  [ProductSourceFetchMode.direct]: "Direct",
+};
+
+export const PRODUCT_SOURCE_FETCH_MODE_COLORS: Record<ProductSourceFetchMode, string> = {
+  [ProductSourceFetchMode.proxied]: "orange",
+  [ProductSourceFetchMode.direct]: "green",
+};
+
+// Zyte truncates a body over 10 MB, so a document that large has to be direct.
+export const FETCH_MODE_DESCRIPTION =
+  "How every page and feed of this source is fetched. Proxied goes through Zyte and is paid per request. Direct calls the shop itself for free: only for a shop that agreed to be read, or a feed over 10 MB, which Zyte truncates.";
+
+export const PRODUCT_SOURCE_FETCH_MODE_OPTIONS = Object.values(ProductSourceFetchMode).map(
+  (mode) => ({ value: mode, label: PRODUCT_SOURCE_FETCH_MODE_LABELS[mode] }),
+);
+
 // The declarative scraping definition stored on ProductSource.config (jsonb).
 // Only the handful of top-level keys the admin UI surfaces are named — the rest
 // of the pipeline (listPage, detailPage, discovery, …) is edited as raw JSON,

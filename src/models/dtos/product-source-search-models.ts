@@ -1,5 +1,9 @@
 import { BasePageResult } from "./base-page-result";
-import { ProductSourceConfig, ProductSourceType } from "../product-source";
+import {
+  ProductSourceConfig,
+  ProductSourceFetchMode,
+  ProductSourceType,
+} from "../product-source";
 import type { Seller } from "../seller";
 import type {
   ProductSourceAction,
@@ -37,6 +41,8 @@ export interface ProductSource {
   identifiesProducts: boolean;
   // Feed sources only: a complete run may remove the offers it did not see.
   hasAllProducts: boolean;
+  // Through Zyte (paid) or directly from the shop (free, with its consent).
+  fetchMode: ProductSourceFetchMode;
   maxConcurrent: number;
   requestsPerHour: number;
   lastRunAt?: string | null;

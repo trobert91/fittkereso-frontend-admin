@@ -18,8 +18,10 @@ import { FaEdit } from "react-icons/fa";
 import { IoMdInformationCircleOutline } from "react-icons/io";
 import { CopyIdBadge } from "@/components/copy-id-badge";
 import { JsonEditor } from "@/components/JsonEditor";
+import { FetchModeBadge } from "@/components/product-sources/fetch-mode-badge";
 import { ProductSource } from "@/models/dtos/product-source-search-models";
 import {
+  FETCH_MODE_DESCRIPTION,
   isFeedSourceType,
   PRODUCT_SOURCE_TYPE_COLORS,
 } from "@/models/product-source";
@@ -219,6 +221,13 @@ export function ProductSourceDetailsView({
                       offLabel="No"
                     />
                   }
+                />
+              </FieldGroup>
+
+              <FieldGroup title="Fetching" description={FETCH_MODE_DESCRIPTION}>
+                <Field
+                  label="Fetch mode"
+                  value={<FetchModeBadge mode={productSource.fetchMode} />}
                 />
               </FieldGroup>
 

@@ -28,9 +28,13 @@ import {
 } from "@/store/slices/product-source-slice";
 import { ProductSourceUpdateDto } from "@/models/dtos/product-source-update.dto";
 import {
+  DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
+  FETCH_MODE_DESCRIPTION,
   isFeedSourceType,
+  PRODUCT_SOURCE_FETCH_MODE_OPTIONS,
   PRODUCT_SOURCE_TYPE_LABELS,
   ProductSourceConfig,
+  ProductSourceFetchMode,
 } from "@/models/product-source";
 import { JsonEditor } from "@/components/JsonEditor";
 import { getProductSourceConfigSchema } from "@/api-actions/product-source/get-product-source-config-schema";
@@ -145,6 +149,7 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
       priority: productSource?.priority ?? 0,
       identifiesProducts: productSource?.identifiesProducts ?? true,
       hasAllProducts: productSource?.hasAllProducts ?? false,
+      fetchMode: productSource?.fetchMode ?? DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
       maxConcurrent: productSource?.maxConcurrent ?? 1,
       requestsPerHour: productSource?.requestsPerHour ?? 1,
       frequency: productSource?.frequency ?? "",
@@ -168,6 +173,7 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
         priority: productSource.priority ?? 0,
         identifiesProducts: productSource.identifiesProducts ?? true,
         hasAllProducts: productSource.hasAllProducts ?? false,
+        fetchMode: productSource.fetchMode ?? DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
         maxConcurrent: productSource.maxConcurrent ?? 1,
         requestsPerHour: productSource.requestsPerHour ?? 1,
         frequency: productSource.frequency ?? "",
@@ -385,6 +391,28 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
                 disabled={!isFeedSourceType(sourceType)}
                 checked={field.value ?? false}
                 onChange={(event) => field.onChange(event.currentTarget.checked)}
+              />
+            )}
+          />
+        </DetailsSection>
+
+        <DetailsSection title="Fetching">
+          <Controller
+            name="fetchMode"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Fetch mode"
+                description={FETCH_MODE_DESCRIPTION}
+                data={PRODUCT_SOURCE_FETCH_MODE_OPTIONS}
+                allowDeselect={false}
+                value={field.value ?? DEFAULT_PRODUCT_SOURCE_FETCH_MODE}
+                onChange={(value) =>
+                  field.onChange(
+                    (value as ProductSourceFetchMode | null) ??
+                      DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
+                  )
+                }
               />
             )}
           />

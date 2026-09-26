@@ -41,7 +41,8 @@ export type ProductSourceActionType =
   | "processing_changed"
   | "seller_changed"
   | "identifies_products_changed"
-  | "has_all_products_changed";
+  | "has_all_products_changed"
+  | "fetch_mode_changed";
 
 /** One entry of a source's audit timeline. */
 export interface ProductSourceAction {

@@ -9,6 +9,10 @@ import {
   ProductSourceActionType,
 } from "@/models/dtos/product-source-history-models";
 import { ProductSource } from "@/models/dtos/product-source-search-models";
+import {
+  PRODUCT_SOURCE_FETCH_MODE_SHORT_LABELS,
+  ProductSourceFetchMode,
+} from "@/models/product-source";
 import { formatDate } from "@/utils/date";
 
 // Mirrors DETAIL_ACTION_LIMIT in product-source-version.service.ts.
@@ -32,6 +36,7 @@ const ACTION_META: Record<
     color: "orange",
   },
   has_all_products_changed: { label: "Has all products changed", color: "orange" },
+  fetch_mode_changed: { label: "Fetch mode changed", color: "orange" },
 };
 
 const str = (value: unknown): string | null =>
@@ -42,6 +47,11 @@ const num = (value: unknown): number | null =>
 
 const onOff = (value: unknown): string =>
   value === true ? "on" : value === false ? "off" : "—";
+
+const fetchModeLabel = (value: unknown): string =>
+  PRODUCT_SOURCE_FETCH_MODE_SHORT_LABELS[value as ProductSourceFetchMode] ??
+  str(value) ??
+  "—";
 
 /**
  * What each entry says beyond its heading.
@@ -107,6 +117,13 @@ function ActionDetail({ action }: { action: ProductSourceAction }): ReactNode {
       return (
         <Text size="sm">
           {onOff(payload["from"])} → {onOff(payload["to"])}
+        </Text>
+      );
+
+    case "fetch_mode_changed":
+      return (
+        <Text size="sm">
+          {fetchModeLabel(payload["from"])} → {fetchModeLabel(payload["to"])}
         </Text>
       );
 

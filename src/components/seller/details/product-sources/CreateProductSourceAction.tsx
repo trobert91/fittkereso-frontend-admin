@@ -19,8 +19,12 @@ import {
   SellerProductSourceCreateDto,
 } from "@/models/dtos/seller-product-source-create.dto";
 import {
+  DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
+  FETCH_MODE_DESCRIPTION,
   isFeedSourceType,
+  PRODUCT_SOURCE_FETCH_MODE_OPTIONS,
   PRODUCT_SOURCE_TYPE_LABELS,
+  ProductSourceFetchMode,
   ProductSourceType,
 } from "@/models/product-source";
 
@@ -48,6 +52,7 @@ export function CreateProductSourceAction({
       type: ProductSourceType.scraping,
       identifiesProducts: true,
       hasAllProducts: false,
+      fetchMode: DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
     },
   });
   const type = watch("type");
@@ -167,6 +172,26 @@ export function CreateProductSourceAction({
                   checked={field.value ?? false}
                   onChange={(event) =>
                     field.onChange(event.currentTarget.checked)
+                  }
+                />
+              )}
+            />
+
+            <Controller
+              name="fetchMode"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  label="Fetch mode"
+                  description={FETCH_MODE_DESCRIPTION}
+                  data={PRODUCT_SOURCE_FETCH_MODE_OPTIONS}
+                  allowDeselect={false}
+                  value={field.value ?? DEFAULT_PRODUCT_SOURCE_FETCH_MODE}
+                  onChange={(value) =>
+                    field.onChange(
+                      (value as ProductSourceFetchMode | null) ??
+                        DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
+                    )
                   }
                 />
               )}

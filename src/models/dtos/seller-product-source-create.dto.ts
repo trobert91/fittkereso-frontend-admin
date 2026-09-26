@@ -1,4 +1,4 @@
-import { ProductSourceType } from "../product-source";
+import { ProductSourceFetchMode, ProductSourceType } from "../product-source";
 
 export const PRODUCT_SOURCE_TYPES = Object.values(ProductSourceType);
 
@@ -15,4 +15,6 @@ export interface SellerProductSourceCreateDto {
   identifiesProducts?: boolean;
   /** Defaults to false; feed sources only. */
   hasAllProducts?: boolean;
+  /** Defaults to proxied for every type. */
+  fetchMode?: ProductSourceFetchMode;
 }

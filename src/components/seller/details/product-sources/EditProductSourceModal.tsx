@@ -8,6 +8,7 @@ import {
   Group,
   Modal,
   NumberInput,
+  Select,
   Stack,
   Switch,
   TextInput,
@@ -18,8 +19,12 @@ import { putProductSourceUpdate } from "@/api-actions/product-source/product-sou
 import { ProductSource } from "@/models/dtos/product-source-search-models";
 import { ProductSourceUpdateDto } from "@/models/dtos/product-source-update.dto";
 import {
+  DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
+  FETCH_MODE_DESCRIPTION,
   isFeedSourceType,
+  PRODUCT_SOURCE_FETCH_MODE_OPTIONS,
   ProductSourceConfig,
+  ProductSourceFetchMode,
 } from "@/models/product-source";
 import { JsonEditor } from "@/components/JsonEditor";
 
@@ -58,6 +63,7 @@ export function EditProductSourceModal({
       priority: productSource.priority,
       identifiesProducts: productSource.identifiesProducts,
       hasAllProducts: productSource.hasAllProducts,
+      fetchMode: productSource.fetchMode ?? DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
       maxConcurrent: productSource.maxConcurrent,
       requestsPerHour: productSource.requestsPerHour,
       frequency: productSource.frequency ?? "",
@@ -74,6 +80,7 @@ export function EditProductSourceModal({
         priority: productSource.priority,
         identifiesProducts: productSource.identifiesProducts,
         hasAllProducts: productSource.hasAllProducts,
+        fetchMode: productSource.fetchMode ?? DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
         maxConcurrent: productSource.maxConcurrent,
         requestsPerHour: productSource.requestsPerHour,
         frequency: productSource.frequency ?? "",
@@ -188,6 +195,26 @@ export function EditProductSourceModal({
               )}
             />
           </Group>
+
+          <Controller
+            name="fetchMode"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Fetch mode"
+                description={FETCH_MODE_DESCRIPTION}
+                data={PRODUCT_SOURCE_FETCH_MODE_OPTIONS}
+                allowDeselect={false}
+                value={field.value ?? DEFAULT_PRODUCT_SOURCE_FETCH_MODE}
+                onChange={(value) =>
+                  field.onChange(
+                    (value as ProductSourceFetchMode | null) ??
+                      DEFAULT_PRODUCT_SOURCE_FETCH_MODE,
+                  )
+                }
+              />
+            )}
+          />
 
           <Group grow>
             <Controller

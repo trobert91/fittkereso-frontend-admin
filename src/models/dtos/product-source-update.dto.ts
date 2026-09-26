@@ -1,4 +1,4 @@
-import { ProductSourceConfig } from "../product-source";
+import { ProductSourceConfig, ProductSourceFetchMode } from "../product-source";
 
 export interface ProductSourceUpdateDto {
   name?: string;
@@ -9,6 +9,7 @@ export interface ProductSourceUpdateDto {
   priority?: number;
   identifiesProducts?: boolean;
   hasAllProducts?: boolean;
+  fetchMode?: ProductSourceFetchMode;
   maxConcurrent?: number;
   requestsPerHour?: number;
   frequency?: string | null;

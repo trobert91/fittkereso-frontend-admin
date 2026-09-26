@@ -30,6 +30,7 @@ import {
   ProductSourceType,
 } from "@/models/dtos/product-source-search-models";
 import { PRODUCT_SOURCE_TYPE_COLORS } from "@/models/product-source";
+import { FetchModeBadge } from "@/components/product-sources/fetch-mode-badge";
 import { useProductSourceSearch } from "@/hooks/useProductSourceSearch";
 import Link from "next/link";
 import { routes } from "@/utils/routes";
@@ -151,6 +152,12 @@ export function ProductSourceTable() {
             </Badge>
           );
         },
+      }),
+      // Not sortable, like `type`: the backend's sort whitelist does not have it.
+      columnHelper.accessor("fetchMode", {
+        id: "fetchMode",
+        header: () => <Text fw={500}>Fetch</Text>,
+        cell: (props) => <FetchModeBadge mode={props.getValue()} />,
       }),
       columnHelper.accessor("schedulingEnabled", {
         id: "schedulingEnabled",
