@@ -10,6 +10,7 @@ import {
   Text,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IoMdSync } from "react-icons/io";
 import { postTriggerProductSourceFullSync } from "@/api-actions/product-source/product-source-actions";
 import { postCategorySearch } from "@/api-actions/category/category-search";
 
@@ -106,7 +107,12 @@ export function TriggerProductSourceFullSyncAction({
 
   return (
     <>
-      <Button onClick={() => setOpened(true)}>Trigger full sync</Button>
+      <Button
+        leftSection={<IoMdSync size={16} />}
+        onClick={() => setOpened(true)}
+      >
+        Trigger full sync
+      </Button>
 
       <Modal
         opened={opened}

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Group, Stack } from "@mantine/core";
-import { FaEdit } from "react-icons/fa";
+import { Stack } from "@mantine/core";
 import {
   selectProductSource,
   selectProductSourceLoading,
@@ -12,7 +11,6 @@ import { useAppDispatch, useAppSelector } from "@/store/store-hooks";
 import { ProductSourceDetailsForm } from "./ProductSourceDetailsForm";
 import { ProductSourceDetailsView } from "./ProductSourceDetailsView";
 import { ProductSourceHistory } from "./ProductSourceHistory";
-import { ProductSourceListings } from "./ProductSourceListings";
 import { ProductSourceVersions } from "./ProductSourceVersions";
 
 export function ProductSourceDetails() {
@@ -27,21 +25,13 @@ export function ProductSourceDetails() {
 
   return (
     <Stack gap="md" mt="lg">
-      {!editing && (
-        <Group justify="flex-end">
-          <Button
-            leftSection={<FaEdit size={14} />}
-            onClick={() => setEditing(true)}
-          >
-            Edit
-          </Button>
-        </Group>
-      )}
-
       {editing ? (
         <ProductSourceDetailsForm onDone={() => setEditing(false)} />
       ) : (
-        <ProductSourceDetailsView productSource={productSource} />
+        <ProductSourceDetailsView
+          productSource={productSource}
+          onEdit={() => setEditing(true)}
+        />
       )}
 
       {/* Three boxes, split by what each is for: the record above is what the
@@ -52,10 +42,8 @@ export function ProductSourceDetails() {
           All three render from the one source in the store. A save or a restore
           answers with the whole source, history included, and putting that in
           the store re-renders every box at once — so none of them can be
-          showing something the last write already moved past. */}
-      {/* Fetched on its own: a feed source holds thousands of listings. */}
-      <ProductSourceListings productSource={productSource} />
-
+          showing something the last write already moved past. The source's
+          listings have their own page, linked from the header. */}
       <ProductSourceVersions
         productSource={productSource}
         onRestored={(updated) => dispatch(setProductSource(updated))}

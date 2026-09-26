@@ -323,13 +323,14 @@ function CountLabel({
 }
 
 // The open state's first line: where the listing lives, its state, and what
-// can be done with it.
+// can be done with it. Resync and delete act through the product page, so
+// they need the product.
 function ListingDetailsHeader({
   listing,
   productId,
 }: {
   listing: ProductSourceRecord;
-  productId: string;
+  productId?: string;
 }) {
   const source = listing.source;
   const errorCount = listing.specErrors
@@ -413,14 +414,16 @@ function ListingDetailsHeader({
             Source settings
           </Anchor>
         )}
-        {source && listing.url ? (
+        {productId && source && listing.url ? (
           <ResyncSourceButton
             productId={productId}
             sourceRecordId={listing.id}
             sourceUrl={listing.url}
           />
         ) : null}
-        <DeleteSourceButton productId={productId} sourceId={listing.id} />
+        {productId && (
+          <DeleteSourceButton productId={productId} sourceId={listing.id} />
+        )}
       </Group>
     </Group>
   );
@@ -429,15 +432,16 @@ function ListingDetailsHeader({
 // The open state: the offers this source supplied the price of first, then
 // every field it extracted — identity and offer entries side by side, its
 // specs (marked by where each value came from), its own label/value rows and
-// its description.
-function ListingDetails({
+// its description. Also the listing details modal's body, where it goes
+// without a product id and so without resync and delete.
+export function ListingDetails({
   listing,
   productId,
   schema,
   specRows,
 }: {
   listing: ProductSourceRecord;
-  productId: string;
+  productId?: string;
   schema: SpecDefinitionJsonSchema | undefined;
   specRows: SpecRow[];
 }) {

@@ -1,7 +1,9 @@
 import { getProductSourceById } from "@/api-actions/product-source/get-product-source";
 import { CommonPage } from "@/components/common-page";
 import { PageHeader } from "@/components/page-header";
-import { ProductSourceActions } from "@/components/product-sources/details/actions/ProductSourceActions";
+import { Group } from "@mantine/core";
+import { TriggerProductSourceFullSyncAction } from "@/components/product-sources/details/actions/TriggerProductSourceFullSyncAction";
+import { ViewSourceRecordsAction } from "@/components/product-sources/details/actions/ViewSourceRecordsAction";
 import { ProductSourceDetailsHydrator } from "@/components/product-sources/details/ProductSourceDetailsHydrator";
 import { routes } from "@/utils/routes";
 
@@ -24,7 +26,16 @@ export default async function ProductSourceDetailsPage({
       <PageHeader
         title={productSource?.name ?? "Product source details"}
         breadcrumbs={breadcrumbs}
-        actions={<ProductSourceActions />}
+        actions={
+          productSource ? (
+            <Group gap="xs">
+              <ViewSourceRecordsAction productSourceId={productSource.id} />
+              <TriggerProductSourceFullSyncAction
+                productSourceId={productSource.id}
+              />
+            </Group>
+          ) : undefined
+        }
       />
 
       <ProductSourceDetailsHydrator productSource={productSource} />

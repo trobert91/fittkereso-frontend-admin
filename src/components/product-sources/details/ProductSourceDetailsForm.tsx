@@ -9,7 +9,6 @@ import {
   Group,
   NumberInput,
   Select,
-  SimpleGrid,
   Stack,
   Switch,
   Text,
@@ -19,6 +18,7 @@ import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
 import { IoMdAlert } from "react-icons/io";
 import dayjs from "dayjs";
+import { isPlainObject, omit } from "lodash";
 import { useAppDispatch, useAppSelector } from "@/store/store-hooks";
 import {
   selectProductSource,
@@ -105,6 +105,30 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
       cancelled = true;
     };
   }, [sourceType]);
+
+  // maxItems is a config key, so its field edits the JSON text instead of
+  // keeping a copy: the two can never disagree, and whichever was touched last
+  // is what gets saved. Null while the text doesn't parse to an object.
+  const parsedConfigJson = useMemo(() => {
+    try {
+      const value: unknown = JSON.parse(configJson);
+      return isPlainObject(value) ? (value as ProductSourceConfig) : null;
+    } catch {
+      return null;
+    }
+  }, [configJson]);
+
+  const maxItems = parsedConfigJson?.maxItems;
+
+  const setMaxItems = (value: number | undefined) => {
+    if (!parsedConfigJson) return;
+    const next =
+      value === undefined
+        ? omit(parsedConfigJson, "maxItems")
+        : { ...parsedConfigJson, maxItems: value };
+    setConfigJson(JSON.stringify(next, null, 2));
+    setConfigError(null);
+  };
 
   const {
     control,
@@ -227,223 +251,231 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Stack gap="md">
+        {/* One field per row: descriptions and the seller select need the
+            width, and a single column reads top to bottom like the save. */}
         <DetailsSection title="General">
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            <TextInput
-              label="Name"
-              placeholder="Enter source name"
-              required
-              {...register("name", { required: "Name is required" })}
-              error={errors.name?.message}
-            />
+          <TextInput
+            label="Name"
+            placeholder="Enter source name"
+            required
+            {...register("name", { required: "Name is required" })}
+            error={errors.name?.message}
+          />
 
-            {/* Read-only on purpose, and the backend refuses a change anyway:
-                the config format is bound to the type, so reinterpreting a
-                stored config under a different one reads the wrong keys for
-                everything. A shop that needs both gets a second source. */}
-            <TextInput
-              label="Type"
-              description={
-                sourceType
-                  ? `${PRODUCT_SOURCE_TYPE_LABELS[sourceType]}. Fixed at creation.`
-                  : "Fixed at creation."
-              }
-              value={sourceType ?? ""}
-              disabled
-            />
+          {/* Read-only on purpose, and the backend refuses a change anyway:
+              the config format is bound to the type, so reinterpreting a
+              stored config under a different one reads the wrong keys for
+              everything. A shop that needs both gets a second source. */}
+          <TextInput
+            label="Type"
+            description={
+              sourceType
+                ? `${PRODUCT_SOURCE_TYPE_LABELS[sourceType]}. Fixed at creation.`
+                : "Fixed at creation."
+            }
+            value={sourceType ?? ""}
+            disabled
+          />
 
-            <Controller
-              name="sellerId"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  label="Seller"
-                  description="Every offer this source produces is attributed to this seller."
-                  placeholder="Select a seller"
-                  data={sellerOptions}
-                  searchable
-                  value={field.value || null}
-                  onChange={(value) => field.onChange(value ?? "")}
-                />
-              )}
-            />
-          </SimpleGrid>
+          <Controller
+            name="sellerId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Seller"
+                description="Every offer this source produces is attributed to this seller."
+                placeholder="Select a seller"
+                data={sellerOptions}
+                searchable
+                value={field.value || null}
+                onChange={(value) => field.onChange(value ?? "")}
+              />
+            )}
+          />
 
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-            <Stack gap={2}>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-                ID
-              </Text>
-              <Group>
-                <CopyIdBadge id={productSource?.id ?? ""} />
-              </Group>
-            </Stack>
-            <TextInput
-              label="Created"
-              value={formatDate(productSource?.createdAt)}
-              disabled
-            />
-            <TextInput
-              label="Updated"
-              value={formatDate(productSource?.updatedAt)}
-              disabled
-            />
-          </SimpleGrid>
+          <Stack gap={2}>
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+              ID
+            </Text>
+            <Group>
+              <CopyIdBadge id={productSource?.id ?? ""} />
+            </Group>
+          </Stack>
+          <TextInput
+            label="Created"
+            value={formatDate(productSource?.createdAt)}
+            disabled
+          />
+          <TextInput
+            label="Updated"
+            value={formatDate(productSource?.updatedAt)}
+            disabled
+          />
         </DetailsSection>
 
         <DetailsSection
           title="Scheduling & processing"
           description="Scheduling gates the sync cron; processing gates whether the collector claims this source's queued tasks at all."
         >
-          <Group gap="xl">
-            <Controller
-              name="schedulingEnabled"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  label="Scheduling Enabled"
-                  checked={field.value ?? false}
-                  onChange={(event) =>
-                    field.onChange(event.currentTarget.checked)
-                  }
-                />
-              )}
-            />
+          <Controller
+            name="schedulingEnabled"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                label="Scheduling Enabled"
+                checked={field.value ?? false}
+                onChange={(event) =>
+                  field.onChange(event.currentTarget.checked)
+                }
+              />
+            )}
+          />
 
-            <Controller
-              name="processingEnabled"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  label="Processing Enabled"
-                  checked={field.value ?? false}
-                  onChange={(event) =>
-                    field.onChange(event.currentTarget.checked)
-                  }
-                />
-              )}
-            />
-          </Group>
+          <Controller
+            name="processingEnabled"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                label="Processing Enabled"
+                checked={field.value ?? false}
+                onChange={(event) =>
+                  field.onChange(event.currentTarget.checked)
+                }
+              />
+            )}
+          />
 
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-            <Controller
-              name="priority"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label="Priority"
-                  min={0}
-                  step={1}
-                  value={field.value ?? 0}
-                  onChange={(value) => field.onChange(Number(value) || 0)}
-                />
-              )}
-            />
+          <Controller
+            name="priority"
+            control={control}
+            render={({ field }) => (
+              <NumberInput
+                label="Priority"
+                min={0}
+                step={1}
+                value={field.value ?? 0}
+                onChange={(value) => field.onChange(Number(value) || 0)}
+              />
+            )}
+          />
 
-            <TextInput
-              label="Last run"
-              value={formatDate(productSource?.lastRunAt)}
-              disabled
-            />
-          </SimpleGrid>
-
-          <Group gap="xl" align="flex-start">
-            <Controller
-              name="identifiesProducts"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  label="Identifies products"
-                  description="Off: only adds prices, specs and descriptions to the seller's existing offers, matched by external id."
-                  checked={field.value ?? true}
-                  onChange={(event) => field.onChange(event.currentTarget.checked)}
-                />
-              )}
-            />
-            <Controller
-              name="hasAllProducts"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  label="Has all products"
-                  description="Feed sources only: a complete run removes the offers it did not see."
-                  disabled={!isFeedSourceType(sourceType)}
-                  checked={field.value ?? false}
-                  onChange={(event) => field.onChange(event.currentTarget.checked)}
-                />
-              )}
-            />
-          </Group>
+          <Controller
+            name="identifiesProducts"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                label="Identifies products"
+                description="Off: only adds prices, specs and descriptions to the seller's existing offers, matched by external id."
+                checked={field.value ?? true}
+                onChange={(event) => field.onChange(event.currentTarget.checked)}
+              />
+            )}
+          />
+          <Controller
+            name="hasAllProducts"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                label="Has all products"
+                description="Feed sources only: a complete run removes the offers it did not see."
+                disabled={!isFeedSourceType(sourceType)}
+                checked={field.value ?? false}
+                onChange={(event) => field.onChange(event.currentTarget.checked)}
+              />
+            )}
+          />
         </DetailsSection>
 
         <DetailsSection
           title="Throttling"
           description="The seller's own caps apply on top of these — whichever is lower wins."
         >
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            <Controller
-              name="maxConcurrent"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label="Max Concurrent"
-                  min={1}
-                  step={1}
-                  value={field.value ?? 1}
-                  onChange={(value) => field.onChange(Number(value) || 1)}
-                />
-              )}
-            />
+          <Controller
+            name="maxConcurrent"
+            control={control}
+            render={({ field }) => (
+              <NumberInput
+                label="Max Concurrent"
+                min={1}
+                step={1}
+                value={field.value ?? 1}
+                onChange={(value) => field.onChange(Number(value) || 1)}
+              />
+            )}
+          />
 
-            <Controller
-              name="requestsPerHour"
-              control={control}
-              render={({ field }) => (
-                <NumberInput
-                  label="Requests Per Hour"
-                  min={1}
-                  step={1}
-                  value={field.value ?? 1}
-                  onChange={(value) => field.onChange(Number(value) || 1)}
-                />
-              )}
-            />
-          </SimpleGrid>
+          <Controller
+            name="requestsPerHour"
+            control={control}
+            render={({ field }) => (
+              <NumberInput
+                label="Requests Per Hour"
+                min={1}
+                step={1}
+                value={field.value ?? 1}
+                onChange={(value) => field.onChange(Number(value) || 1)}
+              />
+            )}
+          />
         </DetailsSection>
 
         <DetailsSection
           title="Schedule"
           description="Runs happen overnight between 02:00 and 06:00. Clearing the next-run time makes the source due on the next tick in that window."
         >
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-            <TextInput
-              label="Frequency"
-              description="ms-compatible value, e.g. 6h or 1d"
-              placeholder="6h"
-              {...register("frequency")}
-            />
+          <TextInput
+            label="Frequency"
+            description="ms-compatible value, e.g. 6h or 1d"
+            placeholder="6h"
+            {...register("frequency")}
+          />
 
-            <Controller
-              name="nextRunAt"
-              control={control}
-              render={({ field }) => (
-                <DateTimePicker
-                  label="Next Run"
-                  placeholder="Due on next tick"
-                  withSeconds
-                  clearable
-                  value={field.value ?? null}
-                  onChange={field.onChange}
-                />
-              )}
-            />
+          <Controller
+            name="nextRunAt"
+            control={control}
+            render={({ field }) => (
+              <DateTimePicker
+                label="Next Run"
+                placeholder="Due on next tick"
+                withSeconds
+                clearable
+                value={field.value ?? null}
+                onChange={field.onChange}
+              />
+            )}
+          />
 
-            <TextInput
-              label="Last run"
-              value={formatDate(productSource?.lastRunAt)}
-              disabled
-            />
-          </SimpleGrid>
+          <TextInput
+            label="Last run"
+            value={formatDate(productSource?.lastRunAt)}
+            disabled
+          />
+        </DetailsSection>
+
+        <DetailsSection
+          title="Run size"
+          description="Caps how many items one run imports, for small test runs. Leave it empty for full runs."
+        >
+          <NumberInput
+            label="Max items per run"
+            description={
+              !parsedConfigJson
+                ? "Fix the config JSON below to edit this."
+                : isFeedSourceType(sourceType)
+                  ? "Counts the feed rows a run queues or refreshes. Stored as maxItems in the config."
+                  : "Counts items per list page, and only the first page of each listing is read. Stored as maxItems in the config."
+            }
+            placeholder="No cap"
+            min={1}
+            step={1}
+            allowDecimal={false}
+            allowNegative={false}
+            disabled={!parsedConfigJson}
+            value={typeof maxItems === "number" ? maxItems : ""}
+            onChange={(value) =>
+              setMaxItems(typeof value === "number" ? value : undefined)
+            }
+          />
         </DetailsSection>
 
         <DetailsSection

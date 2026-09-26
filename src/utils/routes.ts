@@ -69,6 +69,11 @@ export const routes = {
     list: "/product-sources/list",
     details: (id: string) => `/product-sources/${id}`,
   },
+  productSourceRecords: {
+    list: "/product-source-records/list",
+    listForSource: (sourceId: string) =>
+      `/product-source-records/list?${new URLSearchParams({ sourceId })}`,
+  },
   brands: {
     list: "/brands/list",
     details: (id: string) => `/brands/${id}`,

@@ -2,6 +2,7 @@ import { ElementType } from "react";
 import {
   PiCopySimple,
   PiListBullets,
+  PiListMagnifyingGlass,
   PiPlugsConnected,
   PiRobot,
   PiStorefront,
@@ -62,6 +63,12 @@ export const navSections: NavSection[] = [
         href: routes.productSources.list,
         icon: PiPlugsConnected,
         match: "/product-sources",
+      },
+      {
+        label: "Source Records",
+        href: routes.productSourceRecords.list,
+        icon: PiListMagnifyingGlass,
+        match: "/product-source-records",
       },
       {
         label: "Duplicates",
