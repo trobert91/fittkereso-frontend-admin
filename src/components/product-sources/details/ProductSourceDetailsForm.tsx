@@ -148,6 +148,7 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
       maxConcurrent: productSource?.maxConcurrent ?? 1,
       requestsPerHour: productSource?.requestsPerHour ?? 1,
       frequency: productSource?.frequency ?? "",
+      detailRefreshInterval: productSource?.detailRefreshInterval ?? "",
       nextRunAt: isoToPicker(productSource?.nextRunAt),
     },
   });
@@ -170,6 +171,7 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
         maxConcurrent: productSource.maxConcurrent ?? 1,
         requestsPerHour: productSource.requestsPerHour ?? 1,
         frequency: productSource.frequency ?? "",
+        detailRefreshInterval: productSource.detailRefreshInterval ?? "",
         nextRunAt: isoToPicker(productSource.nextRunAt),
       });
       setConfigJson(JSON.stringify(productSource.config ?? {}, null, 2));
@@ -227,6 +229,8 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
           sellerId: values.sellerId || undefined,
           config: parsedConfig,
           frequency: values.frequency?.trim() || null,
+          // Empty leaves it as it is: the interval cannot be cleared.
+          detailRefreshInterval: values.detailRefreshInterval?.trim() || undefined,
           nextRunAt: pickerToIso(values.nextRunAt),
         },
       }),
@@ -430,6 +434,13 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
             {...register("frequency")}
           />
 
+          <TextInput
+            label="Detail refresh interval"
+            description="How old a known product's detail page may get before a run fetches it again, even when its list card could refresh it. ms-compatible, e.g. 60 days or 8w. Acts on scraping sources' list cards."
+            placeholder="60 days"
+            {...register("detailRefreshInterval")}
+          />
+
           <Controller
             name="nextRunAt"
             control={control}
@@ -463,7 +474,7 @@ export function ProductSourceDetailsForm({ onDone }: { onDone?: () => void }) {
                 ? "Fix the config JSON below to edit this."
                 : isFeedSourceType(sourceType)
                   ? "Counts the feed rows a run queues or refreshes. Stored as maxItems in the config."
-                  : "Counts items per list page, and only the first page of each listing is read. Stored as maxItems in the config."
+                  : "Counts the detail pages a run queues, across all its list pages. Every list page is still read, and known products are still refreshed from their cards. Stored as maxItems in the config."
             }
             placeholder="No cap"
             min={1}

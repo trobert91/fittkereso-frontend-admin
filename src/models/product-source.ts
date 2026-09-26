@@ -40,8 +40,8 @@ export interface ProductSourceConfig {
   baseUrl?: string;
   fullSyncStartUrl?: string;
   categories?: Record<string, { enabled: boolean; sourceTitle?: string }>;
-  // Caps one run, for small test runs; unset means no cap. A feed run counts
-  // its rows, a scraping run the items per list page.
+  // Caps one run; unset means no cap. A feed run counts its rows, a scraping
+  // run the detail pages it queues across all its list pages.
   maxItems?: number;
   [key: string]: unknown;
 }

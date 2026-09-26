@@ -12,6 +12,8 @@ export interface ProductSourceUpdateDto {
   maxConcurrent?: number;
   requestsPerHour?: number;
   frequency?: string | null;
+  // Can be changed but not cleared: omit it to leave it alone.
+  detailRefreshInterval?: string;
   // ISO strings; null clears the schedule, which makes that sync due on the
   // collector's next tick.
   nextRunAt?: string | null;

@@ -241,6 +241,10 @@ export function ProductSourceDetailsView({
               >
                 <Field label="Frequency" value={productSource.frequency} />
                 <Field
+                  label="Detail refresh interval"
+                  value={productSource.detailRefreshInterval}
+                />
+                <Field
                   label="Next run"
                   value={
                     formatDate(productSource.nextRunAt) || (

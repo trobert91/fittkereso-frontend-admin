@@ -61,6 +61,7 @@ export function EditProductSourceModal({
       maxConcurrent: productSource.maxConcurrent,
       requestsPerHour: productSource.requestsPerHour,
       frequency: productSource.frequency ?? "",
+      detailRefreshInterval: productSource.detailRefreshInterval ?? "",
     },
   });
 
@@ -76,6 +77,7 @@ export function EditProductSourceModal({
         maxConcurrent: productSource.maxConcurrent,
         requestsPerHour: productSource.requestsPerHour,
         frequency: productSource.frequency ?? "",
+        detailRefreshInterval: productSource.detailRefreshInterval ?? "",
       });
       setConfigJson(JSON.stringify(productSource.config ?? {}, null, 2));
       setConfigError(null);
@@ -97,6 +99,8 @@ export function EditProductSourceModal({
         ...values,
         config: parsedConfig,
         frequency: values.frequency?.trim() || null,
+        // Empty leaves it as it is: the interval cannot be cleared.
+        detailRefreshInterval: values.detailRefreshInterval?.trim() || undefined,
       });
 
       notifications.show({
@@ -232,6 +236,13 @@ export function EditProductSourceModal({
             description="ms-compatible value, e.g. 6h or 1d"
             placeholder="6h"
             {...register("frequency")}
+          />
+
+          <TextInput
+            label="Detail Refresh Interval"
+            description="How old a known product's detail page may get before a run fetches it again, e.g. 60 days. Acts on scraping sources' list cards."
+            placeholder="60 days"
+            {...register("detailRefreshInterval")}
           />
 
           <JsonEditor

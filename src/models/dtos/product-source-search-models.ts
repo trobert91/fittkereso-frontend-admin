@@ -41,6 +41,9 @@ export interface ProductSource {
   requestsPerHour: number;
   lastRunAt?: string | null;
   frequency?: string | null;
+  // How old a known listing's detail import may get before its detail page is
+  // fetched again (an ms string, "60 days" by default). Admin details only.
+  detailRefreshInterval?: string;
   nextRunAt?: string | null;
   createdAt: string;
   updatedAt: string;
