@@ -5,7 +5,7 @@ import {
   ProductDuplicatePair,
 } from "@/models/dtos/product-duplicate-search-models";
 import { ProductModel } from "@/models/product-model";
-import { formatSpecValue } from "./failed-gate-badges";
+import { formatGateValue } from "./failed-gate-badges";
 import {
   isIdentifierMatch,
   MATCHED_ON_LABELS,
@@ -20,6 +20,7 @@ const GATE_LABELS: Record<ProductDuplicateGate, string> = {
   primarySpecMismatch: "Primary spec",
   modelNumberMismatch: "Model number",
   matcherSpecMismatch: "Spec",
+  specMissing: "Missing spec",
 };
 
 const GATE_EXPLANATIONS: Record<ProductDuplicateGate, string> = {
@@ -28,6 +29,8 @@ const GATE_EXPLANATIONS: Record<ProductDuplicateGate, string> = {
   modelNumberMismatch:
     "The numbers in the two names differ, and neither set contains the other.",
   matcherSpecMismatch: "A supporting spec disagrees.",
+  specMissing:
+    "Only one of the two states a spec this category will not match without, such as the model year, so the name alone cannot tell them apart.",
 };
 
 const IDENTIFIER_EXPLANATIONS: Record<ProductDuplicateIdentifier, string> = {
@@ -243,13 +246,13 @@ export function ScoreBreakdown({
               <Table.Td>
                 <Group gap={6}>
                   <Code fz="xs">
-                    {formatSpecValue(inColumnOrder(gate)[0])}
+                    {formatGateValue(inColumnOrder(gate)[0])}
                   </Code>
                   <Text size="xs" c="dimmed">
                     ≠
                   </Text>
                   <Code fz="xs">
-                    {formatSpecValue(inColumnOrder(gate)[1])}
+                    {formatGateValue(inColumnOrder(gate)[1])}
                   </Code>
                 </Group>
               </Table.Td>
@@ -359,11 +362,11 @@ function IdentifierBreakdown({
                   </Table.Td>
                   <Table.Td>
                     <Group gap={6}>
-                      <Code fz="xs">{formatSpecValue(inColumnOrder(gate)[0])}</Code>
+                      <Code fz="xs">{formatGateValue(inColumnOrder(gate)[0])}</Code>
                       <Text size="xs" c="dimmed">
                         ≠
                       </Text>
-                      <Code fz="xs">{formatSpecValue(inColumnOrder(gate)[1])}</Code>
+                      <Code fz="xs">{formatGateValue(inColumnOrder(gate)[1])}</Code>
                     </Group>
                   </Table.Td>
                 </Table.Tr>

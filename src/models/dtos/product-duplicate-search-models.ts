@@ -20,7 +20,9 @@ export type ProductDuplicatePairStatus = "open" | "dismissed";
 export type ProductDuplicateGate =
   | "primarySpecMismatch"
   | "modelNumberMismatch"
-  | "matcherSpecMismatch";
+  | "matcherSpecMismatch"
+  // Only one of the two states a spec the category will not match without.
+  | "specMissing";
 
 /** A contradiction between the two products, with each one's value. */
 export interface ProductDuplicateFailedGate {
@@ -28,6 +30,7 @@ export interface ProductDuplicateFailedGate {
   /** The spec key, for spec gates. */
   spec?: string;
   severity: number;
+  /** Null on the side a `specMissing` gate found without the spec. */
   productAValue: unknown;
   productBValue: unknown;
 }
