@@ -15,6 +15,7 @@ import { OfferAvailability } from "@/models/offer";
 import { ProductSourceRecord, ScrapedOffer } from "@/models/product-source";
 import { SpecDefinitionJsonSchema } from "@/models/product-specs";
 import { availabilityBadge } from "../offers/OfferCard";
+import { NotSet, NotSetField, notSetReason } from "./NotSet";
 import {
   formatSpecValue,
   hasValue,
@@ -98,35 +99,37 @@ export function ListingIdentityTable({
   const scraped = listing.scrapedProduct;
   const externalId = scraped?.externalId ?? listing.externalId;
 
+  // A scraped listing always shows its names and key, saying why one is
+  // missing; an admin edit has none of them.
+  const orNotSet = (value: ReactNode, field: NotSetField): ReactNode =>
+    hasValue(value) || !listing.source ? (
+      value
+    ) : (
+      <NotSet reason={notSetReason(listing, field)} />
+    );
+
   const rows: [string, ReactNode][] = [
     ["Brand", scraped?.brand],
     [
       "Model",
-      scraped?.model && (
-        <Group gap={6} wrap="wrap">
-          <Text size="sm">{scraped.model}</Text>
-          {scraped.nameCleaned !== undefined && (
+      orNotSet(
+        scraped?.model && (
+          <Group gap={6} wrap="wrap">
+            <Text size="sm">{scraped.model}</Text>
             <Tooltip
-              label={
-                scraped.nameCleaned
-                  ? "Cleaned from the title by the AI identity extraction"
-                  : "The raw title: the AI identity extraction was skipped or failed"
-              }
+              label="Read off the title by the AI identity extraction"
               withArrow
             >
-              <Badge
-                size="xs"
-                variant="light"
-                color={scraped.nameCleaned ? "violet" : "orange"}
-              >
-                {scraped.nameCleaned ? "AI" : "Raw title"}
+              <Badge size="xs" variant="light" color="violet">
+                AI
               </Badge>
             </Tooltip>
-          )}
-        </Group>
+          </Group>
+        ),
+        "name",
       ),
     ],
-    ["Display name", scraped?.displayName],
+    ["Display name", orNotSet(scraped?.displayName, "name")],
     ["Original title", scraped?.originalName],
     ["Release year", scraped?.releaseYear],
     ["Category", scraped?.category?.name],
@@ -148,7 +151,7 @@ export function ListingIdentityTable({
       "Aliases",
       scraped?.aliases?.length ? scraped.aliases.join(", ") : undefined,
     ],
-    ["Match key", listing.normalizedSourceName],
+    ["Match key", orNotSet(listing.normalizedSourceName, "matchKey")],
   ];
 
   const shown = rows.filter(([, value]) => hasValue(value));

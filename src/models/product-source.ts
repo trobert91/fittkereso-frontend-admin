@@ -117,6 +117,15 @@ export interface ScrapedOffer {
   specs?: ProductSpecs;
 }
 
+/**
+ * Why a listing lacks a field (ScrapedProduct.flags on the backend):
+ * - `identity_off`: its source's `postProcess.identity` is off, so no AI
+ *   identity extraction ran.
+ * - `identity_failed`: the extraction ran but returned no model name; the next
+ *   import retries it.
+ */
+export type ScrapedProductFlag = "identity_off" | "identity_failed";
+
 export interface ProductSourceRecord {
   id: string;
   url?: string;
@@ -132,16 +141,18 @@ export interface ProductSourceRecord {
   scrapedProduct?: {
     category?: { id: string; slug: string; name: string };
     brand?: string;
+    // The model name the AI identity extraction read off the title. Set only
+    // when it returned one; otherwise absent, and `flags` says why.
     model?: string;
-    // Whether `model` came back from the LLM identity extraction, rather than
-    // being the raw title because the call was skipped or failed.
-    nameCleaned?: boolean;
+    // `${brand} ${model}`, set exactly when `model` is.
     displayName?: string;
     aliases?: string[];
     externalId?: string;
-    // The raw, unfiltered title/model text exactly as scraped, before
-    // brand/marketing/size/color boilerplate is stripped into `model`.
+    // The title exactly as the shop publishes it.
     originalName?: string;
+    // What its import did that its fields alone don't show — why it has no
+    // `model`, say. See the backend's SCRAPED_PRODUCT_FLAGS.
+    flags?: ScrapedProductFlag[];
     releaseYear?: number;
     specs?: ProductSpecs;
     // The deterministic, label-matching spec mapping before the LLM
@@ -170,7 +181,8 @@ export interface ProductSourceRecord {
   deduplicated: boolean;
   // Normalized identity key used for Path-1 dedup matching (see backend
   // ProductScrapeUpdaterService), derived from scrapedProduct at scrape time.
-  normalizedSourceName?: string;
+  // Null on a source that does not identify products: nothing matches on it.
+  normalizedSourceName?: string | null;
   // The linked supplier/source config, e.g. "ebikeshop". Null for manual (admin-entered) specs.
   // The product details route also joins its seller and multi-source settings.
   source?: {

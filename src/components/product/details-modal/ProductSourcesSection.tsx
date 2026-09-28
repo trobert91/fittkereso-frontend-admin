@@ -14,6 +14,16 @@ import { ReactNode } from "react";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import { ProductSourceRecord } from "@/models/product-source";
 import { formatDate } from "@/utils/date";
+import {
+  NotSet,
+  NotSetField,
+  notSetReason,
+} from "@/components/product/details/sources/NotSet";
+
+// A scraped listing says why it lacks a name or key; an admin edit just has none.
+function missing(source: ProductSourceRecord, field: NotSetField): ReactNode {
+  return source.source ? <NotSet reason={notSetReason(source, field)} /> : "—";
+}
 
 function SpecValidCell({ source }: { source: ProductSourceRecord }) {
   if (source.specValid == null) {
@@ -139,17 +149,19 @@ export function ProductSourcesSection({
             return (
               <Table.Tr key={source.id}>
                 <Table.Td>{source.source?.name ?? "Manual"}</Table.Td>
-                <Table.Td>{source.scrapedProduct?.displayName ?? "—"}</Table.Td>
+                <Table.Td>
+                  {source.scrapedProduct?.displayName ?? missing(source, "name")}
+                </Table.Td>
                 <Table.Td>
                   {source.scrapedProduct?.brand ?? "—"} /{" "}
-                  {source.scrapedProduct?.model ?? "—"}
+                  {source.scrapedProduct?.model ?? missing(source, "name")}
                 </Table.Td>
                 <Table.Td>{source.scrapedProduct?.releaseYear ?? "—"}</Table.Td>
                 <Table.Td>
                   {source.normalizedSourceName ? (
                     <Code>{source.normalizedSourceName}</Code>
                   ) : (
-                    "—"
+                    missing(source, "matchKey")
                   )}
                 </Table.Td>
                 <Table.Td>
